@@ -6,7 +6,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import Base, engine
-from app.routers import groups, meetings, users
+from app.routers import events, groups, meetings, users
 from app.websocket import manager
 
 Base.metadata.create_all(bind=engine)
@@ -24,6 +24,7 @@ app.add_middleware(
 app.include_router(users.router)
 app.include_router(groups.router)
 app.include_router(meetings.router)
+app.include_router(events.router)
 
 
 @app.get("/health")

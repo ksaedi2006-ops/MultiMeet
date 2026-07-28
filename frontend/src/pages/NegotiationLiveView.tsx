@@ -3,24 +3,25 @@ import { useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { startNegotiation, type MeetingDecision } from '../api/client'
 import { useNegotiationSocket } from '../api/useNegotiationSocket'
+import StepHeader from '../components/StepHeader'
 
 export default function NegotiationLiveView() {
-  const { meetingId = null } = useParams<{ meetingId: string }>()
-  const { events, connected } = useNegotiationSocket(meetingId)
+  const { eventId = null } = useParams<{ eventId: string }>()
+  const { events, connected } = useNegotiationSocket(eventId)
   const [decision, setDecision] = useState<MeetingDecision | null>(null)
   const [started, setStarted] = useState(false)
   const logRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (!meetingId || started) return
+    if (!eventId || started) return
     // Give the WebSocket a moment to connect before triggering the negotiation.
     const timer = setTimeout(async () => {
       setStarted(true)
-      const result = await startNegotiation(meetingId)
+      const result = await startNegotiation(eventId)
       setDecision(result)
     }, 400)
     return () => clearTimeout(timer)
-  }, [meetingId, started])
+  }, [eventId, started])
 
   useEffect(() => {
     logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' })
@@ -29,7 +30,9 @@ export default function NegotiationLiveView() {
   const agentEvents = events.filter((e) => e.type === 'agent_response')
 
   return (
-    <div className="max-w-3xl mx-auto p-8">
+    <div>
+      <StepHeader step={4} />
+      <div className="max-w-3xl mx-auto p-8">
       <h1 className="text-2xl font-semibold mb-1">Negotiation</h1>
       <p className="text-sm text-gray-500 mb-6">
         {connected ? 'Connected — agents are negotiating live.' : 'Connecting…'}
@@ -89,6 +92,7 @@ export default function NegotiationLiveView() {
           </div>
         </motion.div>
       )}
+      </div>
     </div>
   )
 }

@@ -31,6 +31,7 @@ class User(Base):
 
     calendar_provider = Column(String, nullable=True)
     calendar_oauth_token = Column(Text, nullable=True)
+    calendar_events = Column(JSON, default=list)
     notification_preferences = Column(JSON, default=dict)
 
     preferences = relationship("UserPreference", back_populates="user")

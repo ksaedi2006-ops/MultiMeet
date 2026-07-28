@@ -58,7 +58,7 @@ async def run_negotiation(db: Session, meeting_request: models.MeetingRequest) -
             evaluate_slots,
             user_id=user.id,
             user_name=user.name,
-            calendar_events=[],
+            calendar_events=user.calendar_events or [],
             preferences=[{"raw_text": p.raw_text, "rules": p.parsed_rules, "strength": p.strength} for p in prefs],
             acceptance_rate=0.8,
             reject_patterns=[],

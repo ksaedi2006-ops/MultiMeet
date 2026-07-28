@@ -20,6 +20,10 @@ class UserOut(BaseModel):
         from_attributes = True
 
 
+class CalendarUpload(BaseModel):
+    raw_ics: str
+
+
 class PreferenceCreate(BaseModel):
     raw_text: str
 
@@ -33,6 +37,18 @@ class PreferenceOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class EventCreate(BaseModel):
+    title: str
+
+
+class EventOut(BaseModel):
+    event_id: str
+    group_id: str
+    title: str
+    invite_code: str
+    status: str
 
 
 class GroupCreate(BaseModel):
