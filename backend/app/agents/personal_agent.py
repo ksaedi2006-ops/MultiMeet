@@ -27,4 +27,12 @@ def evaluate_slots(
         meeting_details=json.dumps(meeting_details),
         slots_list=json.dumps(slots),
     )
-    return call_agent(prompt, model=PERSONAL_AGENT_MODEL)
+    try:
+        return call_agent(prompt, model=PERSONAL_AGENT_MODEL)
+    except Exception:
+        return {
+            "user_id": user_id,
+            "slots": [{"datetime": s, "satisfaction": 50, "constraint_type": "free", "notes": "Agent unavailable"} for s in slots],
+            "hard_blocks": [],
+            "general_notes": "Personal agent unavailable; used neutral fallback evaluation.",
+        }
