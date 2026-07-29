@@ -11,7 +11,7 @@ def mediate(meeting_details: dict, agent_responses: list[dict]) -> dict:
         all_personal_agent_responses_json=json.dumps(agent_responses),
     )
     try:
-        return call_agent(prompt, model=MEDIATOR_AGENT_MODEL, max_tokens=2048)
+        return call_agent(prompt, model=MEDIATOR_AGENT_MODEL, max_tokens=4096)
     except Exception:
         return _fallback_mediate(agent_responses)
 

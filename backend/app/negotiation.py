@@ -11,14 +11,18 @@ from app.websocket import manager
 MAX_ROUNDS = 3
 
 
+MAX_CANDIDATE_SLOTS = 60
+
+
 def candidate_slots(start: datetime, end: datetime, duration_minutes: int) -> list[str]:
+    """Generate candidate slots on business hours, capped so agent prompts stay within token budget."""
     slots = []
     cursor = start
     step = timedelta(minutes=duration_minutes)
-    while cursor + step <= end:
+    while cursor + step <= end and len(slots) < MAX_CANDIDATE_SLOTS:
         if 8 <= cursor.hour <= 20:
             slots.append(cursor.isoformat())
-        cursor += timedelta(hours=1)
+        cursor += timedelta(hours=2)
     return slots
 
 

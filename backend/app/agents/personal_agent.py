@@ -28,7 +28,7 @@ def evaluate_slots(
         slots_list=json.dumps(slots),
     )
     try:
-        return call_agent(prompt, model=PERSONAL_AGENT_MODEL)
+        return call_agent(prompt, model=PERSONAL_AGENT_MODEL, max_tokens=4096)
     except Exception:
         return {
             "user_id": user_id,
