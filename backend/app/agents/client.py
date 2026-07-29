@@ -16,6 +16,15 @@ def get_client() -> Anthropic:
     return _client
 
 
+def _strip_code_fence(text: str) -> str:
+    text = text.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1] if "\n" in text else text[3:]
+        if text.endswith("```"):
+            text = text[: -len("```")]
+    return text.strip()
+
+
 def call_agent(system_prompt: str, model: str, max_tokens: int = 1024) -> dict:
     """Call Claude with a system prompt that instructs it to return JSON only, and parse the result."""
     client = get_client()
@@ -26,4 +35,4 @@ def call_agent(system_prompt: str, model: str, max_tokens: int = 1024) -> dict:
         messages=[{"role": "user", "content": "Return the JSON now."}],
     )
     text = "".join(block.text for block in response.content if block.type == "text")
-    return json.loads(text)
+    return json.loads(_strip_code_fence(text))
