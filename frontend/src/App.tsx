@@ -1,4 +1,6 @@
-import { Routes, Route, Link } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import Masthead from './components/Masthead'
 import CreateEvent from './pages/CreateEvent'
 import ShareEvent from './pages/ShareEvent'
 import JoinEvent from './pages/JoinEvent'
@@ -6,22 +8,31 @@ import UploadCalendar from './pages/UploadCalendar'
 import AgentChat from './pages/AgentChat'
 import NegotiationLiveView from './pages/NegotiationLiveView'
 
+function Page({ children }: { children: React.ReactNode }) {
+  const location = useLocation()
+  return (
+    <motion.div
+      key={location.pathname}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
 export default function App() {
   return (
     <div className="min-h-screen">
-      <nav className="border-b border-gray-200 dark:border-gray-800 px-8 py-4">
-        <Link to="/" className="font-semibold">
-          MeetMind
-        </Link>
-      </nav>
-
+      <Masthead />
       <Routes>
-        <Route path="/" element={<CreateEvent />} />
-        <Route path="/event/:eventId/share" element={<ShareEvent />} />
-        <Route path="/join/:inviteCode" element={<JoinEvent />} />
-        <Route path="/event/:eventId/upload" element={<UploadCalendar />} />
-        <Route path="/event/:eventId/agent" element={<AgentChat />} />
-        <Route path="/event/:eventId/negotiate" element={<NegotiationLiveView />} />
+        <Route path="/" element={<Page><CreateEvent /></Page>} />
+        <Route path="/event/:eventId/share" element={<Page><ShareEvent /></Page>} />
+        <Route path="/join/:inviteCode" element={<Page><JoinEvent /></Page>} />
+        <Route path="/event/:eventId/upload" element={<Page><UploadCalendar /></Page>} />
+        <Route path="/event/:eventId/agent" element={<Page><AgentChat /></Page>} />
+        <Route path="/event/:eventId/negotiate" element={<Page><NegotiationLiveView /></Page>} />
       </Routes>
     </div>
   )

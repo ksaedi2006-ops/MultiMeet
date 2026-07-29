@@ -10,6 +10,10 @@ class UserCreate(BaseModel):
     password: str
 
 
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+
+
 class UserOut(BaseModel):
     id: str
     email: str

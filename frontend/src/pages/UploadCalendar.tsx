@@ -2,6 +2,8 @@ import { useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getOrCreateUserId, uploadCalendar } from '../api/client'
 import StepHeader from '../components/StepHeader'
+import Paper from '../components/Paper'
+import Button from '../components/Button'
 
 export default function UploadCalendar() {
   const { eventId = '' } = useParams<{ eventId: string }>()
@@ -22,7 +24,7 @@ export default function UploadCalendar() {
       setFileName(file.name)
       setParsedCount(result.events_parsed)
     } catch {
-      setError('Could not upload calendar. Make sure it is a valid .ics file.')
+      setError('Could not read that file. Make sure it is a valid .ics export.')
     } finally {
       setLoading(false)
     }
@@ -35,47 +37,52 @@ export default function UploadCalendar() {
   return (
     <div>
       <StepHeader step={2} />
-      <div className="max-w-md mx-auto px-8 py-12">
-        <h1 className="text-3xl font-semibold mb-2">Upload your calendar</h1>
-        <p className="text-gray-500 mb-8">
-          Your agent uses this to know your hard blocks — classes, work, existing plans. Export an .ics
-          file from Google/Outlook/Apple Calendar and drop it here.
-        </p>
+      <div className="max-w-xl mx-auto px-5 sm:px-8 py-10">
+        <Paper className="p-8 sm:p-10">
+          <p className="font-mono text-[11px] tracking-[0.25em] text-seal mb-4">EVIDENCE</p>
+          <h1 className="font-mono text-2xl sm:text-3xl font-semibold leading-snug mb-3">
+            Upload your calendar
+          </h1>
+          <p className="text-paper-ink/70 mb-8 leading-relaxed">
+            Your agent uses this to know your hard blocks — classes, work, plans already made. Export an
+            .ics file from Google, Outlook, or Apple Calendar and drop it here.
+          </p>
 
-        <div
-          className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl p-8 text-center cursor-pointer hover:border-violet-400 transition"
-          onClick={() => fileInput.current?.click()}
-        >
-          <input
-            ref={fileInput}
-            type="file"
-            accept=".ics"
-            className="hidden"
-            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          />
-          {loading ? (
-            <p className="text-sm text-gray-500">Uploading…</p>
-          ) : fileName ? (
-            <p className="text-sm">
-              {fileName} — {parsedCount} events parsed
-            </p>
-          ) : (
-            <p className="text-sm text-gray-500">Click to choose an .ics file</p>
-          )}
-        </div>
-        {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
-
-        <div className="flex gap-2 mt-8">
-          <button
-            onClick={handleContinue}
-            className="flex-1 bg-violet-600 text-white rounded-lg px-4 py-3 hover:bg-violet-700 transition"
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => fileInput.current?.click()}
+            onKeyDown={(e) => e.key === 'Enter' && fileInput.current?.click()}
+            className="border-2 border-dashed border-paper-ink/25 rounded-sm p-10 text-center cursor-pointer hover:border-seal transition-colors"
           >
-            Continue
-          </button>
-        </div>
-        <button onClick={handleContinue} className="text-xs text-gray-500 mt-3 hover:text-violet-500">
-          Skip for now
-        </button>
+            <input
+              ref={fileInput}
+              type="file"
+              accept=".ics"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+            />
+            {loading ? (
+              <p className="font-mono text-sm text-mist">READING FILE…</p>
+            ) : fileName ? (
+              <p className="font-mono text-sm">
+                <span className="text-brass">✓</span> {fileName} — {parsedCount} events parsed
+              </p>
+            ) : (
+              <p className="font-mono text-sm text-paper-ink/50">CLICK TO CHOOSE AN .ICS FILE</p>
+            )}
+          </div>
+          {error && <p className="mt-3 font-mono text-sm text-seal">{error}</p>}
+
+          <div className="flex items-center gap-6 mt-8">
+            <Button onClick={handleContinue} className="flex-1">
+              CONTINUE →
+            </Button>
+            <Button variant="quiet" onClick={handleContinue}>
+              SKIP FOR NOW
+            </Button>
+          </div>
+        </Paper>
       </div>
     </div>
   )

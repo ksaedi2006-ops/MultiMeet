@@ -34,7 +34,29 @@ export interface MeetingDecision {
   alternatives: { datetime: string; avg_satisfaction: number }[]
 }
 
+export interface Member {
+  user_id: string
+  name: string | null
+  role: string
+  ready: boolean
+}
+
+export interface AgentResponseSummary {
+  user_id: string
+  user_name: string
+  notes: string
+  top_slot: { datetime: string; satisfaction: number } | null
+}
+
+export interface MeetingState {
+  meeting_status: string
+  negotiation_status: string | null
+  responses: AgentResponseSummary[]
+  decision: MeetingDecision | null
+}
+
 const USER_ID_KEY = 'meetmind_user_id'
+const USER_NAME_KEY = 'meetmind_user_name'
 
 export async function getOrCreateUserId(): Promise<string> {
   const existing = localStorage.getItem(USER_ID_KEY)
@@ -44,6 +66,15 @@ export async function getOrCreateUserId(): Promise<string> {
   return res.data.id
 }
 
+export function getSavedName(): string {
+  return localStorage.getItem(USER_NAME_KEY) ?? ''
+}
+
+export async function setUserName(userId: string, name: string) {
+  localStorage.setItem(USER_NAME_KEY, name)
+  await api.patch<User>(`/users/${userId}`, { name })
+}
+
 export async function createEvent(title: string, userId: string) {
   const res = await api.post<Event>(`/events?requested_by=${userId}`, { title })
   return res.data
@@ -51,6 +82,11 @@ export async function createEvent(title: string, userId: string) {
 
 export async function getEvent(eventId: string) {
   const res = await api.get<Event>(`/events/${eventId}`)
+  return res.data
+}
+
+export async function getEventByInvite(inviteCode: string) {
+  const res = await api.get<Event>(`/events/invite/${inviteCode}`)
   return res.data
 }
 
@@ -74,7 +110,19 @@ export async function listPreferences(userId: string) {
   return res.data
 }
 
-export async function startNegotiation(eventId: string) {
-  const res = await api.post<MeetingDecision>(`/meetings/${eventId}/negotiate`)
+export async function listEventMembers(eventId: string) {
+  const res = await api.get<Member[]>(`/events/${eventId}/members`)
+  return res.data
+}
+
+export async function markReady(eventId: string, userId: string) {
+  const res = await api.post<{ ready_count: number; total_count: number; negotiation_started: boolean }>(
+    `/events/${eventId}/ready?user_id=${userId}`,
+  )
+  return res.data
+}
+
+export async function getMeetingState(meetingId: string) {
+  const res = await api.get<MeetingState>(`/meetings/${meetingId}/state`)
   return res.data
 }

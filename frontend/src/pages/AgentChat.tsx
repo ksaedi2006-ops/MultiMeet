@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { addPreference, getOrCreateUserId, listPreferences } from '../api/client'
+import { motion } from 'framer-motion'
+import { addPreference, getOrCreateUserId, listPreferences, markReady } from '../api/client'
 import StepHeader from '../components/StepHeader'
+import Button from '../components/Button'
 
 interface ChatMessage {
   from: 'user' | 'agent'
@@ -9,7 +11,7 @@ interface ChatMessage {
 }
 
 const INTRO =
-  "Hi, I'm your scheduling agent. Tell me anything about your preferences — mornings, buffer time, days off — and I'll advocate for it during negotiation."
+  "I'm your scheduling agent. Tell me anything about your preferences — mornings, buffer time, days off — and I'll advocate for it during negotiation."
 
 export default function AgentChat() {
   const { eventId = '' } = useParams<{ eventId: string }>()
@@ -17,6 +19,7 @@ export default function AgentChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([{ from: 'agent', text: INTRO }])
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [checkingIn, setCheckingIn] = useState(false)
   const logRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -59,56 +62,77 @@ export default function AgentChat() {
     }
   }
 
+  async function handleReady() {
+    setCheckingIn(true)
+    try {
+      const userId = await getOrCreateUserId()
+      await markReady(eventId, userId)
+      navigate(`/event/${eventId}/negotiate`)
+    } catch {
+      setCheckingIn(false)
+    }
+  }
+
   return (
     <div>
       <StepHeader step={3} />
-      <div className="max-w-md mx-auto px-8 py-8 flex flex-col h-[70vh]">
-        <h1 className="text-2xl font-semibold mb-1">Talk to your agent</h1>
-        <p className="text-gray-500 text-sm mb-4">
-          Say as much or as little as you want. You can always add more later.
-        </p>
+      <div className="max-w-xl mx-auto px-5 sm:px-8 py-8 flex flex-col h-[75vh]">
+        <p className="font-mono text-[11px] tracking-[0.25em] text-seal mb-2">BRIEFING</p>
+        <h1 className="font-mono text-xl sm:text-2xl font-semibold mb-6">Talk to your agent</h1>
 
         <div ref={logRef} className="flex-1 overflow-y-auto flex flex-col gap-3 mb-4 pr-1">
           {messages.map((m, i) => (
-            <div
+            <motion.div
               key={i}
-              className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${
-                m.from === 'agent'
-                  ? 'bg-gray-100 dark:bg-gray-800 self-start'
-                  : 'bg-violet-600 text-white self-end'
-              }`}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className={`max-w-[85%] ${m.from === 'user' ? 'self-end' : 'self-start'}`}
             >
-              {m.text}
-            </div>
+              <p
+                className={`font-mono text-[10px] tracking-widest mb-1 ${
+                  m.from === 'user' ? 'text-right text-mist' : 'text-brass'
+                }`}
+              >
+                {m.from === 'user' ? 'YOU' : 'AGENT'}
+              </p>
+              <div
+                className={`rounded-sm px-4 py-2.5 text-sm leading-relaxed ${
+                  m.from === 'agent'
+                    ? 'bg-ink-raised border-l-2 border-brass'
+                    : 'bg-seal text-paper'
+                }`}
+              >
+                {m.text}
+              </div>
+            </motion.div>
           ))}
           {sending && (
-            <div className="max-w-[85%] rounded-2xl px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 self-start text-gray-400">
-              thinking…
+            <div className="self-start">
+              <p className="font-mono text-[10px] tracking-widest mb-1 text-brass">AGENT</p>
+              <div className="rounded-sm px-4 py-2.5 text-sm bg-ink-raised border-l-2 border-brass text-mist">
+                thinking…
+              </div>
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSend} className="flex gap-2 mb-4">
+        <form onSubmit={handleSend} className="flex gap-3 mb-5 border-t border-ink-line pt-4">
           <input
-            className="flex-1 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent"
+            className="flex-1 bg-transparent outline-none text-sm placeholder:text-mist/60"
             placeholder="I hate mornings, don't schedule before 11…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
           />
-          <button
-            disabled={sending}
-            className="bg-violet-600 text-white rounded-lg px-4 py-2 hover:bg-violet-700 transition disabled:opacity-50"
-          >
-            Send
-          </button>
+          <Button disabled={sending}>SEND</Button>
         </form>
 
-        <button
-          onClick={() => navigate(`/event/${eventId}/negotiate`)}
-          className="w-full border border-violet-400 text-violet-500 rounded-lg px-4 py-3 hover:bg-violet-50 dark:hover:bg-violet-950 transition"
-        >
-          Start negotiation
-        </button>
+        <Button variant="ghost-ink" onClick={handleReady} disabled={checkingIn} className="w-full">
+          {checkingIn ? 'CHECKING IN…' : "I'M READY →"}
+        </Button>
+        <p className="font-mono text-[11px] text-mist mt-3 text-center">
+          Negotiation starts once everyone has checked in.
+        </p>
       </div>
     </div>
   )

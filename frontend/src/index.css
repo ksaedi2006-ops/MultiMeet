@@ -1,10 +1,63 @@
 @import "tailwindcss";
 
+@theme {
+  --color-ink: #12141c;
+  --color-ink-raised: #1a1e29;
+  --color-ink-line: #2a3040;
+  --color-paper: #f3eee1;
+  --color-paper-dim: #e7e0cd;
+  --color-paper-ink: #2b2a25;
+  --color-seal: #c23b2a;
+  --color-seal-dim: #8f2b1f;
+  --color-brass: #c79a46;
+  --color-mist: #8b94a8;
+
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
+}
+
+* {
+  border-color: var(--color-ink-line);
 }
 
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  background: var(--color-ink);
+  color: var(--color-paper);
+  font-family: var(--font-sans);
+  background-image:
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(194, 59, 42, 0.10), transparent),
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(199, 154, 70, 0.07), transparent);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: var(--color-seal);
+  color: var(--color-paper);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brass);
+  outline-offset: 2px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-mist);
+  opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

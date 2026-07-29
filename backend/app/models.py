@@ -75,6 +75,7 @@ class GroupMember(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     role = Column(String, default="member")  # admin | member
     joined_at = Column(DateTime, default=datetime.utcnow)
+    ready = Column(Boolean, default=False)
 
     group = relationship("Group", back_populates="members")
 

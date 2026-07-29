@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getEvent, type Event } from '../api/client'
 import StepHeader from '../components/StepHeader'
+import Paper from '../components/Paper'
+import Button from '../components/Button'
 
 export default function ShareEvent() {
   const { eventId = '' } = useParams<{ eventId: string }>()
@@ -24,33 +26,29 @@ export default function ShareEvent() {
   return (
     <div>
       <StepHeader step={1} />
-      <div className="max-w-md mx-auto px-8 py-12">
-        <h1 className="text-3xl font-semibold mb-2">Share it</h1>
-        <p className="text-gray-500 mb-8">
-          Send this link to everyone you want at "{event?.title ?? '…'}". Their agents will join the
-          negotiation once they open it.
-        </p>
+      <div className="max-w-xl mx-auto px-5 sm:px-8 py-10">
+        <Paper className="p-8 sm:p-10">
+          <p className="font-mono text-[11px] tracking-[0.25em] text-seal mb-4">ROUTING</p>
+          <h1 className="font-mono text-2xl sm:text-3xl font-semibold leading-snug mb-3">Share it</h1>
+          <p className="text-paper-ink/70 mb-8 leading-relaxed">
+            Send this to everyone you want at <span className="font-medium">"{event?.title ?? '…'}"</span>.
+            Their agents join the negotiation the moment they open it.
+          </p>
 
-        <div className="flex gap-2 mb-8">
-          <input
-            readOnly
-            value={shareLink}
-            className="flex-1 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 bg-transparent text-sm font-mono"
-          />
-          <button
-            onClick={handleCopy}
-            className="rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm hover:border-violet-400 transition"
-          >
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-        </div>
+          <div className="border border-paper-ink/20 rounded-sm px-4 py-3 flex items-center gap-3 mb-8 bg-paper-dim/40">
+            <span className="flex-1 font-mono text-xs sm:text-sm truncate">{shareLink || '…'}</span>
+            <button
+              onClick={handleCopy}
+              className="font-mono text-xs tracking-wider shrink-0 text-seal hover:text-seal-dim transition-colors"
+            >
+              {copied ? 'COPIED ✓' : 'COPY'}
+            </button>
+          </div>
 
-        <button
-          onClick={() => navigate(`/event/${eventId}/upload`)}
-          className="w-full bg-violet-600 text-white rounded-lg px-4 py-3 hover:bg-violet-700 transition"
-        >
-          Continue — set up my agent
-        </button>
+          <Button onClick={() => navigate(`/event/${eventId}/upload`)} className="w-full">
+            CONTINUE — SET UP MY AGENT →
+          </Button>
+        </Paper>
       </div>
     </div>
   )

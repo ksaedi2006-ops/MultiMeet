@@ -40,6 +40,18 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
     return user
 
 
+@router.patch("/{user_id}", response_model=schemas.UserOut)
+def update_user(user_id: str, payload: schemas.UserUpdate, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if payload.name is not None and payload.name.strip():
+        user.name = payload.name.strip()
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 @router.post("/{user_id}/preferences", response_model=schemas.PreferenceOut)
 def add_preference(user_id: str, payload: schemas.PreferenceCreate, db: Session = Depends(get_db)):
     from app.agents.client import call_agent, PERSONAL_AGENT_MODEL
