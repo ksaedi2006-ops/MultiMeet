@@ -50,7 +50,9 @@ async def run_negotiation(db: Session, meeting_request: models.MeetingRequest) -
         {"type": "negotiation_started", "participants": len(group_members), "slots": len(slots)},
     )
 
-    agent_responses: list[dict] = []
+    # Load all users/preferences up front (on the main-loop DB session) so the concurrent
+    # agent calls below don't touch the session from worker threads.
+    members_info = []
     for member in group_members:
         user = db.query(models.User).filter(models.User.id == member.user_id).one()
         prefs = (
@@ -58,6 +60,9 @@ async def run_negotiation(db: Session, meeting_request: models.MeetingRequest) -
             .filter(models.UserPreference.user_id == user.id, models.UserPreference.active == True)  # noqa: E712
             .all()
         )
+        members_info.append((user, prefs))
+
+    async def evaluate_for(user: models.User, prefs: list[models.UserPreference]) -> tuple[models.User, dict]:
         response = await asyncio.to_thread(
             evaluate_slots,
             user_id=user.id,
@@ -70,6 +75,11 @@ async def run_negotiation(db: Session, meeting_request: models.MeetingRequest) -
             meeting_details=meeting_details,
             slots=slots,
         )
+        return user, response
+
+    agent_responses: list[dict] = []
+    for coro in asyncio.as_completed([evaluate_for(user, prefs) for user, prefs in members_info]):
+        user, response = await coro
         agent_responses.append(response)
 
         db.add(
