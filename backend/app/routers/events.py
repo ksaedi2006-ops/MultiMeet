@@ -78,7 +78,7 @@ def get_event_by_invite(invite_code: str, db: Session = Depends(get_db)):
 
 
 @router.post("/join/{invite_code}", response_model=schemas.EventOut)
-def join_event(invite_code: str, user_id: str, db: Session = Depends(get_db)):
+async def join_event(invite_code: str, user_id: str, db: Session = Depends(get_db)):
     group = db.query(models.Group).filter(models.Group.invite_code == invite_code).first()
     if not group:
         raise HTTPException(status_code=404, detail="Invalid invite code")
@@ -92,7 +92,8 @@ def join_event(invite_code: str, user_id: str, db: Session = Depends(get_db)):
         .filter(models.GroupMember.group_id == group.id, models.GroupMember.user_id == user_id)
         .first()
     )
-    if not existing_member:
+    just_joined = existing_member is None
+    if just_joined:
         db.add(models.GroupMember(group_id=group.id, user_id=user_id, role="member"))
         db.commit()
 
@@ -104,6 +105,18 @@ def join_event(invite_code: str, user_id: str, db: Session = Depends(get_db)):
     )
     if not meeting:
         raise HTTPException(status_code=404, detail="No event found for this group")
+
+    if just_joined:
+        all_members = db.query(models.GroupMember).filter(models.GroupMember.group_id == group.id).all()
+        await manager.broadcast(
+            meeting.id,
+            {
+                "type": "member_joined",
+                "user_id": user_id,
+                "user_name": user.name,
+                "member_count": len(all_members),
+            },
+        )
 
     return _to_event_out(meeting, group)
 

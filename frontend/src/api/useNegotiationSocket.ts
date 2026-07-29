@@ -6,6 +6,7 @@ export type NegotiationEvent =
   | { type: 'agent_response'; user_id: string; user_name: string; notes: string; top_slot: { datetime: string; satisfaction: number } | null }
   | { type: 'mediator_decision'; decision: Record<string, unknown> }
   | { type: 'member_ready'; user_id: string; user_name: string; ready_count: number; total_count: number }
+  | { type: 'member_joined'; user_id: string; user_name: string; member_count: number }
 
 export function useNegotiationSocket(meetingId: string | null) {
   const [events, setEvents] = useState<NegotiationEvent[]>([])
