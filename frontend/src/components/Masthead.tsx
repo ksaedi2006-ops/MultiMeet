@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-function formatUTC(d: Date) {
+function formatZulu(d: Date) {
   const hh = String(d.getUTCHours()).padStart(2, '0')
   const mm = String(d.getUTCMinutes()).padStart(2, '0')
   const ss = String(d.getUTCSeconds()).padStart(2, '0')
@@ -9,21 +9,23 @@ function formatUTC(d: Date) {
 }
 
 export default function Masthead() {
-  const [time, setTime] = useState(() => formatUTC(new Date()))
+  const [time, setTime] = useState(() => formatZulu(new Date()))
 
   useEffect(() => {
-    const id = setInterval(() => setTime(formatUTC(new Date())), 1000)
+    const id = setInterval(() => setTime(formatZulu(new Date())), 1000)
     return () => clearInterval(id)
   }, [])
 
   return (
-    <header className="border-b border-ink-line px-5 sm:px-8 py-4 flex items-center justify-between">
+    <header className="border-b border-board-line px-5 sm:px-8 py-4 flex items-center justify-between">
       <Link to="/" className="flex items-center gap-2.5 group">
-        <span className="w-2 h-2 rounded-full bg-seal group-hover:bg-brass transition-colors" />
-        <span className="font-mono tracking-[0.2em] text-sm font-medium">MEETMIND</span>
+        <span className="w-2.5 h-2.5 rounded-full bg-clearance group-hover:bg-amber transition-colors" />
+        <span className="font-display font-bold tracking-[0.08em] text-lg leading-none">
+          MEET<span className="text-clearance group-hover:text-amber transition-colors">MIND</span>
+        </span>
       </Link>
       <span className="font-mono text-xs text-mist tracking-wider tabular-nums hidden sm:inline">
-        {time} UTC
+        {time}Z
       </span>
     </header>
   )

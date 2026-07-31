@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getOrCreateUserId, uploadCalendar } from '../api/client'
 import StepHeader from '../components/StepHeader'
-import Paper from '../components/Paper'
+import Strip from '../components/Strip'
 import Button from '../components/Button'
 
 export default function UploadCalendar() {
@@ -38,12 +38,12 @@ export default function UploadCalendar() {
     <div>
       <StepHeader step={2} />
       <div className="max-w-xl mx-auto px-5 sm:px-8 py-10">
-        <Paper className="p-8 sm:p-10">
-          <p className="font-mono text-[11px] tracking-[0.25em] text-seal mb-4">EVIDENCE</p>
-          <h1 className="font-mono text-2xl sm:text-3xl font-semibold leading-snug mb-3">
+        <Strip className="p-8 sm:p-10">
+          <p className="font-mono text-[11px] tracking-[0.25em] text-clearance mb-4">MANIFEST</p>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl leading-tight mb-3 tracking-tight">
             Upload your calendar
           </h1>
-          <p className="text-paper-ink/70 mb-8 leading-relaxed">
+          <p className="text-strip-ink/70 mb-8 leading-relaxed">
             Your agent uses this to know your hard blocks — classes, work, plans already made. Export an
             .ics file from Google, Outlook, or Apple Calendar and drop it here.
           </p>
@@ -53,7 +53,7 @@ export default function UploadCalendar() {
             tabIndex={0}
             onClick={() => fileInput.current?.click()}
             onKeyDown={(e) => e.key === 'Enter' && fileInput.current?.click()}
-            className="border-2 border-dashed border-paper-ink/25 rounded-sm p-10 text-center cursor-pointer hover:border-seal transition-colors"
+            className="border-2 border-dashed border-strip-ink/25 rounded-sm p-10 text-center cursor-pointer hover:border-clearance transition-colors"
           >
             <input
               ref={fileInput}
@@ -66,13 +66,13 @@ export default function UploadCalendar() {
               <p className="font-mono text-sm text-mist">READING FILE…</p>
             ) : fileName ? (
               <p className="font-mono text-sm">
-                <span className="text-brass">✓</span> {fileName} — {parsedCount} events parsed
+                <span className="text-amber">✓</span> {fileName} — {parsedCount} events parsed
               </p>
             ) : (
-              <p className="font-mono text-sm text-paper-ink/50">CLICK TO CHOOSE AN .ICS FILE</p>
+              <p className="font-mono text-sm text-strip-ink/50">CLICK TO CHOOSE AN .ICS FILE</p>
             )}
           </div>
-          {error && <p className="mt-3 font-mono text-sm text-seal">{error}</p>}
+          {error && <p className="mt-3 font-mono text-sm text-clearance">{error}</p>}
 
           <div className="flex items-center gap-6 mt-8">
             <Button onClick={handleContinue} className="flex-1">
@@ -82,7 +82,7 @@ export default function UploadCalendar() {
               SKIP FOR NOW
             </Button>
           </div>
-        </Paper>
+        </Strip>
       </div>
     </div>
   )

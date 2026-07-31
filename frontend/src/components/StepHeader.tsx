@@ -1,4 +1,4 @@
-const STEPS = ['Create', 'Share', 'Calendar', 'Agent', 'Negotiate']
+const STEPS = ['Flight Plan', 'Frequency', 'Manifest', 'Briefing', 'Approach']
 
 export default function StepHeader({ step }: { step: number }) {
   return (
@@ -9,16 +9,16 @@ export default function StepHeader({ step }: { step: number }) {
             <span
               className={
                 i === step
-                  ? 'text-seal font-semibold'
+                  ? 'text-clearance font-semibold'
                   : i < step
-                    ? 'text-brass'
+                    ? 'text-amber'
                     : 'text-mist/50'
               }
             >
               {i < step ? '✓ ' : ''}
               {label.toUpperCase()}
             </span>
-            {i < STEPS.length - 1 && <span className="text-ink-line mx-1">/</span>}
+            {i < STEPS.length - 1 && <span className="text-board-line mx-1">/</span>}
           </div>
         ))}
       </div>

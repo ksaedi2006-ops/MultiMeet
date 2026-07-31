@@ -4,12 +4,12 @@ import { motion } from 'framer-motion'
 type Variant = 'primary' | 'ghost' | 'ghost-ink' | 'quiet'
 
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-seal text-paper hover:bg-seal-dim disabled:bg-seal/40',
-  // for use on paper (light) surfaces
-  ghost: 'border border-paper-ink/25 text-paper-ink hover:border-paper-ink/60 disabled:opacity-40',
-  // for use directly on the dark page background
-  'ghost-ink': 'border border-paper/20 text-paper hover:border-brass hover:text-brass disabled:opacity-40',
-  quiet: 'text-mist hover:text-brass disabled:opacity-40',
+  primary: 'bg-clearance text-strip hover:bg-clearance-dim disabled:bg-clearance/40',
+  // for use on strip (light manila) surfaces
+  ghost: 'border border-strip-ink/25 text-strip-ink hover:border-strip-ink/60 disabled:opacity-40',
+  // for use directly on the dark board background
+  'ghost-ink': 'border border-strip/20 text-strip hover:border-amber hover:text-amber disabled:opacity-40',
+  quiet: 'text-mist hover:text-amber disabled:opacity-40',
 }
 
 // framer-motion's HTMLMotionProps redefines drag/animation event handlers with

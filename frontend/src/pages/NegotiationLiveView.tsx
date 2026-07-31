@@ -10,7 +10,7 @@ import {
 } from '../api/client'
 import { useNegotiationSocket } from '../api/useNegotiationSocket'
 import StepHeader from '../components/StepHeader'
-import Seal from '../components/Seal'
+import Stamp from '../components/Stamp'
 
 function initials(name: string) {
   const parts = name.trim().split(/\s+/)
@@ -78,38 +78,38 @@ export default function NegotiationLiveView() {
     <div>
       <StepHeader step={4} />
       <div className="max-w-2xl mx-auto px-5 sm:px-8 py-10">
-        <p className="font-mono text-[11px] tracking-[0.25em] text-seal mb-2">LIVE WIRE</p>
+        <p className="font-mono text-[11px] tracking-[0.25em] text-clearance mb-2">APPROACH</p>
         <div className="flex items-baseline justify-between mb-8">
-          <h1 className="font-mono text-2xl sm:text-3xl font-semibold">Negotiation</h1>
+          <h1 className="font-display font-bold text-3xl sm:text-4xl tracking-tight">Negotiation</h1>
           <span className="flex items-center gap-2 font-mono text-xs text-mist">
             <span
-              className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-brass animate-pulse' : 'bg-mist'}`}
+              className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-amber animate-pulse' : 'bg-mist'}`}
             />
-            {connected ? 'CONNECTED' : 'CONNECTING…'}
+            {connected ? 'ON FREQUENCY' : 'ACQUIRING…'}
           </span>
         </div>
 
-        {!loaded && <p className="font-mono text-sm text-mist">Loading roster…</p>}
+        {!loaded && <p className="font-mono text-sm text-mist">Loading strip board…</p>}
 
         {loaded && !negotiationStarted && (
-          <div className="border border-ink-line rounded-sm p-6 mb-8">
+          <div className="border border-board-line rounded-sm p-6 mb-8">
             <p className="font-mono text-xs tracking-widest text-mist mb-4">
-              WAITING FOR EVERYONE TO CHECK IN · {readyCount}/{members.length}
+              HOLDING PATTERN · READY {readyCount}/{members.length}
             </p>
             <div className="flex flex-col gap-3">
               {members.map((m) => (
                 <div key={m.user_id} className="flex items-center gap-3">
                   <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${m.ready ? 'bg-brass' : 'bg-mist/30'}`}
+                    className={`w-2 h-2 rounded-full shrink-0 ${m.ready ? 'bg-amber' : 'bg-mist/30'}`}
                   />
                   <span className="font-mono text-sm">{m.name || m.user_id.slice(0, 8)}</span>
                   <span className="font-mono text-[10px] text-mist ml-auto">
-                    {m.ready ? 'CHECKED IN' : 'BRIEFING AGENT…'}
+                    {m.ready ? 'CHECKED IN' : 'IN BRIEFING'}
                   </span>
                 </div>
               ))}
             </div>
-            <p className="text-xs text-paper/50 mt-5 leading-relaxed">
+            <p className="text-xs text-strip/50 mt-5 leading-relaxed">
               Negotiation begins the moment the last agent checks in — nobody's decision gets made
               before everyone's had a say.
             </p>
@@ -129,9 +129,9 @@ export default function NegotiationLiveView() {
                     initial={{ opacity: 0, scale: 0.5 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                    className="flex items-center gap-2 pr-3 rounded-full border border-brass/40 bg-ink-raised"
+                    className="flex items-center gap-2 pr-3 rounded-full border border-amber/40 bg-board-raised"
                   >
-                    <span className="w-7 h-7 rounded-full bg-brass/20 border border-brass text-brass flex items-center justify-center font-mono text-[10px] font-semibold">
+                    <span className="w-7 h-7 rounded-full bg-amber/20 border border-amber text-amber flex items-center justify-center font-mono text-[10px] font-semibold">
                       {name ? initials(name) : ''}
                     </span>
                     <span className="font-mono text-xs">{name}</span>
@@ -140,17 +140,17 @@ export default function NegotiationLiveView() {
               </AnimatePresence>
             </div>
 
-            <div className="border border-ink-line rounded-sm overflow-hidden mb-8">
-              <div className="bg-ink-raised px-4 py-2 border-b border-ink-line font-mono text-[10px] tracking-[0.2em] text-mist">
-                WIRE TRANSCRIPT
+            <div className="border border-board-line rounded-sm overflow-hidden mb-8">
+              <div className="bg-board-raised px-4 py-2 border-b border-board-line font-mono text-[10px] tracking-[0.2em] text-mist">
+                TOWER LOG
               </div>
-              <div className="max-h-64 overflow-y-auto bg-paper text-paper-ink px-4 py-3 font-mono text-xs">
+              <div className="max-h-64 overflow-y-auto bg-strip text-strip-ink px-4 py-3 font-mono text-xs">
                 {events.length > 0
                   ? events
                       .filter((e) => e.type !== 'member_ready')
                       .map((e, i) => (
-                        <div key={i} className={`py-1.5 flex gap-3 ${i > 0 ? 'border-t border-paper-ink/10' : ''}`}>
-                          <span className="text-paper-ink/40 shrink-0">{stamps[i] ?? ''}</span>
+                        <div key={i} className={`py-1.5 flex gap-3 ${i > 0 ? 'border-t border-strip-ink/10' : ''}`}>
+                          <span className="text-strip-ink/40 shrink-0">{stamps[i] ?? ''}</span>
                           <span>
                             {e.type === 'negotiation_started' && (
                               <>
@@ -166,14 +166,14 @@ export default function NegotiationLiveView() {
                               </>
                             )}
                             {e.type === 'mediator_decision' && (
-                              <span className="text-seal font-semibold">Mediator reached a decision.</span>
+                              <span className="text-clearance font-semibold">Mediator reached a decision.</span>
                             )}
                           </span>
                         </div>
                       ))
                   : pastResponses.map((r, i) => (
-                      <div key={i} className={`py-1.5 flex gap-3 ${i > 0 ? 'border-t border-paper-ink/10' : ''}`}>
-                        <span className="text-paper-ink/40 shrink-0">—</span>
+                      <div key={i} className={`py-1.5 flex gap-3 ${i > 0 ? 'border-t border-strip-ink/10' : ''}`}>
+                        <span className="text-strip-ink/40 shrink-0">—</span>
                         <span>
                           <span className="font-semibold">{r.user_name}'s agent</span> — top slot{' '}
                           {r.top_slot?.datetime ? new Date(r.top_slot.datetime).toLocaleString() : '—'} (
@@ -191,15 +191,15 @@ export default function NegotiationLiveView() {
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="border-2 border-seal rounded-sm p-6 sm:p-7 relative"
+            className="border-2 border-clearance rounded-sm p-6 sm:p-7 relative"
           >
             <div className="flex items-start gap-4">
-              <Seal size={40} />
+              <Stamp label={decision.chosen_datetime ? 'CLEARED' : 'HOLD'} />
               <div className="min-w-0">
-                <p className="font-mono text-[11px] tracking-[0.25em] text-seal mb-1">
-                  {decision.chosen_datetime ? 'DECIDED' : 'ESCALATED'}
+                <p className="font-mono text-[11px] tracking-[0.25em] text-clearance mb-1">
+                  {decision.chosen_datetime ? 'CLEARANCE GRANTED' : 'HOLD FOR INSTRUCTIONS'}
                 </p>
-                <h2 className="font-mono text-lg sm:text-xl font-semibold mb-2 truncate">
+                <h2 className="font-display font-bold text-xl sm:text-2xl mb-2 truncate tracking-tight">
                   {decision.chosen_datetime
                     ? new Date(decision.chosen_datetime).toLocaleString(undefined, {
                         weekday: 'short',
@@ -210,13 +210,13 @@ export default function NegotiationLiveView() {
                       })
                     : 'No slot satisfied everyone — flagged for humans'}
                 </h2>
-                <p className="text-sm text-paper/70 mb-4 leading-relaxed">{decision.explanation}</p>
+                <p className="text-sm text-strip/70 mb-4 leading-relaxed">{decision.explanation}</p>
                 {Object.keys(decision.satisfaction_breakdown).length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(decision.satisfaction_breakdown).map(([uid, score]) => (
                       <span
                         key={uid}
-                        className="font-mono text-[10px] tracking-wide rounded-full border border-brass/40 bg-brass/10 text-brass px-3 py-1"
+                        className="font-mono text-[10px] tracking-wide rounded-full border border-amber/40 bg-amber/10 text-amber px-3 py-1"
                       >
                         {nameFor(uid)} · {score}%
                       </span>

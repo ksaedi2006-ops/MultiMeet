@@ -1,17 +1,18 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #12141c;
-  --color-ink-raised: #1a1e29;
-  --color-ink-line: #2a3040;
-  --color-paper: #f3eee1;
-  --color-paper-dim: #e7e0cd;
-  --color-paper-ink: #2b2a25;
-  --color-seal: #c23b2a;
-  --color-seal-dim: #8f2b1f;
-  --color-brass: #c79a46;
-  --color-mist: #8b94a8;
+  --color-board: #16212c;
+  --color-board-raised: #1e2e3b;
+  --color-board-line: #2f4152;
+  --color-strip: #ecdfc2;
+  --color-strip-dim: #e0d0a8;
+  --color-strip-ink: #2a2015;
+  --color-clearance: #d4551c;
+  --color-clearance-dim: #a13f13;
+  --color-amber: #e8a93a;
+  --color-mist: #7c93a8;
 
+  --font-display: "Big Shoulders Display", "IBM Plex Sans", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
 }
@@ -20,28 +21,30 @@
   color-scheme: dark;
 }
 
-* {
-  border-color: var(--color-ink-line);
+@layer base {
+  * {
+    border-color: var(--color-board-line);
+  }
 }
 
 body {
   margin: 0;
-  background: var(--color-ink);
-  color: var(--color-paper);
+  background: var(--color-board);
+  color: var(--color-strip);
   font-family: var(--font-sans);
   background-image:
-    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(194, 59, 42, 0.10), transparent),
-    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(199, 154, 70, 0.07), transparent);
+    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(212, 85, 28, 0.08), transparent),
+    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(232, 169, 58, 0.06), transparent);
   background-attachment: fixed;
 }
 
 ::selection {
-  background: var(--color-seal);
-  color: var(--color-paper);
+  background: var(--color-clearance);
+  color: var(--color-strip);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-brass);
+  outline: 2px solid var(--color-amber);
   outline-offset: 2px;
 }
 

@@ -77,8 +77,12 @@ export default function AgentChat() {
     <div>
       <StepHeader step={3} />
       <div className="max-w-xl mx-auto px-5 sm:px-8 py-8 flex flex-col h-[75vh]">
-        <p className="font-mono text-[11px] tracking-[0.25em] text-seal mb-2">BRIEFING</p>
-        <h1 className="font-mono text-xl sm:text-2xl font-semibold mb-6">Talk to your agent</h1>
+        <p className="font-mono text-[11px] tracking-[0.25em] text-clearance mb-2">
+          PRE-FLIGHT BRIEFING
+        </p>
+        <h1 className="font-display font-bold text-2xl sm:text-3xl mb-6 tracking-tight">
+          Talk to your agent
+        </h1>
 
         <div ref={logRef} className="flex-1 overflow-y-auto flex flex-col gap-3 mb-4 pr-1">
           {messages.map((m, i) => (
@@ -91,7 +95,7 @@ export default function AgentChat() {
             >
               <p
                 className={`font-mono text-[10px] tracking-widest mb-1 ${
-                  m.from === 'user' ? 'text-right text-mist' : 'text-brass'
+                  m.from === 'user' ? 'text-right text-mist' : 'text-amber'
                 }`}
               >
                 {m.from === 'user' ? 'YOU' : 'AGENT'}
@@ -99,8 +103,8 @@ export default function AgentChat() {
               <div
                 className={`rounded-sm px-4 py-2.5 text-sm leading-relaxed ${
                   m.from === 'agent'
-                    ? 'bg-ink-raised border-l-2 border-brass'
-                    : 'bg-seal text-paper'
+                    ? 'bg-board-raised border-l-2 border-amber'
+                    : 'bg-clearance text-strip'
                 }`}
               >
                 {m.text}
@@ -109,15 +113,15 @@ export default function AgentChat() {
           ))}
           {sending && (
             <div className="self-start">
-              <p className="font-mono text-[10px] tracking-widest mb-1 text-brass">AGENT</p>
-              <div className="rounded-sm px-4 py-2.5 text-sm bg-ink-raised border-l-2 border-brass text-mist">
+              <p className="font-mono text-[10px] tracking-widest mb-1 text-amber">AGENT</p>
+              <div className="rounded-sm px-4 py-2.5 text-sm bg-board-raised border-l-2 border-amber text-mist">
                 thinking…
               </div>
             </div>
           )}
         </div>
 
-        <form onSubmit={handleSend} className="flex gap-3 mb-5 border-t border-ink-line pt-4">
+        <form onSubmit={handleSend} className="flex gap-3 mb-5 border-t border-board-line pt-4">
           <input
             className="flex-1 bg-transparent outline-none text-sm placeholder:text-mist/60"
             placeholder="I hate mornings, don't schedule before 11…"
@@ -128,7 +132,7 @@ export default function AgentChat() {
         </form>
 
         <Button variant="ghost-ink" onClick={handleReady} disabled={checkingIn} className="w-full">
-          {checkingIn ? 'CHECKING IN…' : "I'M READY →"}
+          {checkingIn ? 'CHECKING IN…' : 'CHECK IN →'}
         </Button>
         <p className="font-mono text-[11px] text-mist mt-3 text-center">
           Negotiation starts once everyone has checked in.
