@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -9,6 +9,7 @@ import Stamp from '../components/Stamp'
 import { EASE } from '../lib/motion'
 import { buildModel } from '../tower/model'
 import BayStrip, { Box } from './BayStrip'
+import { play, useGrowth } from '../lib/sound'
 import { useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
 
@@ -64,6 +65,7 @@ export default function InviteStage() {
   }, [events, event])
 
   const ready = members.filter((m) => m.ready).length
+  useGrowth(members.length, useCallback(() => play('blip'), []))
   useScopeFeed({
     model,
     label: `${members.length} people have joined; ${ready} are ready. Their agents wait in the middle of the scope.`,

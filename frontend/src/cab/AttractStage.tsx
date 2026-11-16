@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -11,7 +11,7 @@ import RadioTicker from '../tower/RadioTicker'
 import { usePlayback } from '../tower/usePlayback'
 import Atis from './Atis'
 import BayStrip, { Box } from './BayStrip'
-import { useFixture, useScopeFeed } from './context'
+import { useCab, useFixture, useScopeFeed } from './context'
 import ChosenTime from '../tower/ChosenTime'
 
 const SIZES = [8, 16, 30] as const
@@ -57,6 +57,46 @@ export default function AttractStage() {
       landed && model.decision ? <ChosenTime decision={model.decision} timezone={model.timezone} /> : null,
     [landed, model.decision, model.timezone],
   )
+  // Idle tour: after 20 s without input, point at each person in turn so their tag shows
+  // what their agent is doing. Any pointer, key or scroll stops it (and restarts the clock).
+  const { setHighlight } = useCab()
+  const touring = useRef(false)
+  const agentIds = useMemo(() => model.agents.map((a) => a.id).join(','), [model.agents])
+  useEffect(() => {
+    const ids = agentIds ? agentIds.split(',') : []
+    if (!ids.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    let idle = 0
+    let step = 0
+    let timer = 0
+    const stop = () => {
+      idle = 0
+      if (touring.current) {
+        touring.current = false
+        setHighlight(null)
+      }
+    }
+    timer = window.setInterval(() => {
+      idle += 1
+      if (idle >= 20 && (idle - 20) % 3 === 0) {
+        touring.current = true
+        setHighlight(ids[step++ % ids.length])
+      }
+    }, 1000)
+    const opts = { passive: true } as const
+    window.addEventListener('pointermove', stop, opts)
+    window.addEventListener('pointerdown', stop, opts)
+    window.addEventListener('keydown', stop)
+    window.addEventListener('wheel', stop, opts)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('pointermove', stop)
+      window.removeEventListener('pointerdown', stop)
+      window.removeEventListener('keydown', stop)
+      window.removeEventListener('wheel', stop)
+      if (touring.current) setHighlight(null)
+    }
+  }, [agentIds, setHighlight])
+
   useScopeFeed({
     model, onLanded, overlay,
     label: `Replay of ${model.agents.length} people's agents negotiating a meeting time.`,

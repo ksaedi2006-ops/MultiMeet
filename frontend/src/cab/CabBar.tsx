@@ -2,12 +2,14 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { EASE } from '../lib/motion'
+import { useSoundSetting } from '../lib/sound'
 import type { StageSpec } from './stages'
 
 const local = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
 /** The slim bar along the top: the product, the current step in plain words, the local time. */
 export default function CabBar({ stage }: { stage: StageSpec }) {
+  const [sound, setSound] = useSoundSetting()
   const [now, setNow] = useState(() => local(new Date()))
   useEffect(() => {
     const id = window.setInterval(() => setNow(local(new Date())), 15000)
@@ -34,6 +36,16 @@ export default function CabBar({ stage }: { stage: StageSpec }) {
           </motion.span>
         </AnimatePresence>
       </div>
+      <button type="button" onClick={() => setSound(!sound)} aria-pressed={sound}
+        aria-label={sound ? 'Sound is on; turn it off' : 'Sound is off; turn it on'}
+        className={`flex items-center gap-2 px-4 border-l border-board-line transition-colors ${sound ? 'text-amber' : 'text-mist hover:text-strip'}`}>
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5"
+          strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M2.5 6h2.5l3.5-3v10l-3.5-3H2.5z" />
+          {sound ? <path d="M11 5.5a3.5 3.5 0 0 1 0 5M12.8 3.8a6 6 0 0 1 0 8.4" /> : <path d="m11 6 4 4m0-4-4 4" />}
+        </svg>
+        <span className="hidden md:inline font-sans text-[13px] tracking-normal">{sound ? 'Sound on' : 'Sound off'}</span>
+      </button>
       <span className="hidden sm:flex items-center px-4 lg:px-5 border-l border-board-line text-mist tabular-nums">{now}</span>
     </header>
   )

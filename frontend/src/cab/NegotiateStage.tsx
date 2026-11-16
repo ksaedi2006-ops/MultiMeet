@@ -12,6 +12,7 @@ import StatusBar from '../tower/StatusBar'
 import StripBoard from '../tower/StripBoard'
 import TowerLog from '../tower/TowerLog'
 import { usePlayback } from '../tower/usePlayback'
+import { play, useGrowth } from '../lib/sound'
 import { useCab, useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
 
@@ -49,7 +50,12 @@ export default function NegotiateStage() {
     if (!model.decision) setLanded(false)
   }, [model.decision])
 
-  const onLanded = useCallback(() => setLanded(true), [])
+  const onLanded = useCallback(() => {
+    setLanded(true)
+    play('chime')
+  }, [])
+  useGrowth(playback.model.slots.filter((s) => s.closed).length, useCallback((n: number) => play('cross', n), []))
+  useGrowth(playback.model.asks.length, useCallback(() => play('blip'), []))
   const decided = Boolean(model.decision && landed)
   const overlay = useMemo(
     () => (decided && model.decision ? <ChosenTime decision={model.decision} timezone={model.timezone} /> : null),

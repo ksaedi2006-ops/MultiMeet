@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -11,6 +11,7 @@ import { useEventLog } from '../api/useEventLog'
 import WeekView, { mondayOf } from '../components/WeekView'
 import { EASE } from '../lib/motion'
 import { buildModel } from '../tower/model'
+import { play, useGrowth } from '../lib/sound'
 import { useCab, useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
 
@@ -89,6 +90,7 @@ export default function CalendarStage() {
   }, [log, event, busyEvents, viewerId])
 
   const closed = model.slots.filter((s) => s.closed).length
+  useGrowth(closed, useCallback((n: number) => play('cross', n), []))
   useScopeFeed({
     model,
     label: `${closed} of ${model.slots.length} possible times are ruled out by your calendar.`,
