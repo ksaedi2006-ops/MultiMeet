@@ -182,3 +182,29 @@ Each is assessed separately for each n unless stated otherwise.
 | T1 | Translation | Reported, with no threshold. |
 
 Ablations and Ours-d are reported descriptively, with no thresholds.
+
+## Amendment 1 (2026-11-16, before any evaluation results)
+
+**Observed.** A pilot of the instance generator only, with no mechanism run and no
+metric computed, produced very small feasible sets: 2 to 23 slots, and 2 to 4 at n = 8.
+Students from `app/sample.py` have mostly hard calendars (courses, labs, shifts), so
+"density" was nearly all hard. The research report's instance design expects roughly
+15 to 80 feasible slots. With 2 to 4 options every mechanism picks nearly the same slot,
+which would flatter Ours.
+
+**Changed.**
+
+- Each person's busy time is held at 40% hard, the same share already preregistered for
+  the random busy blocks.
+- Hard items are reclassified as movable at random until that share holds. This mirrors
+  what `app/sample.py`'s crowd-thinning does.
+
+**Result of the pilot after the change (60 instances per n).** Median feasible-set size:
+
+| n | median | range |
+|---|---|---|
+| 3 | 27 | 6 to 46 |
+| 5 | 16 | 4 to 43 |
+| 8 | 9 | 2 to 32 |
+
+Feasible-set sizes are reported with the results. Nothing else changed.
