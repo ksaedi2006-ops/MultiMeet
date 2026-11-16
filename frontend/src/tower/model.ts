@@ -1,5 +1,5 @@
 import type { LogEvent, MemberPayload, RankedInfo, SlotInfo } from '../api/events'
-import { blockerPhrase, fullTime } from '../lib/timeLabels'
+import { blockerPhrase, fullTime, plainTimes } from '../lib/timeLabels'
 
 export type Phase = 'holding' | 'filtering' | 'scoring' | 'asking' | 'decided' | 'escalated' | 'failed'
 
@@ -144,7 +144,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
   const m: TowerModel = { ...model, lastSeq: e.seq }
   const sign = (id: string) => m.agents.find((a) => a.id === id)?.callsign ?? 'Someone'
   const line = (l: Omit<LogLine, 'seq' | 'at' | 'round'>) => {
-    m.log = [...m.log, { seq: e.seq, at: e.at, round: m.round, ...l }]
+    m.log = [...m.log, { seq: e.seq, at: e.at, round: m.round, ...l, text: plainTimes(l.text) }]
   }
   const slotLabel = (id: string) => m.slots.find((s) => s.id === id)?.label ?? id
 

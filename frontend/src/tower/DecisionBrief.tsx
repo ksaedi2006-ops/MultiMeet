@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { errorMessage, icsUrl, sendRsvp } from '../api/client'
+import { plainTimes } from '../lib/timeLabels'
 import type { TowerModel } from './model'
 
 interface Props {
@@ -46,20 +47,23 @@ export default function DecisionBrief({ eventId, title, model, viewerId }: Props
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       className="bg-strip text-strip-ink border-t-4 border-clearance px-5 py-5 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.8)]"
     >
-      <h2 className="font-display font-bold text-3xl leading-[1.05] tracking-tight">
+      <h2 className="font-display font-bold text-3xl leading-[1.05] tracking-tight text-balance">
         {when ?? 'No time worked for everyone'}
       </h2>
       {d.status === 'converged' && d.minScore !== null && (
         <dl className="mt-3 flex gap-6 font-mono">
           <div>
             <dt className="text-[11px] tracking-[0.14em] text-strip-ink/65">LEAST HAPPY</dt>
-            <dd className="text-2xl font-semibold tabular-nums leading-tight">{d.minScore}</dd>
+            <dd className="text-2xl font-semibold tabular-nums leading-tight">{d.minScore}<span className="text-[13px] font-normal opacity-60">/100</span></dd>
           </div>
           <div>
             <dt className="text-[11px] tracking-[0.14em] text-strip-ink/65">AVERAGE</dt>
-            <dd className="text-2xl font-semibold tabular-nums leading-tight">{Math.round(d.avgScore ?? 0)}</dd>
+            <dd className="text-2xl font-semibold tabular-nums leading-tight">{Math.round(d.avgScore ?? 0)}<span className="text-[13px] font-normal opacity-60">/100</span></dd>
           </div>
         </dl>
+      )}
+      {d.status === 'converged' && d.minScore !== null && (
+        <p className="mt-1 text-[13px] text-strip-ink/65">Scores are out of 100: how much each person likes the time.</p>
       )}
       <p className="mt-3 text-[15px] leading-relaxed text-strip-ink/85">{d.explanation}</p>
       {d.question && <p className="mt-3 text-[15px] font-medium">{d.question}</p>}
@@ -70,8 +74,8 @@ export default function DecisionBrief({ eventId, title, model, viewerId }: Props
           <ul className="mt-1.5 space-y-1">
             {d.compromises.map((c) => (
               <li key={c.user_id} className="flex justify-between gap-3 text-sm">
-                <span><span className="font-medium">{c.name}</span>: {c.gave_up}</span>
-                <span className="font-mono tabular-nums text-strip-ink/65">{c.score}</span>
+                <span><span className="font-medium">{c.name}</span>: {plainTimes(c.gave_up)}</span>
+                <span className="font-mono tabular-nums text-strip-ink/65 whitespace-nowrap">now {c.score}/100</span>
               </li>
             ))}
           </ul>
@@ -85,7 +89,7 @@ export default function DecisionBrief({ eventId, title, model, viewerId }: Props
             {d.alternatives.map((a) => (
               <li key={a.slot_id} className="flex justify-between gap-3">
                 <span>{a.label}</span>
-                <span className="font-mono tabular-nums text-strip-ink/65">least happy {a.min_score}</span>
+                <span className="font-mono tabular-nums text-strip-ink/65 whitespace-nowrap">worst-off {a.min_score}/100</span>
               </li>
             ))}
           </ol>
@@ -96,7 +100,7 @@ export default function DecisionBrief({ eventId, title, model, viewerId }: Props
         <div className="mt-5 flex flex-wrap gap-2">
           <a href={icsUrl(eventId)}
             className="inline-flex items-center h-10 px-4 rounded-[2px] bg-clearance text-strip font-mono text-xs tracking-wider hover:bg-clearance-dim transition-colors">
-            ADD TO CALENDAR (.ICS)
+            ADD TO MY CALENDAR
           </a>
           <a href={googleLink(title, d.slot.start, d.slot.end, d.explanation)} target="_blank" rel="noreferrer"
             className="inline-flex items-center h-10 px-4 rounded-[2px] border border-strip-ink/30 font-mono text-xs tracking-wider hover:border-strip-ink transition-colors">

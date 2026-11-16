@@ -177,7 +177,7 @@ export default function PreferencesStage() {
       <h2 className="font-display font-bold text-[1.6rem] leading-none text-strip">Your card</h2>
       <p className="mt-1.5 text-[14px] text-mist">What your agent will hold to. Everyone sees your card; only you see your agent’s reasoning.</p>
       <div className="mt-4">
-        <BayStrip holder="plan">
+        <BayStrip holder="person">
           <div className="flex flex-col gap-px">
             <Box>
               <span className="block font-display font-bold text-[24px] leading-none text-strip-ink">{myName}</span>
@@ -242,7 +242,7 @@ export default function PreferencesStage() {
           {prefs.map((p) => (
             <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: EASE }} className="flex flex-col gap-2">
-              <p className="self-end max-w-[90%] bg-clearance px-3.5 py-2.5 text-[15px] leading-snug text-strip rounded-[2px]">
+              <p className="self-end max-w-[90%] bg-strip px-3.5 py-2.5 text-[15px] leading-snug text-strip-ink rounded-[2px]">
                 {p.raw_text}
               </p>
               <div className="max-w-[90%] bg-board-raised px-3.5 py-2.5 rounded-[2px]">
@@ -258,7 +258,7 @@ export default function PreferencesStage() {
         </AnimatePresence>
         {pending && (
           <div className="flex flex-col gap-2">
-            <p className="self-end max-w-[90%] bg-clearance px-3.5 py-2.5 text-[15px] text-strip rounded-[2px]">{pending}</p>
+            <p className="self-end max-w-[90%] bg-strip px-3.5 py-2.5 text-[15px] text-strip-ink rounded-[2px]">{pending}</p>
             <p className="bg-board-raised px-3.5 py-3 rounded-[2px] flex gap-1.5 self-start" aria-label="Your agent is reading that">
               {[0, 1, 2].map((i) => (
                 <motion.span key={i} className="w-1.5 h-1.5 rounded-full bg-amber"

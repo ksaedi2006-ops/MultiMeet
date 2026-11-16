@@ -55,7 +55,7 @@ export default function StatusBar({ title, model, playback, connection }: Props)
         <span className={model.phase === 'decided' || model.phase === 'failed' || model.phase === 'escalated' ? 'text-signal' : 'text-amber'}>
           {phase}
         </span>
-        {playback.started && <span className="text-mist tabular-nums">T+{mmss(playback.clock)}</span>}
+        {playback.started && <span className="text-mist tabular-nums font-sans text-[13px] tracking-normal">{mmss(playback.clock)} in</span>}
         {model.backend === 'simulated' && (
           <span className="px-2 py-0.5 border border-mist/40 text-mist rounded-[2px] font-sans text-[12px] tracking-normal">Simulated agents, not live AI</span>
         )}
@@ -68,24 +68,27 @@ export default function StatusBar({ title, model, playback, connection }: Props)
               <Icon d={playback.playing ? ICONS.pause : ICONS.play} />
               <span className="hidden sm:inline">{playback.playing ? 'PAUSE' : 'PLAY'}</span>
             </button>
-            <button type="button" className={btn} onClick={() => playback.setSpeed(playback.speed === 1 ? 2 : 1)}
+            {!model.decision && <button type="button" className={btn} onClick={() => playback.setSpeed(playback.speed === 1 ? 2 : 1)}
               aria-label={`Playback speed ${playback.speed}x, switch to ${playback.speed === 1 ? 2 : 1}x`}>
               {playback.speed}×
-            </button>
+            </button>}
             <button type="button" className={btn} onClick={playback.replay} aria-label="Replay from the start">
               <Icon d={ICONS.replay} />
               <span className="hidden sm:inline">REPLAY</span>
             </button>
-            <button type="button" className={btn} onClick={playback.skipToEnd} disabled={playback.caughtUp}
-              aria-label="Skip to the latest state">
-              <Icon d={ICONS.skip} />
-              <span className="hidden sm:inline">SKIP</span>
-            </button>
+            {!model.decision && (
+              <button type="button" className={btn} onClick={playback.skipToEnd} disabled={playback.caughtUp}
+                aria-label="Skip to the latest state">
+                <Icon d={ICONS.skip} />
+                <span className="hidden sm:inline">SKIP</span>
+              </button>
+            )}
           </>
         )}
-        <span className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-mist pl-2 whitespace-nowrap" role="status">
-          <span className={`w-1.5 h-1.5 rounded-full ${live ? 'bg-amber' : 'bg-mist/50'}`} />
-          {live ? 'LIVE' : connection === 'closed' ? 'NOT FOUND' : 'CONNECTING'}
+        {/* Only say something about the connection when it isn't fine. */}
+        <span className="flex items-center gap-2 text-[13px] text-mist pl-2 whitespace-nowrap" role="status">
+          {!live && <span className="w-1.5 h-1.5 rounded-full bg-mist/50" />}
+          {live ? '' : connection === 'closed' ? 'Meeting not found' : connection === 'reconnecting' ? 'Reconnecting…' : 'Connecting…'}
         </span>
       </div>
     </div>

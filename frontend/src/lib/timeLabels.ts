@@ -34,5 +34,24 @@ export function fullTime(label: string): string {
 export function blockerPhrase(name: string, reason: string): string {
   const first = name.trim().split(/\s+/)[0] || name
   const rule = /^Rule: ?(.*)$/i.exec(reason)
-  return rule ? `${first}'s rule (${rule[1]})` : `${first}'s ${reason}`
+  return plainTimes(rule ? `${first}'s rule (${rule[1]})` : `${first}'s ${reason}`)
+}
+
+/** "Done by 17:00" -> "Done by 5 PM": 24-hour times inside free text, as the rest of the app reads them. */
+export function plainTimes(text: string): string {
+  return text.replace(/\b([01]?\d|2[0-3]):([0-5]\d)\b(?!\s?(?:AM|PM|am|pm))/g, (_, h: string, m: string) => {
+    const hour = Number(h)
+    const ap = hour < 12 ? 'AM' : 'PM'
+    const h12 = hour % 12 || 12
+    return m === '00' ? `${h12} ${ap}` : `${h12}:${m} ${ap}`
+  })
+}
+
+/** "Tap" on a touch screen, "Point at" with a mouse: the verb a legend should use. */
+export function pointVerb(): 'Tap' | 'Point at' {
+  try {
+    return window.matchMedia('(pointer: coarse)').matches ? 'Tap' : 'Point at'
+  } catch {
+    return 'Point at'
+  }
 }

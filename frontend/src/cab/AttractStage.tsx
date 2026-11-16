@@ -118,6 +118,18 @@ export default function AttractStage() {
     }
   }
 
+  const ticker = (where: string) => (
+    <section aria-label="What's happening in the replay" className={`px-5 lg:px-6 py-5 border-t border-board-line ${where}`}>
+      <div className="flex items-center justify-between gap-3 mb-3">
+        <span className="text-[13px] text-mist">Replay of a recorded run</span>
+        <span className="px-2 py-0.5 border border-mist/40 rounded-[2px] text-[12px] text-mist whitespace-nowrap">
+          {model.agents.length || 14} people · simulated agents
+        </span>
+      </div>
+      <RadioTicker model={model} />
+    </section>
+  )
+
   const strips = (
     <div className="px-4 lg:px-5 py-5">
       <h2 className="sr-only">Get started</h2>
@@ -183,21 +195,27 @@ export default function AttractStage() {
           </motion.li>
         ))}
       </motion.ul>
+    {ticker('lg:hidden mt-2 -mx-4')}
     </div>
   )
+
 
   const comms = (
     <div className="flex flex-col min-h-full">
       <Atis />
-      <section aria-label="What's happening in the replay" className="mt-auto px-5 lg:px-6 py-5 border-t border-board-line">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <span className="text-[13px] text-mist">Replay of a recorded run</span>
-          <span className="px-2 py-0.5 border border-mist/40 rounded-[2px] text-[12px] text-mist whitespace-nowrap">
-            {model.agents.length || 14} people · simulated agents
-          </span>
-        </div>
-        <RadioTicker model={model} />
-      </section>
+      {/* On a phone the cards are a long scroll away, so the two actions come right here. */}
+      <div className="lg:hidden px-5 pb-6 -mt-1 flex flex-wrap gap-2">
+        <button type="button" onClick={runSample} disabled={busy}
+          className="h-11 px-4 rounded-[2px] bg-clearance text-strip font-mono text-[12px] tracking-[0.14em] hover:bg-clearance-dim disabled:opacity-60 transition-colors">
+          {busy ? 'STARTING…' : 'RUN A SAMPLE'}
+        </button>
+        <button type="button" onClick={() => navigate('/new')}
+          className="h-11 px-4 rounded-[2px] border border-strip/50 text-strip font-mono text-[12px] tracking-[0.14em] hover:border-strip transition-colors">
+          SCHEDULE A MEETING
+        </button>
+        {error && <p role="alert" className="w-full text-sm text-signal">{error}</p>}
+      </div>
+      {ticker('hidden lg:block mt-auto')}
     </div>
   )
 

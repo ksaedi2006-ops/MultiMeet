@@ -10,6 +10,7 @@ import { emptyModel } from '../tower/model'
 import BayStrip, { Box } from './BayStrip'
 import { useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
+import { pointVerb } from '../lib/timeLabels'
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -73,7 +74,7 @@ export default function PlanStage() {
   useScopeFeed({
     model,
     label: `Preview of the ${slots.length} possible meeting times over ${days} days.`,
-    legend: 'Each mark on the ring is a time the agents will consider, grouped by day. Point at one to read it.',
+    legend: `Each mark on the ring is a time the agents will consider, grouped by day. ${pointVerb()} one to read it.`,
   })
 
   useEffect(() => {

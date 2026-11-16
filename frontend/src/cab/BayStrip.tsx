@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 
-export type Holder = 'plan' | 'sim' | 'event'
+export type Holder = 'plan' | 'sim' | 'event' | 'person'
 
 /** The coloured end of a card says what kind of card it is. */
 const HOLDER: Record<Holder, string> = {
   plan: 'bg-clearance text-strip',
   sim: 'bg-holder-steel text-strip',
   event: 'bg-holder-ochre text-strip',
+  person: 'bg-holder-person text-strip',
 }
 
 /** A ruled box on a card, with an optional small label in the corner. */
@@ -28,6 +29,7 @@ const ICONS: Record<Holder, string> = {
   plan: 'M3 3.5h10v9.5H3zM3 6.5h10M6 2v3M10 2v3M8 8.5v3M6.5 10h3',
   sim: 'M5 3.5v9l7-4.5z',
   event: 'M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM8 5v3l2 1.5',
+  person: 'M8 8a2.75 2.75 0 1 0 0-5.5A2.75 2.75 0 0 0 8 8zM3 13.5c.6-2.5 2.6-4 5-4s4.4 1.5 5 4',
 }
 
 interface Props {

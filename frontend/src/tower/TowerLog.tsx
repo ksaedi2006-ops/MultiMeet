@@ -10,9 +10,11 @@ const TONE: Record<LogLine['tone'], string> = {
   warn: 'text-signal',
 }
 
-function clock(at: string | null) {
-  if (!at) return '--:--:--'
-  return new Date(at).toLocaleTimeString([], { hour12: false })
+/** The server writes UTC timestamps without an offset; read them as UTC, show them in the meeting's zone. */
+function clock(at: string | null, tz: string | null) {
+  if (!at) return ''
+  const iso = /[zZ]|[+-]\d\d:?\d\d$/.test(at) ? at : `${at}Z`
+  return new Date(iso).toLocaleTimeString('en-US', { timeZone: tz ?? undefined, hour: 'numeric', minute: '2-digit' })
 }
 
 export default function TowerLog({ model, viewerId }: { model: TowerModel; viewerId: string | null }) {
@@ -45,7 +47,7 @@ export default function TowerLog({ model, viewerId }: { model: TowerModel; viewe
                 </div>
               )}
               <div className="grid grid-cols-[4.5rem_5.5rem_1fr] gap-x-2 py-0.5">
-                <span className="text-mist/70 tabular-nums">{clock(l.at)}</span>
+                <span className="text-mist/70 tabular-nums">{clock(l.at, model.timezone)}</span>
                 <span className={`${TONE[l.tone]} font-semibold truncate`}>{l.speaker}</span>
                 <span className="text-strip/90 font-sans text-[13px]">
                   {l.text}

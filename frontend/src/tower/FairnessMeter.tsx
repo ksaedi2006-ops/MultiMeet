@@ -22,7 +22,7 @@ export default function FairnessMeter({ model }: { model: TowerModel }) {
         <div className="absolute inset-x-0 top-3 h-px bg-board-line" />
         <div className="absolute top-1 bottom-1 w-px bg-mist/60" style={{ left: '50%' }} />
         <span className="absolute -bottom-3 font-mono text-[9px] text-mist -translate-x-1/2" style={{ left: '50%' }}>
-          OK AT 50
+          50 = OK
         </span>
         {min !== null && avg !== null && (
           <>
@@ -44,13 +44,14 @@ export default function FairnessMeter({ model }: { model: TowerModel }) {
       <dl className="grid grid-cols-2 gap-3 mt-5 font-mono">
         <div>
           <dt className="text-[11px] tracking-[0.14em] text-signal">LEAST HAPPY</dt>
-          <dd className="text-2xl font-semibold text-strip tabular-nums leading-tight">{min ?? '–'}</dd>
+          <dd className="text-2xl font-semibold text-strip tabular-nums leading-tight">{min ?? '–'}{min !== null && <span className="text-[13px] font-normal opacity-60">/100</span>}</dd>
         </div>
         <div>
           <dt className="text-[11px] tracking-[0.14em] text-amber">AVERAGE</dt>
-          <dd className="text-2xl font-semibold text-strip tabular-nums leading-tight">{avg === null ? '–' : Math.round(avg)}</dd>
+          <dd className="text-2xl font-semibold text-strip tabular-nums leading-tight">{avg === null ? '–' : Math.round(avg)}{avg !== null && <span className="text-[13px] font-normal opacity-60">/100</span>}</dd>
         </div>
       </dl>
+      <p className="mt-2 text-[13px] text-mist">Scores are out of 100: how much each person likes the time.</p>
       {!decided && unhappy.length > 0 && (
         <p className="mt-2 text-xs text-strip/70">Unhappy with it: {unhappy.join(', ')}</p>
       )}

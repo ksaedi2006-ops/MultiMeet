@@ -15,6 +15,7 @@ import { usePlayback } from '../tower/usePlayback'
 import { play, useGrowth } from '../lib/sound'
 import { useCab, useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
+import { pointVerb } from '../lib/timeLabels'
 
 /**
  * Negotiating, then Booked. The camera centres on the scope; the left panel holds every
@@ -64,7 +65,7 @@ export default function NegotiateStage() {
   useScopeFeed({
     model, onLanded, overlay,
     stageName: decided ? (model.decision?.status === 'converged' ? 'Booked' : 'No time works') : undefined,
-    legend: 'Each dot is someone’s agent, drifting toward the times they prefer. Crossed-out times are ones someone can’t make. Point at a time to read it.',
+    legend: `Each dot is someone’s agent, drifting toward the times they prefer. Crossed-out times are ones someone can’t make. ${pointVerb()} a time to read it.`,
   })
 
   if (loadError || state === 'closed') {
@@ -80,7 +81,6 @@ export default function NegotiateStage() {
 
   const rows = (
     <div className="px-4 lg:px-5 py-5 flex flex-col gap-4">
-      {model.phase === 'holding' && event && <HoldingPanel event={event} model={model} viewerId={viewerId} />}
       <StripBoard model={model} viewerId={viewerId} highlight={highlight} onHover={setHighlight} />
     </div>
   )
@@ -88,6 +88,8 @@ export default function NegotiateStage() {
   const side = (
     <div className="px-5 lg:px-6 pb-6 flex flex-col gap-4 lg:h-full">
       <StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state} />
+      {/* The one thing to do before it starts: first in the panel, so first on a phone too. */}
+      {model.phase === 'holding' && event && <HoldingPanel event={event} model={model} viewerId={viewerId} />}
       {decided ? (
         <DecisionBrief eventId={eventId} title={event?.title ?? 'Meeting'} model={model} viewerId={viewerId} />
       ) : model.phase === 'failed' ? (
@@ -99,7 +101,7 @@ export default function NegotiateStage() {
         <FairnessMeter model={model} />
       ) : null}
       <RadioTicker model={model} />
-      <div className="flex min-h-[16rem] flex-1">
+      <div className={`flex flex-1 ${model.phase === 'holding' ? 'min-h-[10rem]' : 'min-h-[16rem]'}`}>
         <TowerLog model={model} viewerId={viewerId} />
       </div>
     </div>

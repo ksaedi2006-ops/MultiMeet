@@ -121,7 +121,7 @@ export default function InviteStage() {
             <motion.li key={m.user_id} layout="position"
               initial={{ opacity: 0, x: -28 }} animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.55, ease: EASE }}>
-              <BayStrip holder={m.role === 'admin' ? 'plan' : 'event'}>
+              <BayStrip holder="person">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-px">
                   <Box>
                     <span className="block truncate text-[16px] font-semibold text-strip-ink leading-tight">

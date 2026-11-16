@@ -5,7 +5,7 @@ import type { TowerModel } from './model'
 /** The latest thing said, typed out under the scope. */
 export default function RadioTicker({ model }: { model: TowerModel }) {
   const latest = [...model.log].reverse().find((l) => l.speaker !== 'Update' || l.tone === 'close')
-  const text = latest ? latest.text : 'Standing by.'
+  const text = latest ? latest.text : 'Waiting for the organiser to start.'
   const speaker = latest?.speaker ?? 'Mediator'
   const reduced = useReducedMotion()
   const [shown, setShown] = useState(0)

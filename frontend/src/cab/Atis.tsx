@@ -18,7 +18,8 @@ export default function Atis() {
   const [shown, setShown] = useState(0)
 
   useEffect(() => {
-    if (reduced) {
+    // On a phone the whole explanation has to land within a glance: no typing there.
+    if (reduced || window.matchMedia('(max-width: 1023px)').matches) {
       setShown(total)
       return
     }

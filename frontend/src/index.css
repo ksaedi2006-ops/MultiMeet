@@ -16,6 +16,7 @@
   --color-console: #1a2531; /* the cab's furniture: bay, comms, status strip */
   --color-holder-steel: #4d6a80;
   --color-holder-ochre: #8f6f33;
+  --color-holder-person: #5d6e7c; /* a person's card: neutral, so orange keeps its meaning */
 
   --font-display: "Big Shoulders Display", "IBM Plex Sans", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;

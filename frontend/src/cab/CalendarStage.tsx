@@ -14,6 +14,7 @@ import { buildModel } from '../tower/model'
 import { play, useGrowth } from '../lib/sound'
 import { useCab, useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
+import { pointVerb } from '../lib/timeLabels'
 
 const NO_EVENTS: never[] = []
 
@@ -47,6 +48,7 @@ export default function CalendarStage() {
   const [busy, setBusy] = useState<'file' | 'sample' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const tz = event?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
+  const finePointer = pointVerb() === 'Point at'
 
   useEffect(() => {
     if (viewerId) getCalendar(viewerId).then(setCalendar, () => undefined)
@@ -94,7 +96,7 @@ export default function CalendarStage() {
   useScopeFeed({
     model,
     label: `${closed} of ${model.slots.length} possible times are ruled out by your calendar.`,
-    legend: 'Crossed-out times are ones your fixed commitments rule out. Point at one to see which.',
+    legend: `Crossed-out times are ones your fixed commitments rule out. ${pointVerb()} one to see which.`,
   })
 
   async function load(file: File) {
@@ -171,7 +173,7 @@ export default function CalendarStage() {
           <span aria-hidden className="w-3 h-3 rounded-[1px] bg-[repeating-linear-gradient(45deg,var(--color-strip)_0_2px,transparent_2px_5px)]" />
           Movable
         </span>
-        <span>Click a block to switch it.</span>
+        <span>{finePointer ? 'Click' : 'Tap'} a block to switch it.</span>
       </p>
     </div>
   )
@@ -197,14 +199,20 @@ export default function CalendarStage() {
         <input ref={fileInput} type="file" accept=".ics,text/calendar" className="hidden"
           onChange={(e) => { const f = e.target.files?.[0]; if (f) void load(f); e.target.value = '' }} />
         <p className="font-display font-bold text-[1.4rem] leading-none text-strip">
-          {busy === 'file' ? 'Reading…' : dragging ? 'Drop it here' : 'Drop an .ics file'}
+          {busy === 'file' ? 'Reading…' : dragging ? 'Drop it here' : 'Add your calendar file'}
         </p>
-        <p className="mt-1.5 text-[13px] text-mist">or click to choose one. Google Calendar and Outlook both export .ics.</p>
+        <p className="mt-1.5 text-[13px] text-mist">
+          {finePointer ? 'Drop it here or click to choose. ' : 'Tap to choose. '}
+          Export it from Google Calendar or Outlook (.ics).
+        </p>
       </div>
-      <button type="button" onClick={sample} disabled={busy !== null}
-        className="self-start -mt-2 font-mono text-[12px] tracking-[0.12em] text-strip/80 underline underline-offset-4 decoration-board-line hover:text-amber hover:decoration-amber disabled:opacity-50 transition-colors">
-        {busy === 'sample' ? 'BUILDING A WEEK…' : 'OR USE A SAMPLE WEEK'}
-      </button>
+      <div className="-mt-1 flex items-center gap-3">
+        <span className="text-[14px] text-mist">No file handy?</span>
+        <button type="button" onClick={sample} disabled={busy !== null}
+          className="h-10 px-4 rounded-[2px] border border-strip/50 text-strip font-mono text-[12px] tracking-[0.12em] hover:border-strip disabled:opacity-50 transition-colors">
+          {busy === 'sample' ? 'BUILDING A WEEK…' : 'USE A SAMPLE WEEK'}
+        </button>
+      </div>
       {error && <p role="alert" className="-mt-2 text-sm text-signal">{error}</p>}
 
       {titles.length > 0 && (

@@ -51,7 +51,7 @@ export default function HoldingPanel({ event, model, viewerId }: Props) {
           {ready.length === 0 && <p className="mt-2 text-xs text-mist">Mark yourself ready first, on the preferences step.</p>}
         </>
       ) : (
-        <p className="mt-3 font-mono text-xs tracking-wider text-mist">THE ORGANISER STARTS THE NEGOTIATION</p>
+        <p className="mt-3 text-[14px] text-mist">The organiser starts the negotiation.</p>
       )}
       {error && <p role="alert" className="mt-3 text-sm text-signal">{error}</p>}
     </section>
