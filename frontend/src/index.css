@@ -13,6 +13,9 @@
   --color-signal: #f4844f; /* safety orange as text on the board; fills stay clearance */
   --color-amber: #e8a93a;
   --color-mist: #93aabd;
+  --color-console: #1a2531; /* the cab's furniture: bay, comms, status strip */
+  --color-holder-steel: #4d6a80;
+  --color-holder-ochre: #8f6f33;
 
   --font-display: "Big Shoulders Display", "IBM Plex Sans", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -71,4 +74,25 @@ textarea::placeholder {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* The cab: a dark floor under the scope, and furniture with a faint moulded grain. */
+.cab-floor {
+  background: radial-gradient(ellipse 70% 80% at 55% 50%, #1c2a37 0%, #141d27 75%);
+}
+
+.console {
+  background-color: var(--color-console);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* On manila, amber focus rings vanish; the strip's own ink marks focus instead. */
+.on-strip :focus-visible {
+  outline-color: var(--color-strip-ink);
+  outline-offset: -2px;
+}
+
+.on-strip input::placeholder {
+  color: var(--color-strip-ink);
+  opacity: 0.32;
 }

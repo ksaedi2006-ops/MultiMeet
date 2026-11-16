@@ -1,0 +1,87 @@
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Outlet, useLocation } from 'react-router-dom'
+import { emptyModel } from '../tower/model'
+import RadarScope from '../tower/RadarScope'
+import CabBar from './CabBar'
+import { CabContext, type Cab, type ScopeFeed } from './context'
+import { scopeFrame, stageFor, type Rect } from './stages'
+
+const DESKTOP = '(min-width: 1024px)'
+
+function useMedia(query: string) {
+  const [match, setMatch] = useState(() => window.matchMedia(query).matches)
+  useEffect(() => {
+    const m = window.matchMedia(query)
+    const on = () => setMatch(m.matches)
+    m.addEventListener('change', on)
+    return () => m.removeEventListener('change', on)
+  }, [query])
+  return match
+}
+
+/**
+ * The tower cab: one console that stays mounted for the whole visit. The scope, the strip
+ * bay and the comms panel are permanent fixtures; routes only change the stage, which moves
+ * the camera and swaps what the bay and panel hold.
+ */
+export default function TowerCab() {
+  const { pathname } = useLocation()
+  const stage = stageFor(pathname)
+  const desktop = useMedia(DESKTOP)
+  const [bay, setBay] = useState<HTMLElement | null>(null)
+  const [panel, setPanel] = useState<HTMLElement | null>(null)
+  const [scope, setScope] = useState<ScopeFeed>({ model: emptyModel })
+  const [highlight, setHighlight] = useState<string | null>(null)
+  const layer = useRef<HTMLDivElement>(null)
+  const [size, setSize] = useState({ w: 0, h: 0 })
+
+  useLayoutEffect(() => {
+    const el = layer.current!
+    const measure = () => setSize({ w: el.clientWidth, h: el.clientHeight })
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const frame: Rect | null = useMemo(
+    () => (size.w ? scopeFrame(stage, size.w, size.h, desktop) : null),
+    [stage, size.w, size.h, desktop],
+  )
+
+  const feed = useCallback((f: ScopeFeed) => setScope(f), [])
+  const cab: Cab = useMemo(() => ({ bay, panel, feed, highlight, setHighlight, desktop }), [bay, panel, feed, highlight, desktop])
+  const landed = useRef(scope.onLanded)
+  landed.current = scope.onLanded
+  const onLanded = useCallback(() => landed.current?.(), [])
+
+  return (
+    <CabContext.Provider value={cab}>
+      <div className="cab-floor min-h-svh lg:h-svh lg:overflow-hidden flex flex-col">
+        <CabBar stage={stage} />
+        <div className="relative flex-1 min-h-0 flex flex-col lg:block">
+          <div ref={layer} className="relative h-[52svh] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
+            <RadarScope model={scope.model} label={scope.label} frame={frame}
+              highlight={highlight} onHover={setHighlight} onLanded={onLanded} />
+            {frame && scope.overlay && (
+              <div className="absolute pointer-events-none flex items-center justify-center"
+                style={{ left: frame.x, top: frame.y, width: frame.w, height: frame.h }}>
+                {scope.overlay}
+              </div>
+            )}
+          </div>
+
+          <aside ref={setBay} aria-label="Strip bay"
+            style={{ ['--bay-w' as string]: `${stage.bay}px` }}
+            className="console relative lg:absolute lg:left-0 lg:top-0 lg:bottom-0 lg:w-[var(--bay-w)] border-t lg:border-t-0 lg:border-r border-board-line transition-[width] duration-700 ease-out-expo lg:overflow-y-auto lg:overflow-x-hidden" />
+
+          <aside ref={setPanel} aria-label="Comms"
+            style={{ ['--panel-w' as string]: `${stage.panel || 400}px` }}
+            className={`console relative lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[var(--panel-w)] border-t lg:border-t-0 lg:border-l border-board-line lg:overflow-y-auto transition-[transform,opacity] duration-700 ease-out-expo ${
+              stage.panel === 0 ? 'hidden lg:block lg:translate-x-full lg:opacity-0 lg:pointer-events-none' : ''}`} />
+        </div>
+      </div>
+      <Outlet />
+    </CabContext.Provider>
+  )
+}

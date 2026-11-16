@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Outlet, Routes, Route, useLocation } from 'react-router-dom'
 import { MotionConfig, motion } from 'framer-motion'
 import Masthead from './components/Masthead'
-import CreateEvent from './pages/CreateEvent'
-import Landing from './pages/Landing'
+import TowerCab from './cab/TowerCab'
+import AttractStage from './cab/AttractStage'
+import PlanStage from './cab/PlanStage'
 import ShareEvent from './pages/ShareEvent'
 import JoinEvent from './pages/JoinEvent'
 import UploadCalendar from './pages/UploadCalendar'
@@ -22,6 +23,16 @@ function Page({ children }: { children: React.ReactNode }) {
   )
 }
 
+/** Stages not yet moved into the cab keep the old page shell for now. */
+function OldPages() {
+  return (
+    <div className="min-h-screen overflow-x-clip">
+      <Masthead />
+      <Outlet />
+    </div>
+  )
+}
+
 export default function App() {
   const location = useLocation()
   useEffect(() => {
@@ -29,18 +40,19 @@ export default function App() {
   }, [location.pathname])
   return (
     <MotionConfig reducedMotion="user">
-    <div className="min-h-screen overflow-x-clip">
-      <Masthead />
       <Routes>
-        <Route path="/" element={<Page><Landing /></Page>} />
-        <Route path="/new" element={<Page><CreateEvent /></Page>} />
+        <Route element={<TowerCab />}>
+          <Route path="/" element={<AttractStage />} />
+          <Route path="/new" element={<PlanStage />} />
+        </Route>
+        <Route element={<OldPages />}>
         <Route path="/event/:eventId/share" element={<Page><ShareEvent /></Page>} />
         <Route path="/join/:inviteCode" element={<Page><JoinEvent /></Page>} />
         <Route path="/event/:eventId/upload" element={<Page><UploadCalendar /></Page>} />
         <Route path="/event/:eventId/agent" element={<Page><AgentChat /></Page>} />
         <Route path="/event/:eventId/negotiate" element={<Page><NegotiationLiveView /></Page>} />
+        </Route>
       </Routes>
-    </div>
     </MotionConfig>
   )
 }

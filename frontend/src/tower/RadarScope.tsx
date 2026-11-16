@@ -1,13 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import type { TowerModel } from './model'
-import { ScopeEngine } from './scope/engine'
+import { ScopeEngine, type Frame } from './scope/engine'
 
 interface Props {
   model: TowerModel
   highlight: string | null
   onHover: (id: string | null) => void
   onLanded: () => void
+  /** Where the scope sits inside the canvas; omitted, it fills the canvas. */
+  frame?: Frame | null
+  label?: string
 }
 
 function describe(m: TowerModel): string {
@@ -20,7 +23,7 @@ function describe(m: TowerModel): string {
   return parts.join(', ') + '. The strip board and tower log below list the same details.'
 }
 
-export default function RadarScope({ model, highlight, onHover, onLanded }: Props) {
+export default function RadarScope({ model, highlight, onHover, onLanded, frame, label }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<ScopeEngine | null>(null)
   const reduced = useReducedMotion() ?? false
@@ -47,5 +50,9 @@ export default function RadarScope({ model, highlight, onHover, onLanded }: Prop
     engine.current?.setModel(model)
   }, [model])
 
-  return <canvas ref={canvas} role="img" aria-label={describe(model)} className="block w-full h-full touch-none" />
+  useEffect(() => {
+    if (frame) engine.current?.setFrame(frame)
+  }, [frame])
+
+  return <canvas ref={canvas} role="img" aria-label={label ?? describe(model)} className="block w-full h-full touch-none" />
 }

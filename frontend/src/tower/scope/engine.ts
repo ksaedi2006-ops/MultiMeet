@@ -1,5 +1,6 @@
 import type { Agent, TowerModel } from '../model'
 import { layoutRim, scoreTarget, separate, type Layout } from './geometry'
+import { Phosphor } from './phosphor'
 
 const AMBER = '232,169,58'
 const ORANGE = '212,85,28'
@@ -23,6 +24,19 @@ interface Plane {
   landed: boolean
 }
 
+export interface Frame {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+interface Departing {
+  x: number
+  y: number
+  at: number
+}
+
 export interface EngineOptions {
   reducedMotion: boolean
   highlight: string | null
@@ -31,6 +45,10 @@ export interface EngineOptions {
 }
 
 const TAU = Math.PI * 2
+const clamp01 = (t: number) => Math.max(0, Math.min(1, t))
+const easeOutBack = (t: number) => 1 + 2.4 * (t - 1) ** 3 + 1.4 * (t - 1) ** 2
+/** Shortest signed difference between two bearings. */
+const angDiff = (a: number, b: number) => ((((a - b) % TAU) + TAU * 1.5) % TAU) - TAU / 2
 const easeInOut = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2)
 /** Radians since the sweep last passed this bearing; drives the phosphor "paint". */
 const sinceSweep = (sweep: number, angle: number) => (((sweep - angle) % TAU) + TAU) % TAU
@@ -56,10 +74,25 @@ export class ScopeEngine {
   private opts: EngineOptions = { reducedMotion: false, highlight: null }
   private observer: ResizeObserver
   private canvas: HTMLCanvasElement
+  private phosphor: Phosphor | null
+  private offscreen: HTMLCanvasElement | null = null
+  private frameTarget: Frame | null = null
+  private frameNow: Frame | null = null
+  private shown = new Map<string, number>() // displayed bearing per fix, eased toward the layout
+  private bornAt = new Map<string, number>()
+  private ghosts = new Map<string, { angle: number; at: number }>()
+  private sectorsShown = new Map<string, { start: number; end: number; label: string; born: number }>()
+  private departing: Departing[] = []
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
-    this.ctx = canvas.getContext('2d')!
+    this.phosphor = Phosphor.create(canvas)
+    if (this.phosphor) {
+      this.offscreen = document.createElement('canvas')
+      this.ctx = this.offscreen.getContext('2d')!
+    } else {
+      this.ctx = canvas.getContext('2d')!
+    }
     this.observer = new ResizeObserver(() => this.resize())
     this.observer.observe(canvas)
     this.resize()
@@ -69,6 +102,12 @@ export class ScopeEngine {
 
   setOptions(opts: EngineOptions) {
     this.opts = opts
+  }
+
+  /** Where the scope should sit in the canvas. Changes ease over, like a camera move. */
+  setFrame(frame: Frame) {
+    this.frameTarget = frame
+    if (!this.frameNow || this.opts.reducedMotion) this.frameNow = { ...frame }
   }
 
   start() {
@@ -95,6 +134,21 @@ export class ScopeEngine {
     if (key !== this.layoutKey) {
       this.layout = layoutRim(model.slots)
       this.layoutKey = key
+      // Fixes that left fade where they stood; new ones pop onto the rim in time order.
+      for (const [id, angle] of this.shown) {
+        if (!this.layout.angles.has(id)) {
+          this.ghosts.set(id, { angle, at: now })
+          this.shown.delete(id)
+          this.bornAt.delete(id)
+        }
+      }
+      let born = 0
+      for (const s of model.slots) {
+        if (!this.shown.has(s.id)) {
+          this.shown.set(s.id, this.layout.angles.get(s.id)!)
+          this.bornAt.set(s.id, now + Math.min(born++, 72) * 14)
+        }
+      }
     }
 
     let k = 0
@@ -131,6 +185,8 @@ export class ScopeEngine {
   }
 
   private reset() {
+    const now = performance.now()
+    for (const p of this.planes.values()) if (!p.landed) this.departing.push({ x: p.x, y: p.y, at: now })
     this.planes.clear()
     this.closeFx.clear()
     this.askFx.clear()
@@ -147,13 +203,54 @@ export class ScopeEngine {
     this.size = { w: rect.width, h: rect.height, dpr }
     this.canvas.width = Math.round(rect.width * dpr)
     this.canvas.height = Math.round(rect.height * dpr)
+    if (this.offscreen) {
+      this.offscreen.width = this.canvas.width
+      this.offscreen.height = this.canvas.height
+      this.phosphor!.resize(this.canvas.width, this.canvas.height)
+    }
   }
 
   private geometry() {
-    const { w, h } = this.size
-    const S = Math.min(w, h)
+    const f = this.frameNow ?? { x: 0, y: 0, w: this.size.w, h: this.size.h }
+    const S = Math.min(f.w, f.h)
     const R = S * 0.48
-    return { cx: w / 2, cy: h / 2, R, Rf: R * 0.8, scale: Math.max(0.7, Math.min(1.25, S / 640)) }
+    return { cx: f.x + f.w / 2, cy: f.y + f.h / 2, R, Rf: R * 0.8, scale: Math.max(0.7, Math.min(1.25, S / 640)) }
+  }
+
+  /** The bearing a fix is drawn at right now (eases when the rim re-lays out). */
+  private bearing(id: string): number | undefined {
+    return this.shown.get(id) ?? this.layout.angles.get(id)
+  }
+
+  private ease(dt: number) {
+    const reduced = this.opts.reducedMotion
+    if (this.frameTarget && this.frameNow) {
+      const k = reduced ? 1 : 1 - Math.exp(-dt * 4.2)
+      const f = this.frameNow
+      const t = this.frameTarget
+      f.x += (t.x - f.x) * k
+      f.y += (t.y - f.y) * k
+      f.w += (t.w - f.w) * k
+      f.h += (t.h - f.h) * k
+    }
+    const k = reduced ? 1 : 1 - Math.exp(-dt * 6)
+    for (const [id, a] of this.shown) {
+      const target = this.layout.angles.get(id)
+      if (target !== undefined) this.shown.set(id, a + angDiff(target, a) * k)
+    }
+    const now = performance.now()
+    const live = new Set<string>()
+    for (const sec of this.layout.sectors) {
+      live.add(sec.dayKey)
+      const cur = this.sectorsShown.get(sec.dayKey)
+      if (!cur) {
+        this.sectorsShown.set(sec.dayKey, { start: sec.start, end: sec.end, label: sec.label, born: now })
+      } else {
+        cur.start += angDiff(sec.start, cur.start) * k
+        cur.end += angDiff(sec.end, cur.end) * k
+      }
+    }
+    for (const key of this.sectorsShown.keys()) if (!live.has(key)) this.sectorsShown.delete(key)
   }
 
   private holdingPoint(i: number, n: number, now: number): [number, number] {
@@ -191,6 +288,7 @@ export class ScopeEngine {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, w, h)
     if (w === 0) return
+    this.ease(dt)
 
     const g = this.geometry()
     const sweep = this.opts.reducedMotion ? null : (((now % SWEEP_PERIOD) / SWEEP_PERIOD) * Math.PI * 2 - Math.PI / 2)
@@ -202,8 +300,39 @@ export class ScopeEngine {
     this.drawClosures(g, now)
     this.updatePlanes(dt, now)
     this.drawAsks(g, now)
+    this.drawGhosts(g, now)
     this.drawTower(g, now)
+    this.drawDeparting(g, now)
     this.drawPlanes(g, now, sweep)
+    this.phosphor?.render(this.offscreen!, dt * 1000, this.opts.reducedMotion ? 0 : 1)
+  }
+
+  private drawGhosts({ cx, cy, Rf, scale }: ReturnType<ScopeEngine['geometry']>, now: number) {
+    for (const [id, g] of this.ghosts) {
+      const t = (now - g.at) / 320
+      if (t >= 1 || this.opts.reducedMotion) {
+        this.ghosts.delete(id)
+        continue
+      }
+      const x = cx + Math.cos(g.angle) * Rf
+      const y = cy + Math.sin(g.angle) * Rf
+      this.triangle(x, y, g.angle, 4.5 * scale * (1 - t), `rgba(${AMBER},${0.6 * (1 - t)})`, false)
+    }
+  }
+
+  /** Aircraft from a run that has left the scope peel off outward and fade. */
+  private drawDeparting({ cx, cy, Rf, scale }: ReturnType<ScopeEngine['geometry']>, now: number) {
+    const { ctx } = this
+    this.departing = this.departing.filter((d) => now - d.at < 900 && !this.opts.reducedMotion)
+    const s = 3.4 * scale
+    for (const d of this.departing) {
+      const t = (now - d.at) / 900
+      const e = t * t
+      const len = Math.hypot(d.x, d.y) || 1
+      const push = 1 + e * (1.25 / len)
+      ctx.fillStyle = `rgba(${AMBER},${1 - t})`
+      ctx.fillRect(cx + d.x * push * Rf - s, cy + d.y * push * Rf - s, s * 2, s * 2)
+    }
   }
 
   private drawGlass({ cx, cy, R, Rf }: ReturnType<ScopeEngine['geometry']>) {
@@ -255,7 +384,10 @@ export class ScopeEngine {
     ctx.font = `500 ${Math.round(11.5 * scale)}px ${MONO}`
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
-    for (const s of this.layout.sectors) {
+    const now = performance.now()
+    for (const s of this.sectorsShown.values()) {
+      const a = this.opts.reducedMotion ? 1 : clamp01((now - s.born) / 450)
+      ctx.globalAlpha = a
       ctx.strokeStyle = `rgba(${MIST},0.35)`
       ctx.lineWidth = 1
       ctx.beginPath()
@@ -271,6 +403,7 @@ export class ScopeEngine {
       ctx.fillStyle = `rgba(${MIST},0.85)`
       ctx.fillText(s.label, cx + Math.cos(mid) * R * 0.94, cy + Math.sin(mid) * R * 0.94)
     }
+    ctx.globalAlpha = 1
   }
 
   private drawSweep({ cx, cy, R }: ReturnType<ScopeEngine['geometry']>, sweep: number) {
@@ -296,7 +429,7 @@ export class ScopeEngine {
   }
 
   private fixPoint(slotId: string, r: number, cx: number, cy: number): [number, number] | null {
-    const a = this.layout.angles.get(slotId)
+    const a = this.bearing(slotId)
     return a === undefined ? null : [cx + Math.cos(a) * r, cy + Math.sin(a) * r]
   }
 
@@ -308,8 +441,12 @@ export class ScopeEngine {
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     for (const s of model.slots) {
-      const angle = this.layout.angles.get(s.id)
+      const angle = this.bearing(s.id)
       if (angle === undefined) continue
+      const bornAt = this.bornAt.get(s.id)
+      const grow = bornAt === undefined || this.opts.reducedMotion ? 1 : clamp01((now - bornAt) / 380)
+      if (grow <= 0) continue
+      const pop = easeOutBack(grow)
       const x = cx + Math.cos(angle) * Rf
       const y = cy + Math.sin(angle) * Rf
       const closeAt = this.closeFx.get(s.id)
@@ -347,7 +484,9 @@ export class ScopeEngine {
         continue
       }
       const dim = anyRank ? 0.28 : 0.6
-      this.triangle(x, y, angle, 4.5 * scale, `rgba(${AMBER},${dim + painted * 0.35})`, false)
+      // A fresh fix lands bright, then settles to the resting phosphor level.
+      const flash = grow < 1 ? 0.4 * (1 - grow) : 0
+      this.triangle(x, y, angle, 4.5 * scale * pop, `rgba(${AMBER},${(dim + painted * 0.35 + flash) * grow})`, grow < 0.6)
     }
   }
 
@@ -515,7 +654,7 @@ export class ScopeEngine {
     const { ctx, model } = this
     const winner = model?.decision?.status === 'converged' ? model.decision.slot?.id : null
     if (!winner || this.decisionAt === null) return
-    const angle = this.layout.angles.get(winner)
+    const angle = this.bearing(winner)
     if (angle === undefined) return
     // Once everyone is down the runway fades, so it never shows through the stamp.
     const fade = this.landedAt === null ? 1 : this.opts.reducedMotion ? 0 : Math.max(0, 1 - (now - this.landedAt) / 300)
