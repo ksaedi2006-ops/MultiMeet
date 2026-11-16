@@ -5,7 +5,7 @@ import Masthead from './components/Masthead'
 import TowerCab from './cab/TowerCab'
 import AttractStage from './cab/AttractStage'
 import PlanStage from './cab/PlanStage'
-import ShareEvent from './pages/ShareEvent'
+import InviteStage from './cab/InviteStage'
 import JoinEvent from './pages/JoinEvent'
 import UploadCalendar from './pages/UploadCalendar'
 import AgentChat from './pages/AgentChat'
@@ -44,9 +44,9 @@ export default function App() {
         <Route element={<TowerCab />}>
           <Route path="/" element={<AttractStage />} />
           <Route path="/new" element={<PlanStage />} />
+          <Route path="/event/:eventId/share" element={<InviteStage />} />
         </Route>
         <Route element={<OldPages />}>
-        <Route path="/event/:eventId/share" element={<Page><ShareEvent /></Page>} />
         <Route path="/join/:inviteCode" element={<Page><JoinEvent /></Page>} />
         <Route path="/event/:eventId/upload" element={<Page><UploadCalendar /></Page>} />
         <Route path="/event/:eventId/agent" element={<Page><AgentChat /></Page>} />

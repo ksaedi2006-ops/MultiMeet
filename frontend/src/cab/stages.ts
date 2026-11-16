@@ -2,7 +2,7 @@
  * The cab never reloads; a route only picks a stage. Each stage says how the console is
  * arranged around the scope, and the camera follows from that.
  */
-export type StageId = 'attract' | 'plan'
+export type StageId = 'attract' | 'plan' | 'invite'
 
 export interface StageSpec {
   id: StageId
@@ -17,10 +17,12 @@ export interface StageSpec {
 export const STAGES: Record<StageId, StageSpec> = {
   attract: { id: 'attract', name: 'How it works', bay: 360, panel: 400 },
   plan: { id: 'plan', name: 'New meeting', bay: 660, panel: 0 },
+  invite: { id: 'invite', name: 'Invite people', bay: 360, panel: 420 },
 }
 
 export function stageFor(pathname: string): StageSpec {
   if (pathname === '/new') return STAGES.plan
+  if (/^\/event\/[^/]+\/share\/?$/.test(pathname)) return STAGES.invite
   return STAGES.attract
 }
 
@@ -34,6 +36,7 @@ export interface Rect {
 const GUTTER = 28
 /** Room kept under the scope for its one-line legend. */
 const LEGEND = 30
+const LEGEND_PHONE = 46
 
 /**
  * Bay and panel widths for the actual viewport. On a narrow desktop they give way so the
@@ -50,7 +53,7 @@ export function fixtureWidths(stage: StageSpec, w: number): { bay: number; panel
 /** Where the scope goes: the largest square in the space the bay and panel leave free. */
 export function scopeFrame(stage: StageSpec, w: number, h: number, desktop: boolean): Rect {
   if (!desktop) {
-    const s = Math.min(w - 16, h - LEGEND - 12)
+    const s = Math.min(w - 16, h - LEGEND_PHONE - 12)  // the legend wraps to two lines on a phone
     return { x: (w - s) / 2, y: 6, w: s, h: s }
   }
   const fx = fixtureWidths(stage, w)
