@@ -4,7 +4,7 @@ import { emptyModel } from '../tower/model'
 import RadarScope from '../tower/RadarScope'
 import CabBar from './CabBar'
 import { CabContext, type Cab, type ScopeFeed } from './context'
-import { scopeFrame, stageFor, type Rect } from './stages'
+import { fixtureWidths, scopeFrame, stageFor, type Rect } from './stages'
 
 const DESKTOP = '(min-width: 1024px)'
 
@@ -49,6 +49,7 @@ export default function TowerCab() {
     [stage, size.w, size.h, desktop],
   )
 
+  const widths = fixtureWidths(stage, size.w || window.innerWidth)
   const feed = useCallback((f: ScopeFeed) => setScope(f), [])
   const cab: Cab = useMemo(() => ({ bay, panel, feed, highlight, setHighlight, desktop }), [bay, panel, feed, highlight, desktop])
   const landed = useRef(scope.onLanded)
@@ -60,7 +61,7 @@ export default function TowerCab() {
       <div className="cab-floor min-h-svh lg:h-svh lg:overflow-hidden flex flex-col">
         <CabBar stage={stage} />
         <div className="relative flex-1 min-h-0 flex flex-col lg:block">
-          <div ref={layer} className="relative h-[52svh] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
+          <div ref={layer} className="relative h-[max(52svh,min(100vw,88svh))] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
             <RadarScope model={scope.model} label={scope.label} frame={frame}
               highlight={highlight} onHover={setHighlight} onLanded={onLanded} />
             {frame && scope.overlay && (
@@ -72,11 +73,11 @@ export default function TowerCab() {
           </div>
 
           <aside ref={setBay} aria-label="Strip bay"
-            style={{ ['--bay-w' as string]: `${stage.bay}px` }}
+            style={{ ['--bay-w' as string]: `${widths.bay}px` }}
             className="console relative lg:absolute lg:left-0 lg:top-0 lg:bottom-0 lg:w-[var(--bay-w)] border-t lg:border-t-0 lg:border-r border-board-line transition-[width] duration-700 ease-out-expo lg:overflow-y-auto lg:overflow-x-hidden" />
 
           <aside ref={setPanel} aria-label="Comms"
-            style={{ ['--panel-w' as string]: `${stage.panel || 400}px` }}
+            style={{ ['--panel-w' as string]: `${widths.panel || 400}px` }}
             className={`console relative lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[var(--panel-w)] border-t lg:border-t-0 lg:border-l border-board-line lg:overflow-y-auto transition-[transform,opacity] duration-700 ease-out-expo ${
               stage.panel === 0 ? 'hidden lg:block lg:translate-x-full lg:opacity-0 lg:pointer-events-none' : ''}`} />
         </div>

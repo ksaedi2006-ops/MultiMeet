@@ -33,14 +33,27 @@ export interface Rect {
 
 const GUTTER = 28
 
+/**
+ * Bay and panel widths for the actual viewport. On a narrow desktop they give way so the
+ * scope always keeps at least ~44% of the width.
+ */
+export function fixtureWidths(stage: StageSpec, w: number): { bay: number; panel: number } {
+  const share = (px: number, frac: number) => (px === 0 ? 0 : Math.round(Math.min(px, Math.max(280, w * frac))))
+  return {
+    bay: share(stage.bay, stage.bay > 500 ? 0.5 : 0.27),
+    panel: share(stage.panel, 0.29),
+  }
+}
+
 /** Where the scope goes: the largest square in the space the bay and panel leave free. */
 export function scopeFrame(stage: StageSpec, w: number, h: number, desktop: boolean): Rect {
   if (!desktop) {
     const s = Math.min(w, h) - 16
     return { x: (w - s) / 2, y: (h - s) / 2, w: s, h: s }
   }
-  const left = stage.bay + GUTTER
-  const right = w - stage.panel - GUTTER
+  const fx = fixtureWidths(stage, w)
+  const left = fx.bay + GUTTER
+  const right = w - fx.panel - GUTTER
   const room = Math.max(200, right - left)
   const s = Math.min(room, h - GUTTER * 2)
   return { x: left + (room - s) / 2, y: (h - s) / 2, w: s, h: s }
