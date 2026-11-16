@@ -78,7 +78,7 @@ export default function TowerCab() {
             )}
           </div>
 
-          <aside ref={setBay} aria-label={stage.id === 'plan' ? 'New meeting form' : stage.id === 'invite' ? 'People' : stage.id === 'calendar' ? 'Your week' : stage.id === 'preferences' ? 'Your card' : stage.id === 'negotiate' ? 'Everyone' : 'Get started'}
+          <aside ref={setBay} aria-label={stage.id === 'plan' ? 'New meeting form' : stage.id === 'invite' ? 'People' : stage.id === 'join' ? 'Already in' : stage.id === 'calendar' ? 'Your week' : stage.id === 'preferences' ? 'Your card' : stage.id === 'negotiate' ? 'Everyone' : 'Get started'}
             style={{ ['--bay-w' as string]: `${widths.bay}px` }}
             className="console relative order-2 lg:order-none lg:absolute lg:left-0 lg:top-0 lg:bottom-0 lg:w-[var(--bay-w)] border-t lg:border-t-0 lg:border-r border-board-line transition-[width] duration-700 ease-out-expo lg:overflow-y-auto lg:overflow-x-hidden" />
 

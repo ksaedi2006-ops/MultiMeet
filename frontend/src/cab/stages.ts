@@ -2,7 +2,7 @@
  * The cab never reloads; a route only picks a stage. Each stage says how the console is
  * arranged around the scope, and the camera follows from that.
  */
-export type StageId = 'attract' | 'plan' | 'invite' | 'calendar' | 'preferences' | 'negotiate'
+export type StageId = 'attract' | 'plan' | 'invite' | 'join' | 'calendar' | 'preferences' | 'negotiate'
 
 export interface StageSpec {
   id: StageId
@@ -18,6 +18,7 @@ export const STAGES: Record<StageId, StageSpec> = {
   attract: { id: 'attract', name: 'How it works', bay: 360, panel: 400 },
   plan: { id: 'plan', name: 'New meeting', bay: 660, panel: 0 },
   invite: { id: 'invite', name: 'Invite people', bay: 360, panel: 420 },
+  join: { id: 'join', name: 'You’re invited', bay: 340, panel: 440 },
   calendar: { id: 'calendar', name: 'Your calendar', bay: 440, panel: 420 },
   preferences: { id: 'preferences', name: 'Your preferences', bay: 380, panel: 440 },
   negotiate: { id: 'negotiate', name: 'Negotiating', bay: 520, panel: 440 },
@@ -26,6 +27,7 @@ export const STAGES: Record<StageId, StageSpec> = {
 export function stageFor(pathname: string): StageSpec {
   if (pathname === '/new') return STAGES.plan
   if (/^\/event\/[^/]+\/share\/?$/.test(pathname)) return STAGES.invite
+  if (/^\/join\/[^/]+\/?$/.test(pathname)) return STAGES.join
   if (/^\/event\/[^/]+\/upload\/?$/.test(pathname)) return STAGES.calendar
   if (/^\/event\/[^/]+\/agent\/?$/.test(pathname)) return STAGES.preferences
   if (/^\/event\/[^/]+\/negotiate\/?$/.test(pathname)) return STAGES.negotiate

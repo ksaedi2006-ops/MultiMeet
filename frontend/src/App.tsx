@@ -1,38 +1,16 @@
 import { useEffect } from 'react'
-import { Outlet, Routes, Route, useLocation } from 'react-router-dom'
-import { MotionConfig, motion } from 'framer-motion'
-import Masthead from './components/Masthead'
+import { Navigate, Routes, Route, useLocation } from 'react-router-dom'
+import { MotionConfig } from 'framer-motion'
 import TowerCab from './cab/TowerCab'
 import AttractStage from './cab/AttractStage'
 import PlanStage from './cab/PlanStage'
 import InviteStage from './cab/InviteStage'
+import JoinStage from './cab/JoinStage'
 import CalendarStage from './cab/CalendarStage'
 import PreferencesStage from './cab/PreferencesStage'
 import NegotiateStage from './cab/NegotiateStage'
-import JoinEvent from './pages/JoinEvent'
 
-function Page({ children }: { children: React.ReactNode }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-/** Stages not yet moved into the cab keep the old page shell for now. */
-function OldPages() {
-  return (
-    <div className="min-h-screen overflow-x-clip">
-      <Masthead />
-      <Outlet />
-    </div>
-  )
-}
-
+/** Every screen is a step of one persistent console (cab/TowerCab); routes only pick the step. */
 export default function App() {
   const location = useLocation()
   useEffect(() => {
@@ -45,12 +23,11 @@ export default function App() {
           <Route path="/" element={<AttractStage />} />
           <Route path="/new" element={<PlanStage />} />
           <Route path="/event/:eventId/share" element={<InviteStage />} />
+          <Route path="/join/:inviteCode" element={<JoinStage />} />
           <Route path="/event/:eventId/upload" element={<CalendarStage />} />
           <Route path="/event/:eventId/agent" element={<PreferencesStage />} />
           <Route path="/event/:eventId/negotiate" element={<NegotiateStage />} />
-        </Route>
-        <Route element={<OldPages />}>
-        <Route path="/join/:inviteCode" element={<Page><JoinEvent /></Page>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </MotionConfig>
