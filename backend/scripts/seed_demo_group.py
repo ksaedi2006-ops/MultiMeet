@@ -1,168 +1,169 @@
 #!/usr/bin/env python3
-"""Seed a MeetMind event with fake participants for local negotiation testing.
+"""Fill a MeetMind event with seven fake participants for local testing.
 
-Usage:
     python3 scripts/seed_demo_group.py <invite_code>
+        Join an event you created in the browser (the invite code is the last part
+        of the share link). Watch its Share page while this runs; then check in and
+        press Start yourself.
 
-Get <invite_code> from the Share step after creating an event in the app
-(it's the last path segment of the invite link, e.g. the part after
-/join/ in http://localhost:5173/join/<invite_code>).
+    python3 scripts/seed_demo_group.py --new [--start]
+        Create a fresh event (organised by "Ava"), add everyone, and with --start
+        run the negotiation and print it as it happens.
 
-Creates 7 fake users, each with a distinct .ics calendar (also written to
-scripts/fixtures/ so they can be uploaded manually too) and a few
-natural-language preferences posted like chat messages, joins them to the
-event, and marks them ready. Open the event's Share page in the browser
-before running this to watch the roster fill in live.
+Each persona gets a recurring weekly .ics calendar in local time (also written to
+scripts/fixtures/ for manual uploads) and a couple of things told to their agent.
 """
+
 import json
 import sys
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import date, timedelta
 from pathlib import Path
 
-API_BASE = "http://localhost:8000"
-FIXTURES_DIR = Path(__file__).parent / "fixtures"
+API = "http://localhost:8000"
+TZ = "America/New_York"
+FIXTURES = Path(__file__).parent / "fixtures"
+WEEKDAYS = "MO,TU,WE,TH,FR"
 
-# weekdays: 0=Monday ... 6=Sunday
-WEEKDAYS = set(range(5))
-
+# (title, BYDAY, start HH:MM, end HH:MM)
 PERSONAS = [
-    {
-        "name": "Katherine Boyd",
-        "slug": "katherine",
-        "calendar_events": [(WEEKDAYS, 17, 0, 60, "Gym")],
-        "preferences": [
-            "I have gym at 5pm most weekdays, try to keep meetings wrapped up before 4:30 if possible",
-            "Mornings before 9am are rough for me, I'm not sharp yet",
-        ],
-    },
-    {
-        "name": "Marcus Webb",
-        "slug": "marcus",
-        "calendar_events": [(WEEKDAYS, 9, 0, 120, "CS 301 Lecture")],
-        "preferences": [
-            "Nothing before 11am, I have back-to-back classes every morning",
-        ],
-    },
-    {
-        "name": "Priya Nair",
-        "slug": "priya",
-        "calendar_events": [({2}, 12, 0, 60, "Team lunch")],
-        "preferences": [
-            "I have a standing team lunch Wednesdays at noon, please avoid that slot",
-            "Otherwise I'm pretty flexible during the week",
-        ],
-    },
-    {
-        "name": "Diego Alvarez",
-        "slug": "diego",
-        "calendar_events": [({4}, 15, 0, 300, "Wind down")],
-        "preferences": [
-            "Fridays after 3pm I'm mentally checked out, please don't schedule then",
-        ],
-    },
-    {
-        "name": "Lena Fischer",
-        "slug": "lena",
-        "calendar_events": [(WEEKDAYS, 8, 0, 360, "Morning/afternoon classes")],
-        "preferences": [
-            "I have class until 2pm most days, so anything after that works great",
-            "Avoid early mornings, I'm usually still commuting",
-        ],
-    },
-    {
-        "name": "Tomas Rivera",
-        "slug": "tomas",
-        "calendar_events": [({0}, 8, 0, 720, "Family commitment (all day)")],
-        "preferences": [
-            "I try to keep Mondays completely free if at all possible",
-        ],
-    },
-    {
-        "name": "Aisha Rahman",
-        "slug": "aisha",
-        "calendar_events": [(WEEKDAYS, 7, 0, 60, "Morning workout")],
-        "preferences": [
-            "I'm flexible on timing but strongly prefer avoiding anything right at 8am, I'm usually just getting settled",
-            "Longer meetings are easier for me later in the day",
-        ],
-    },
+    ("Katherine Boyd", [("Gym", WEEKDAYS, "17:00", "18:00"), ("Organic Chem Lab", "TU,TH", "13:00", "15:30")],
+     ["I have gym at 5pm most weekdays, I'd rather wrap up before 4:30", "Mornings before 9 are rough for me"]),
+    ("Marcus Webb", [("CS 301 Lecture", WEEKDAYS, "09:00", "11:00")],
+     ["I can never do anything before 11am, I have class every morning"]),
+    ("Priya Nair", [("Team lunch", "WE", "12:00", "13:00"), ("Research meeting", "MO", "15:00", "16:00")],
+     ["I have a standing team lunch Wednesdays at noon", "Otherwise I'm pretty flexible during the week"]),
+    ("Diego Alvarez", [("Shift at the bookstore", "FR", "14:00", "19:00")],
+     ["Fridays after 3pm I'm completely checked out, please avoid Fridays"]),
+    ("Lena Fischer", [("Studio", "MO,WE,FR", "10:00", "14:00")],
+     ["Studio runs late, I like 15 minutes of buffer between things"]),
+    ("Tomas Rivera", [("Family dinner", "MO", "18:00", "20:00"), ("Run club", "TU,TH", "07:00", "08:00")],
+     ["I try to keep Mondays free if at all possible"]),
+    ("Aisha Rahman", [("TA office hours", "TH", "14:00", "16:00")],
+     ["Longer meetings are easier for me later in the day", "Never anything after 7pm"]),
 ]
 
 
-def api(method: str, path: str, body: dict | None = None) -> dict:
-    url = f"{API_BASE}{path}"
+def api(method: str, path: str, body: dict | None = None):
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method, headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(f"{API}{path}", data=data, method=method,
+                                 headers={"Content-Type": "application/json"})
     try:
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=120) as resp:
             raw = resp.read()
             return json.loads(raw) if raw else {}
     except urllib.error.HTTPError as e:
-        print(f"  ! {method} {path} -> {e.code}: {e.read().decode()}")
-        raise
+        sys.exit(f"{method} {path} -> {e.code}: {e.read().decode()}")
 
 
-def build_ics(events_spec, days: int = 14) -> str:
-    now = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+def build_ics(events) -> str:
+    anchor = date.today() - timedelta(days=date.today().weekday() + 7)  # a Monday in the past
     lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MeetMind Demo//EN"]
-    for day_offset in range(days):
-        day = now + timedelta(days=day_offset)
-        weekday = day.weekday()
-        for weekdays, hour, minute, duration, title in events_spec:
-            if weekday not in weekdays:
-                continue
-            start = day.replace(hour=hour, minute=minute)
-            end = start + timedelta(minutes=duration)
-            lines += [
-                "BEGIN:VEVENT",
-                f"SUMMARY:{title}",
-                f"DTSTART:{start.strftime('%Y%m%dT%H%M%SZ')}",
-                f"DTEND:{end.strftime('%Y%m%dT%H%M%SZ')}",
-                "END:VEVENT",
-            ]
+    for i, (title, days, start, end) in enumerate(events):
+        first = anchor + timedelta(days=["MO", "TU", "WE", "TH", "FR", "SA", "SU"].index(days.split(",")[0]))
+        d = first.strftime("%Y%m%d")
+        lines += ["BEGIN:VEVENT", f"UID:demo-{i}-{title}", f"SUMMARY:{title}",
+                  f"DTSTART;TZID={TZ}:{d}T{start.replace(':', '')}00",
+                  f"DTEND;TZID={TZ}:{d}T{end.replace(':', '')}00",
+                  f"RRULE:FREQ=WEEKLY;BYDAY={days}", "END:VEVENT"]
     lines.append("END:VCALENDAR")
     return "\n".join(lines)
 
 
-def main():
-    if len(sys.argv) != 2:
-        print(__doc__)
-        sys.exit(1)
-    invite_code = sys.argv[1]
+def guest(name: str) -> str:
+    uid = api("POST", "/users/anon")["id"]
+    api("PATCH", f"/users/{uid}", {"name": name})
+    return uid
 
-    event = api("GET", f"/events/invite/{invite_code}")
-    event_id = event["event_id"]
-    print(f'Seeding "{event["title"]}" ({event_id}) — watch the Share page roster fill in.\n')
 
-    FIXTURES_DIR.mkdir(exist_ok=True)
+def add_persona(event_id: str, invite: str, name: str, events, prefs) -> str:
+    uid = guest(name)
+    api("POST", f"/events/join/{invite}?user_id={uid}")
+    print(f"+ {name} joined")
+    ics = build_ics(events)
+    FIXTURES.mkdir(exist_ok=True)
+    (FIXTURES / f"{name.split()[0].lower()}.ics").write_text(ics)
+    cal = api("POST", f"/users/{uid}/calendar?event_id={event_id}",
+              {"raw_ics": ics, "timezone": TZ, "filename": f"{name.split()[0].lower()}.ics"})
+    print(f"    calendar: {len(cal['events'])} busy blocks")
+    for text in prefs:
+        pref = api("POST", f"/users/{uid}/preferences?event_id={event_id}", {"raw_text": text})
+        print(f"    told agent: {text!r} -> {[r['summary'] for r in pref['rules']]}")
+    api("POST", f"/events/{event_id}/ready?user_id={uid}")
+    print("    checked in")
+    return uid
 
-    for persona in PERSONAS:
-        user = api("POST", "/users/anon")
-        user_id = user["id"]
-        api("PATCH", f"/users/{user_id}", {"name": persona["name"]})
 
-        ics_text = build_ics(persona["calendar_events"])
-        (FIXTURES_DIR / f"{persona['slug']}.ics").write_text(ics_text)
-        api("POST", f"/users/{user_id}/calendar", {"raw_ics": ics_text})
+def describe(e: dict) -> str | None:
+    t = e["type"]
+    if t == "negotiation_started":
+        return f"negotiation opened: {len(e['participants'])} agents ({e['agent_backend']}), {len(e['slots'])} slots"
+    if t == "slots_closed":
+        return f"closed {len(e['closed'])} slots on hard conflicts; {len(e['open'])} still open"
+    if t == "round_started":
+        return f"--- round {e['round']} ({e['kind']}) ---"
+    if t == "agent_scored":
+        best = max(e["scores"].values(), default=0)
+        return f"  {e['user_id'][:6]} scored (best {best}){' [SIM fallback]' if e['fallback'] else ''}: {e['summary']}"
+    if t == "agent_failed":
+        return f"  ! agent {e['user_id'][:6]} failed: {e['error']}"
+    if t == "shortlist":
+        return "  shortlist: " + ", ".join(f"{r['slot_id']} (min {r['min_score']})" for r in e["ranked"])
+    if t == "mediator_ask":
+        return f"  mediator -> {e['to_name']}: {e['text']}"
+    if t == "agent_reply":
+        return f"    {e['response'].upper()} {e['old_score']}->{e['new_score']}: {e['text']}"
+    if t == "decision":
+        slot = e["slot"]["label"] if e["slot"] else "none"
+        return f"DECISION {e['status']}: {slot} (min {e['min_score']})\n{e['explanation']}"
+    if t == "negotiation_failed":
+        return f"FAILED: {e['error']}"
+    return None
 
-        api("POST", f"/events/join/{invite_code}?user_id={user_id}")
-        print(f"+ {persona['name']} joined")
 
-        for pref in persona["preferences"]:
-            api("POST", f"/users/{user_id}/preferences", {"raw_text": pref})
-        print(f"    briefed agent: {len(persona['preferences'])} preference(s)")
+def watch(event_id: str) -> None:
+    seq = 0
+    while True:
+        for e in api("GET", f"/events/{event_id}/log?after={seq}"):
+            seq = e["seq"]
+            line = describe(e)
+            if line:
+                print(line)
+            if e["type"] in ("decision", "negotiation_failed"):
+                return
+        time.sleep(0.5)
 
-        api("POST", f"/events/{event_id}/ready?user_id={user_id}")
-        print("    checked in\n")
 
-        time.sleep(1.2)  # let the roster animate in the browser
+def main() -> None:
+    args = sys.argv[1:]
+    if not args:
+        sys.exit(__doc__)
+    if args[0] == "--new":
+        organiser = guest("Ava Chen")
+        start = date.today() + timedelta(days=1)
+        event = api("POST", f"/events?requested_by={organiser}", {
+            "title": "CS Club weekly meeting", "duration_minutes": 60, "start_date": start.isoformat(),
+            "end_date": (start + timedelta(days=9)).isoformat(), "timezone": TZ,
+            "earliest_hour": 9, "latest_hour": 21,
+        })
+        api("POST", f"/events/{event['event_id']}/ready?user_id={organiser}")
+        print(f"event {event['event_id']} organised by Ava ({organiser})")
+    else:
+        event = api("GET", f"/events/invite/{args[0]}")
+        organiser = event["organizer_id"]
 
-    print("All 7 fake participants joined, briefed, and checked in.")
-    print("Open the event in the browser, finish your own upload/agent steps, and check in —")
-    print("negotiation starts automatically once everyone (including you) is ready.")
+    for name, events, prefs in PERSONAS:
+        add_persona(event["event_id"], event["invite_code"], name, events, prefs)
+        time.sleep(0.8)  # let the roster animate in the browser
+
+    if "--start" in args:
+        result = api("POST", f"/events/{event['event_id']}/start?user_id={organiser}")
+        print(f"\nstarted with {result['participants']} participants ({result['agent_backend']} agents)\n")
+        watch(event["event_id"])
+    else:
+        print("\nEveryone is in and checked in. The organiser can press Start in the browser.")
 
 
 if __name__ == "__main__":

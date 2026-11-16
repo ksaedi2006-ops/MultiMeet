@@ -5,8 +5,7 @@ psycopg2-binary==2.9.9
 pydantic==2.9.2
 python-dotenv==1.0.1
 anthropic>=0.60.0
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4
 websockets==13.1
 icalendar>=7.3
 recurring-ical-events>=3.8
+alembic>=1.20

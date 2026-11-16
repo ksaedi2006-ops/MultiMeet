@@ -45,6 +45,9 @@ def assess_slot(slot: Slot, intervals: list[BusyInterval], rules: list[Preferenc
     local_start = slot.start.astimezone(zone)
     local_end = slot.end.astimezone(zone)
     for rule in rules:
+        day_scoped = rule.kind in ("not_before", "not_after") and rule.weekdays
+        if day_scoped and local_start.weekday() not in rule.weekdays:
+            continue
         if rule.kind == "not_before":
             hm = parse_hhmm(rule.time)
             if hm and (local_start.hour, local_start.minute) < hm:

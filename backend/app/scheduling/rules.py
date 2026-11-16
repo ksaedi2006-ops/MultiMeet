@@ -20,7 +20,13 @@ class PreferenceRule(BaseModel):
         description="hard only if the person states it as absolute (never, can't, no exceptions); otherwise soft."
     )
     time: Optional[str] = Field(default=None, description="24h local time HH:MM, for not_before / not_after.")
-    weekdays: Optional[list[int]] = Field(default=None, description="0=Monday ... 6=Sunday, for avoid_weekdays.")
+    weekdays: Optional[list[int]] = Field(
+        default=None,
+        description=(
+            "0=Monday ... 6=Sunday. Required for avoid_weekdays. For not_before / not_after, set it only "
+            "when the rule applies to specific days (e.g. 'Fridays after 3pm' -> [4]); omit it for every day."
+        ),
+    )
     minutes: Optional[int] = Field(default=None, description="For buffer_minutes.")
     summary: str = Field(description="Short label for the rule as the person would read it, e.g. 'Nothing before 11:00'.")
 

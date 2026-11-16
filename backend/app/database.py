@@ -1,8 +1,11 @@
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from pathlib import Path
 
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./meetmind.db")
+from sqlalchemy import create_engine
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+DEFAULT_SQLITE = f"sqlite:///{Path(__file__).resolve().parent.parent / 'meetmind.db'}"
+DATABASE_URL = os.environ.get("DATABASE_URL") or DEFAULT_SQLITE
 
 connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(DATABASE_URL, connect_args=connect_args)

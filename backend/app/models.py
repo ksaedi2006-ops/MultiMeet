@@ -1,38 +1,44 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     Column,
+    Date,
     DateTime,
     ForeignKey,
     Integer,
     String,
     Text,
-    JSON,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
 from app.database import Base
 
 
-def gen_uuid():
+def gen_uuid() -> str:
     return str(uuid.uuid4())
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
 
 
 class User(Base):
     __tablename__ = "users"
 
     id = Column(String, primary_key=True, default=gen_uuid)
-    email = Column(String, unique=True, nullable=False, index=True)
     name = Column(String, nullable=False)
-    password_hash = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
 
-    calendar_provider = Column(String, nullable=True)
-    calendar_oauth_token = Column(Text, nullable=True)
-    calendar_events = Column(JSON, default=list)
-    notification_preferences = Column(JSON, default=dict)
+    # Busy intervals parsed from the person's .ics upload (see scheduling.ics.BusyInterval).
+    calendar = Column(JSON, default=list)
+    # Title -> "hard" | "soft", set when the person reclassifies an event.
+    calendar_overrides = Column(JSON, default=dict)
+    calendar_filename = Column(String, nullable=True)
+    calendar_uploaded_at = Column(DateTime(timezone=True), nullable=True)
 
     preferences = relationship("UserPreference", back_populates="user")
 
@@ -41,12 +47,13 @@ class UserPreference(Base):
     __tablename__ = "user_preferences"
 
     id = Column(String, primary_key=True, default=gen_uuid)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     raw_text = Column(Text, nullable=False)
-    parsed_rules = Column(JSON, default=dict)
-    strength = Column(String, default="soft")  # hard | soft
-    created_at = Column(DateTime, default=datetime.utcnow)
+    rules = Column(JSON, default=list)  # list of scheduling.rules.PreferenceRule dicts
+    ack = Column(Text, nullable=True)
+    parse_ok = Column(Boolean, default=True)
     active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
 
     user = relationship("User", back_populates="preferences")
 
@@ -56,31 +63,29 @@ class Group(Base):
 
     id = Column(String, primary_key=True, default=gen_uuid)
     name = Column(String, nullable=False)
-    type = Column(String, default="custom")  # club | study_group | project_team | custom
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-    default_duration = Column(Integer, default=60)
-    default_location_preference = Column(String, nullable=True)
-    recurring_schedule = Column(JSON, nullable=True)
     invite_code = Column(String, unique=True, default=gen_uuid)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
 
     members = relationship("GroupMember", back_populates="group")
 
 
 class GroupMember(Base):
     __tablename__ = "group_members"
+    __table_args__ = (UniqueConstraint("group_id", "user_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
-    group_id = Column(String, ForeignKey("groups.id"), nullable=False)
+    group_id = Column(String, ForeignKey("groups.id"), nullable=False, index=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     role = Column(String, default="member")  # admin | member
-    joined_at = Column(DateTime, default=datetime.utcnow)
     ready = Column(Boolean, default=False)
+    joined_at = Column(DateTime(timezone=True), default=utcnow)
 
     group = relationship("Group", back_populates="members")
 
 
 class MeetingRequest(Base):
+    """An event being scheduled. One group, one negotiation."""
+
     __tablename__ = "meeting_requests"
 
     id = Column(String, primary_key=True, default=gen_uuid)
@@ -88,74 +93,71 @@ class MeetingRequest(Base):
     requested_by = Column(String, ForeignKey("users.id"), nullable=False)
     title = Column(String, nullable=False)
     duration_minutes = Column(Integer, default=60)
-
-    date_range_start = Column(DateTime, nullable=False)
-    date_range_end = Column(DateTime, nullable=False)
-
-    is_recurring = Column(Boolean, default=False)
-    recurrence_pattern = Column(JSON, nullable=True)
-    location_constraint = Column(String, nullable=True)
-    urgency = Column(String, default="normal")  # low | normal | high
-    status = Column(String, default="negotiating")  # negotiating | scheduled | cancelled | rescheduled
-    created_at = Column(DateTime, default=datetime.utcnow)
+    start_date = Column(Date, nullable=False)
+    end_date = Column(Date, nullable=False)
+    timezone = Column(String, nullable=False, default="America/New_York")
+    earliest_hour = Column(Integer, default=9)
+    latest_hour = Column(Integer, default=21)
+    weekdays = Column(JSON, default=lambda: [0, 1, 2, 3, 4])
+    # open | negotiating | scheduled | escalated | failed
+    status = Column(String, default="open")
+    created_at = Column(DateTime(timezone=True), default=utcnow)
 
 
 class NegotiationSession(Base):
     __tablename__ = "negotiation_sessions"
 
     id = Column(String, primary_key=True, default=gen_uuid)
-    meeting_request_id = Column(String, ForeignKey("meeting_requests.id"), nullable=False)
-    round_number = Column(Integer, default=1)
-    mediator_proposal = Column(JSON, nullable=True)
-    status = Column(String, default="active")  # active | converged | escalated
-    started_at = Column(DateTime, default=datetime.utcnow)
-    completed_at = Column(DateTime, nullable=True)
+    # Unique: an event can only ever be negotiated once, even if two people press Start.
+    meeting_request_id = Column(String, ForeignKey("meeting_requests.id"), nullable=False, unique=True)
+    status = Column(String, default="running")  # running | converged | escalated | failed
+    agent_backend = Column(String, nullable=False)  # anthropic | simulated
+    error = Column(Text, nullable=True)
+    started_at = Column(DateTime(timezone=True), default=utcnow)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
 
 
-class AgentResponse(Base):
-    __tablename__ = "agent_responses"
+class NegotiationEvent(Base):
+    """Append-only log of everything that happened to an event, replayable by sequence number."""
 
-    id = Column(String, primary_key=True, default=gen_uuid)
-    negotiation_session_id = Column(String, ForeignKey("negotiation_sessions.id"), nullable=False)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    round_number = Column(Integer, default=1)
-    slot_evaluations = Column(JSON, default=list)
-    hard_blocks = Column(JSON, default=list)
-    notes = Column(Text, nullable=True)
-    responded_at = Column(DateTime, default=datetime.utcnow)
+    __tablename__ = "negotiation_events"
+    __table_args__ = (UniqueConstraint("meeting_request_id", "seq"),)
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    meeting_request_id = Column(String, ForeignKey("meeting_requests.id"), nullable=False, index=True)
+    seq = Column(Integer, nullable=False)
+    type = Column(String, nullable=False)
+    payload = Column(JSON, nullable=False)
+    # Fields only the owner may see (their own agent's reasoning). Stripped for everyone else.
+    owner_id = Column(String, nullable=True)
+    private = Column(JSON, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
 
 
 class MeetingDecision(Base):
     __tablename__ = "meeting_decisions"
 
     id = Column(String, primary_key=True, default=gen_uuid)
-    meeting_request_id = Column(String, ForeignKey("meeting_requests.id"), nullable=False)
-    chosen_datetime = Column(DateTime, nullable=False)
-    chosen_location = Column(String, nullable=True)
+    meeting_request_id = Column(String, ForeignKey("meeting_requests.id"), nullable=False, unique=True)
+    status = Column(String, nullable=False)  # converged | escalated
+    slot_id = Column(String, nullable=True)
+    start = Column(DateTime(timezone=True), nullable=True)
+    end = Column(DateTime(timezone=True), nullable=True)
+    label = Column(String, nullable=True)
     explanation = Column(Text, nullable=True)
-    satisfaction_breakdown = Column(JSON, default=dict)
+    question = Column(Text, nullable=True)  # what humans need to answer when escalated
+    scores = Column(JSON, default=dict)  # user_id -> score at the chosen slot
+    compromises = Column(JSON, default=list)
     alternatives = Column(JSON, default=list)
-    decided_at = Column(DateTime, default=datetime.utcnow)
+    decided_at = Column(DateTime(timezone=True), default=utcnow)
 
 
-class MeetingAttendance(Base):
-    __tablename__ = "meeting_attendance"
-
-    id = Column(String, primary_key=True, default=gen_uuid)
-    meeting_decision_id = Column(String, ForeignKey("meeting_decisions.id"), nullable=False)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    rsvp_status = Column(String, default="pending")  # accepted | declined | pending
-    actually_attended = Column(Boolean, nullable=True)
-    override_reason = Column(Text, nullable=True)
-
-
-class NudgeLog(Base):
-    __tablename__ = "nudge_log"
+class Rsvp(Base):
+    __tablename__ = "rsvps"
+    __table_args__ = (UniqueConstraint("meeting_request_id", "user_id"),)
 
     id = Column(String, primary_key=True, default=gen_uuid)
     meeting_request_id = Column(String, ForeignKey("meeting_requests.id"), nullable=False)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    nudge_type = Column(String, default="gentle")  # gentle | specific | escalation
-    channel = Column(String, default="in_app")  # in_app | email | sms
-    sent_at = Column(DateTime, default=datetime.utcnow)
-    responded_at = Column(DateTime, nullable=True)
+    response = Column(String, nullable=False)  # accepted | declined
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

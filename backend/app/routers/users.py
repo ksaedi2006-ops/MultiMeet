@@ -1,31 +1,47 @@
-import uuid
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
-from passlib.hash import bcrypt
 from sqlalchemy.orm import Session
 
 from app import models, schemas
+from app.agents import get_agents
+from app.agents.types import AgentError
 from app.database import get_db
+from app.members import announce_member
+from app.scheduling.ics import BusyInterval, CalendarParseError, parse_ics
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+CALENDAR_HORIZON_DAYS = 120
 
-@router.post("", response_model=schemas.UserOut)
-def create_user(payload: schemas.UserCreate, db: Session = Depends(get_db)):
-    if db.query(models.User).filter(models.User.email == payload.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
-    user = models.User(email=payload.email, name=payload.name, password_hash=bcrypt.hash(payload.password))
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+
+def get_user_or_404(db: Session, user_id: str) -> models.User:
+    user = db.get(models.User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     return user
 
 
+def calendar_out(user: models.User) -> dict:
+    overrides = user.calendar_overrides or {}
+    events = []
+    for raw in user.calendar or []:
+        iv = BusyInterval.from_dict(raw)
+        events.append({**iv.to_dict(), "kind": overrides.get(iv.title, iv.kind)})
+    return {
+        "filename": user.calendar_filename,
+        "uploaded_at": user.calendar_uploaded_at.isoformat() if user.calendar_uploaded_at else None,
+        "events": events,
+    }
+
+
+def preference_out(p: models.UserPreference) -> dict:
+    return {"id": p.id, "raw_text": p.raw_text, "rules": p.rules or [], "ack": p.ack}
+
+
 @router.post("/anon", response_model=schemas.UserOut)
-def create_anon_user(db: Session = Depends(get_db)):
-    """Create a lightweight guest identity for the no-login linear flow."""
-    token = uuid.uuid4().hex[:8]
-    user = models.User(email=f"guest-{token}@meetmind.local", name=f"Guest {token}")
+def create_guest(db: Session = Depends(get_db)):
+    user = models.User(name="Guest")
     db.add(user)
     db.commit()
     db.refresh(user)
@@ -34,99 +50,105 @@ def create_anon_user(db: Session = Depends(get_db)):
 
 @router.get("/{user_id}", response_model=schemas.UserOut)
 def get_user(user_id: str, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+    return get_user_or_404(db, user_id)
 
 
 @router.patch("/{user_id}", response_model=schemas.UserOut)
-def update_user(user_id: str, payload: schemas.UserUpdate, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    if payload.name is not None and payload.name.strip():
-        user.name = payload.name.strip()
+def rename(user_id: str, payload: schemas.UserUpdate, db: Session = Depends(get_db)):
+    user = get_user_or_404(db, user_id)
+    user.name = payload.name.strip()
     db.commit()
     db.refresh(user)
     return user
 
 
-@router.post("/{user_id}/preferences", response_model=schemas.PreferenceOut)
-def add_preference(user_id: str, payload: schemas.PreferenceCreate, db: Session = Depends(get_db)):
-    from app.agents.client import call_agent, PERSONAL_AGENT_MODEL
+@router.get("/{user_id}/calendar")
+def get_calendar(user_id: str, db: Session = Depends(get_db)):
+    return calendar_out(get_user_or_404(db, user_id))
 
-    parse_prompt = (
-        "Parse the following natural-language scheduling preference into a structured JSON object "
-        'with keys "type" (e.g. "morning_aversion", "day_cutoff", "buffer_time", "custom"), '
-        '"strength" ("hard" or "soft"), "details" (free-form structured fields), and "ack" '
-        "(a short first-person sentence from the agent confirming it understood, e.g. "
-        '"Got it — I\'ll keep you out of anything before 11am."). '
-        f'Preference text: "{payload.raw_text}". Return ONLY the JSON object.'
-    )
+
+@router.post("/{user_id}/calendar")
+async def upload_calendar(
+    user_id: str, payload: schemas.CalendarUpload, event_id: str | None = None, db: Session = Depends(get_db)
+):
+    user = get_user_or_404(db, user_id)
+    now = datetime.now(timezone.utc)
     try:
-        parsed = call_agent(parse_prompt, model=PERSONAL_AGENT_MODEL, max_tokens=512)
-        strength = parsed.get("strength", "soft")
-    except Exception:
-        parsed = {"type": "custom", "details": {}, "ack": "Got it, I'll factor that in."}
-        strength = "soft"
+        intervals = parse_ics(
+            payload.raw_ics,
+            window_start=now - timedelta(days=1),
+            window_end=now + timedelta(days=CALENDAR_HORIZON_DAYS),
+            default_tz=payload.timezone,
+        )
+    except CalendarParseError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    user.calendar = [iv.to_dict() for iv in intervals]
+    user.calendar_filename = payload.filename
+    user.calendar_uploaded_at = now
+    db.commit()
+    await announce_member(db, event_id, user_id)
+    return calendar_out(user)
 
+
+@router.patch("/{user_id}/calendar/override")
+def override_event_kind(user_id: str, payload: schemas.CalendarOverride, db: Session = Depends(get_db)):
+    """Reclassify every occurrence of an event title as hard or soft."""
+    user = get_user_or_404(db, user_id)
+    user.calendar_overrides = {**(user.calendar_overrides or {}), payload.title: payload.kind}
+    db.commit()
+    return calendar_out(user)
+
+
+@router.delete("/{user_id}/calendar")
+async def clear_calendar(user_id: str, event_id: str | None = None, db: Session = Depends(get_db)):
+    user = get_user_or_404(db, user_id)
+    user.calendar, user.calendar_filename, user.calendar_uploaded_at = [], None, None
+    db.commit()
+    await announce_member(db, event_id, user_id)
+    return calendar_out(user)
+
+
+@router.get("/{user_id}/preferences")
+def list_preferences(user_id: str, db: Session = Depends(get_db)):
+    prefs = (
+        db.query(models.UserPreference)
+        .filter_by(user_id=user_id, active=True)
+        .order_by(models.UserPreference.created_at)
+        .all()
+    )
+    return [preference_out(p) for p in prefs]
+
+
+@router.post("/{user_id}/preferences")
+async def add_preference(
+    user_id: str, payload: schemas.PreferenceCreate, event_id: str | None = None, db: Session = Depends(get_db)
+):
+    get_user_or_404(db, user_id)
+    try:
+        parsed = await get_agents().parse_preference(payload.raw_text)
+    except AgentError as exc:
+        raise HTTPException(status_code=502, detail="Your agent couldn't read that. Try saying it another way.") from exc
     pref = models.UserPreference(
-        user_id=user_id, raw_text=payload.raw_text, parsed_rules=parsed, strength=strength
+        user_id=user_id,
+        raw_text=payload.raw_text,
+        rules=[r.model_dump(exclude_none=True) for r in parsed.rules],
+        ack=parsed.ack,
     )
     db.add(pref)
     db.commit()
     db.refresh(pref)
-    return pref
-
-
-@router.get("/{user_id}/preferences", response_model=list[schemas.PreferenceOut])
-def list_preferences(user_id: str, db: Session = Depends(get_db)):
-    return (
-        db.query(models.UserPreference)
-        .filter(models.UserPreference.user_id == user_id, models.UserPreference.active == True)  # noqa: E712
-        .all()
-    )
-
-
-@router.post("/{user_id}/calendar")
-def upload_calendar(user_id: str, payload: schemas.CalendarUpload, db: Session = Depends(get_db)):
-    """Accepts raw .ics text and does a naive VEVENT extraction (SUMMARY + DTSTART)."""
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    events = []
-    current: dict = {}
-    for line in payload.raw_ics.splitlines():
-        line = line.strip()
-        if line == "BEGIN:VEVENT":
-            current = {}
-        elif line.startswith("SUMMARY:"):
-            current["title"] = line[len("SUMMARY:") :]
-        elif line.startswith("DTSTART"):
-            current["start"] = line.split(":", 1)[-1]
-        elif line.startswith("DTEND"):
-            current["end"] = line.split(":", 1)[-1]
-        elif line == "END:VEVENT" and current:
-            events.append(current)
-            current = {}
-
-    user.calendar_events = events
-    user.calendar_provider = "ics_upload"
-    db.commit()
-    return {"events_parsed": len(events)}
+    await announce_member(db, event_id, user_id)
+    return preference_out(pref)
 
 
 @router.delete("/{user_id}/preferences/{preference_id}")
-def delete_preference(user_id: str, preference_id: str, db: Session = Depends(get_db)):
-    pref = (
-        db.query(models.UserPreference)
-        .filter(models.UserPreference.id == preference_id, models.UserPreference.user_id == user_id)
-        .first()
-    )
+async def delete_preference(
+    user_id: str, preference_id: str, event_id: str | None = None, db: Session = Depends(get_db)
+):
+    pref = db.query(models.UserPreference).filter_by(id=preference_id, user_id=user_id).one_or_none()
     if not pref:
         raise HTTPException(status_code=404, detail="Preference not found")
     pref.active = False
     db.commit()
+    await announce_member(db, event_id, user_id)
     return {"ok": True}

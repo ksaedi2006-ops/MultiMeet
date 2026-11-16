@@ -160,6 +160,10 @@ def test_rules_enforced_in_code():
     assert assess_slot(one_slot(10, day=3), [], rules, NY).status == HARD
     assert assess_slot(one_slot(13, day=6), [], rules, NY).status == SOFT  # Friday
     assert assess_slot(one_slot(13, day=3), [], rules, NY).status == FREE
+    fridays_only = [PreferenceRule(kind="not_after", strength="hard", time="15:00", weekdays=[4],
+                                   summary="Nothing after 15:00 on Fri")]
+    assert assess_slot(one_slot(16, day=6), [], fridays_only, NY).status == HARD  # Friday
+    assert assess_slot(one_slot(16, day=5), [], fridays_only, NY).status == FREE  # Thursday
     # Lecture ends 10:30 on Mon 2, so an 11:00 start is only 30 minutes after it.
     buffered = assess_slot(one_slot(11), parse_window(), rules, NY)
     assert buffered.status == SOFT and "next to CS 301 Lecture" in buffered.conflicts[0].reason
