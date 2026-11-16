@@ -10,3 +10,5 @@ __pycache__/
 backend/scripts/fixtures/*.ics
 .pytest_cache/
 .impeccable/review/
+
+backend/eval/out/
