@@ -6,8 +6,8 @@ import TowerCab from './cab/TowerCab'
 import AttractStage from './cab/AttractStage'
 import PlanStage from './cab/PlanStage'
 import InviteStage from './cab/InviteStage'
+import CalendarStage from './cab/CalendarStage'
 import JoinEvent from './pages/JoinEvent'
-import UploadCalendar from './pages/UploadCalendar'
 import AgentChat from './pages/AgentChat'
 import NegotiationLiveView from './pages/NegotiationLiveView'
 
@@ -45,10 +45,10 @@ export default function App() {
           <Route path="/" element={<AttractStage />} />
           <Route path="/new" element={<PlanStage />} />
           <Route path="/event/:eventId/share" element={<InviteStage />} />
+          <Route path="/event/:eventId/upload" element={<CalendarStage />} />
         </Route>
         <Route element={<OldPages />}>
         <Route path="/join/:inviteCode" element={<Page><JoinEvent /></Page>} />
-        <Route path="/event/:eventId/upload" element={<Page><UploadCalendar /></Page>} />
         <Route path="/event/:eventId/agent" element={<Page><AgentChat /></Page>} />
         <Route path="/event/:eventId/negotiate" element={<Page><NegotiationLiveView /></Page>} />
         </Route>

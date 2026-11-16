@@ -65,8 +65,8 @@ export default function PlanStage() {
   }, [start, end, weekdays, earliest, latest, duration])
 
   const slots = useMemo(
-    () => (problem ? [] : previewSlots({ start, end, duration, earliest, latest, weekdays })),
-    [problem, start, end, duration, earliest, latest, weekdays],
+    () => (problem ? [] : previewSlots({ start, end, duration, earliest, latest, weekdays, tz })),
+    [problem, start, end, duration, earliest, latest, weekdays, tz],
   )
   const model = useMemo(() => ({ ...emptyModel, slots }), [slots])
   const days = new Set(slots.map((s) => s.dayKey)).size

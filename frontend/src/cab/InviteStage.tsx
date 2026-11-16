@@ -58,7 +58,7 @@ export default function InviteStage() {
     if (!event || live.slots.length) return live
     const slots = previewSlots({
       start: event.start_date, end: event.end_date, duration: event.duration_minutes,
-      earliest: event.earliest_hour, latest: event.latest_hour, weekdays: event.weekdays,
+      earliest: event.earliest_hour, latest: event.latest_hour, weekdays: event.weekdays, tz: event.timezone,
     })
     return { ...live, slots }
   }, [events, event])

@@ -590,9 +590,9 @@ export class ScopeEngine {
       const painted = sweep === null ? 0 : Math.exp(-sinceSweep(sweep, angle) * 1.6)
 
       if (closed || (s.closed && this.opts.reducedMotion)) {
-        const d = 2.6 * scale
-        ctx.strokeStyle = `rgba(${ORANGE},0.42)`
-        ctx.lineWidth = 1
+        const d = 3.6 * scale  // a crossed-out time has to read at a glance: it is the point of the calendar step
+        ctx.strokeStyle = `rgba(${ORANGE},0.7)`
+        ctx.lineWidth = 1.4
         ctx.beginPath()
         ctx.moveTo(x - d, y - d)
         ctx.lineTo(x + d, y + d)

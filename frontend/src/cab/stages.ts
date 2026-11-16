@@ -2,7 +2,7 @@
  * The cab never reloads; a route only picks a stage. Each stage says how the console is
  * arranged around the scope, and the camera follows from that.
  */
-export type StageId = 'attract' | 'plan' | 'invite'
+export type StageId = 'attract' | 'plan' | 'invite' | 'calendar'
 
 export interface StageSpec {
   id: StageId
@@ -18,11 +18,13 @@ export const STAGES: Record<StageId, StageSpec> = {
   attract: { id: 'attract', name: 'How it works', bay: 360, panel: 400 },
   plan: { id: 'plan', name: 'New meeting', bay: 660, panel: 0 },
   invite: { id: 'invite', name: 'Invite people', bay: 360, panel: 420 },
+  calendar: { id: 'calendar', name: 'Your calendar', bay: 440, panel: 420 },
 }
 
 export function stageFor(pathname: string): StageSpec {
   if (pathname === '/new') return STAGES.plan
   if (/^\/event\/[^/]+\/share\/?$/.test(pathname)) return STAGES.invite
+  if (/^\/event\/[^/]+\/upload\/?$/.test(pathname)) return STAGES.calendar
   return STAGES.attract
 }
 

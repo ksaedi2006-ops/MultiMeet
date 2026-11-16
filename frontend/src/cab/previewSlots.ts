@@ -10,6 +10,27 @@ export interface PlanWindow {
   earliest: number
   latest: number
   weekdays: number[] // 0 = Monday
+  tz?: string // the meeting's time zone; times are real instants in it when given
+}
+
+/** Minutes east of UTC for a zone at a given instant. */
+function offsetMinutes(utcMs: number, tz: string): number {
+  const p = Object.fromEntries(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+    }).formatToParts(new Date(utcMs)).map((x) => [x.type, x.value]),
+  )
+  const asUtc = Date.UTC(+p.year, +p.month - 1, +p.day, +p.hour, +p.minute)
+  return Math.round((asUtc - utcMs) / 60000)
+}
+
+/** The UTC instant of a wall-clock time in a zone (two passes settle DST edges). */
+function zoned(dayMs: number, minutes: number, tz?: string): number {
+  const wall = dayMs + minutes * 60000
+  if (!tz) return wall
+  let utc = wall - offsetMinutes(wall, tz) * 60000
+  utc = wall - offsetMinutes(utc, tz) * 60000
+  return utc
 }
 
 function dayLabel(d: Date) {
@@ -38,7 +59,7 @@ export function previewSlots(w: PlanWindow): SlotModel[] {
       for (let m = w.earliest * 60; m + w.duration <= w.latest * 60; m += step) {
         const hh = Math.floor(m / 60)
         const mm = m % 60
-        const at = new Date(day.getTime() + m * 60000)
+        const at = new Date(zoned(day.getTime(), m, w.tz))
         out.push({
           id: `${key}T${String(hh).padStart(2, '0')}${String(mm).padStart(2, '0')}`,
           start: at.toISOString(),
