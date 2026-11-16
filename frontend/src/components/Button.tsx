@@ -21,19 +21,27 @@ type NativeProps = Omit<
 
 interface Props extends NativeProps {
   variant?: Variant
+  /** Draws a forward arrow after the label, as an icon rather than a text glyph. */
+  arrow?: boolean
 }
 
-export default function Button({ variant = 'primary', className = '', children, ...props }: Props) {
+export default function Button({ variant = 'primary', className = '', arrow, children, ...props }: Props) {
   const isQuiet = variant === 'quiet'
   return (
     <motion.button
       whileTap={props.disabled ? undefined : { scale: 0.97 }}
-      className={`font-mono text-sm tracking-wide rounded-[3px] transition-colors disabled:cursor-not-allowed ${
+      className={`font-mono text-sm tracking-wide rounded-[2px] transition-colors disabled:cursor-not-allowed ${
         isQuiet ? 'px-0 py-1' : 'px-5 py-3'
       } ${VARIANTS[variant]} ${className}`}
       {...props}
     >
       {children}
+      {arrow && (
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6"
+          strokeLinecap="round" strokeLinejoin="round" aria-hidden className="inline-block ml-2 -mt-0.5">
+          <path d="M3 8h10M9 4l4 4-4 4" />
+        </svg>
+      )}
     </motion.button>
   )
 }

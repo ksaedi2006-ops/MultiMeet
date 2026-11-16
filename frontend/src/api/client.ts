@@ -131,6 +131,26 @@ export async function createEvent(settings: EventSettings, userId: string) {
   return (await api.post<EventInfo>('/events', settings, { params: { requested_by: userId } })).data
 }
 
+export async function createSampleEvent(userId: string, count: number, title?: string) {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  return (
+    await api.post<EventInfo>('/events/sample', null, { params: { user_id: userId, count, timezone, ...(title ? { title } : {}) } })
+  ).data
+}
+
+export async function addSamplePeople(eventId: string, userId: string, count: number) {
+  await api.post(`/events/${eventId}/sample`, null, { params: { user_id: userId, count } })
+}
+
+export async function fillSampleCalendar(userId: string, eventId?: string) {
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  return (
+    await api.post<CalendarInfo>(`/users/${userId}/calendar/sample`, null, {
+      params: { timezone, ...(eventId ? { event_id: eventId } : {}) },
+    })
+  ).data
+}
+
 export async function getEvent(eventId: string) {
   return (await api.get<EventInfo>(`/events/${eventId}`)).data
 }

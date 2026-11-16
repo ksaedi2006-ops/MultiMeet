@@ -81,6 +81,23 @@ def event_slots(meeting: models.MeetingRequest, now: datetime | None = None) -> 
     )
 
 
+async def launch_negotiation(db: Session, meeting: models.MeetingRequest, agents: Agents) -> bool:
+    """Open the one negotiation this event may have and run it. False if it already started."""
+    from sqlalchemy.exc import IntegrityError
+
+    if meeting.status != "open":
+        return False
+    db.add(models.NegotiationSession(meeting_request_id=meeting.id, agent_backend=agents.name))
+    meeting.status = "negotiating"
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        return False
+    start_negotiation(meeting.id, agents)
+    return True
+
+
 def start_negotiation(meeting_id: str, agents: Agents) -> None:
     task = asyncio.create_task(run_negotiation(meeting_id, agents))
     _tasks.add(task)

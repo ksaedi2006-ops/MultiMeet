@@ -1,7 +1,9 @@
+import { useEffect } from 'react'
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion'
+import { MotionConfig, motion } from 'framer-motion'
 import Masthead from './components/Masthead'
 import CreateEvent from './pages/CreateEvent'
+import Landing from './pages/Landing'
 import ShareEvent from './pages/ShareEvent'
 import JoinEvent from './pages/JoinEvent'
 import UploadCalendar from './pages/UploadCalendar'
@@ -13,7 +15,6 @@ function Page({ children }: { children: React.ReactNode }) {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6, transition: { duration: 0.15 } }}
       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
     >
       {children}
@@ -23,20 +24,22 @@ function Page({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   const location = useLocation()
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [location.pathname])
   return (
     <MotionConfig reducedMotion="user">
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-clip">
       <Masthead />
-      <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        <Route path="/" element={<Page><CreateEvent /></Page>} />
+      <Routes>
+        <Route path="/" element={<Page><Landing /></Page>} />
+        <Route path="/new" element={<Page><CreateEvent /></Page>} />
         <Route path="/event/:eventId/share" element={<Page><ShareEvent /></Page>} />
         <Route path="/join/:inviteCode" element={<Page><JoinEvent /></Page>} />
         <Route path="/event/:eventId/upload" element={<Page><UploadCalendar /></Page>} />
         <Route path="/event/:eventId/agent" element={<Page><AgentChat /></Page>} />
         <Route path="/event/:eventId/negotiate" element={<Page><NegotiationLiveView /></Page>} />
       </Routes>
-      </AnimatePresence>
     </div>
     </MotionConfig>
   )

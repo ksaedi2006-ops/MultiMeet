@@ -1,21 +1,30 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { getEventByInvite, getOrCreateUserId, getSavedName, joinEvent, setUserName } from '../api/client'
-import Strip from '../components/Strip'
+import { motion } from 'framer-motion'
+import { getEventByInvite, getOrCreateUserId, getSavedName, joinEvent, setUserName, errorMessage, type EventInfo } from '../api/client'
 import Button from '../components/Button'
+import Field, { inputClass } from '../components/Field'
+import Strip from '../components/Strip'
+import { rise, stagger } from '../lib/motion'
+import { rememberEvent } from '../lib/recents'
+
+const NEXT = [
+  'Show your agent your calendar, or skip it.',
+  'Tell it what you will and won’t do.',
+  'Check in. The organiser starts the negotiation.',
+]
 
 export default function JoinEvent() {
   const { inviteCode = '' } = useParams<{ inviteCode: string }>()
   const navigate = useNavigate()
-  const [title, setTitle] = useState<string | null>(null)
+  const [event, setEvent] = useState<EventInfo | null>(null)
   const [name, setName] = useState(getSavedName)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [missing, setMissing] = useState(false)
 
   useEffect(() => {
-    getEventByInvite(inviteCode)
-      .then((event) => setTitle(event.title))
-      .catch(() => setError('This invite link looks invalid, or the backend is unreachable.'))
+    getEventByInvite(inviteCode).then(setEvent, () => setMissing(true))
   }, [inviteCode])
 
   async function handleJoin(e: React.FormEvent) {
@@ -25,47 +34,56 @@ export default function JoinEvent() {
     try {
       const userId = await getOrCreateUserId()
       await setUserName(userId, name)
-      const event = await joinEvent(inviteCode, userId)
-      navigate(`/event/${event.event_id}/upload`, { replace: true })
-    } catch {
-      setError('Could not join. Check that the backend is running, then try again.')
+      const joined = await joinEvent(inviteCode, userId)
+      rememberEvent(joined.event_id, joined.title)
+      navigate(`/event/${joined.event_id}/upload`, { replace: true })
+    } catch (err) {
+      setError(errorMessage(err, "Couldn't join. Check that the backend is running, then try again."))
       setLoading(false)
     }
   }
 
+  if (missing) {
+    return (
+      <div className="max-w-xl mx-auto px-5 py-20">
+        <h1 className="font-display font-bold text-5xl text-strip leading-none">This invite doesn’t work</h1>
+        <p className="mt-4 text-strip/85 text-[17px] leading-relaxed">
+          The link may be mistyped, or the organiser started over. Ask them to send it again.
+        </p>
+      </div>
+    )
+  }
+
   return (
-    <div className="max-w-xl mx-auto px-5 sm:px-8 py-10">
-      <Strip className="p-8 sm:p-10">
-        <p className="font-mono text-[11px] tracking-[0.25em] text-clearance mb-4">BOARDING PASS</p>
-        <h1 className="font-display font-bold text-3xl sm:text-4xl leading-tight mb-3 tracking-tight">
-          {title ? `Join "${title}"` : error ? 'Invite not found' : 'Loading invite…'}
-        </h1>
-        {!error && (
-          <>
-            <p className="text-strip-ink/70 mb-8 leading-relaxed">
-              Your agent checks in the moment you're briefed — right after this.
-            </p>
-            <form onSubmit={handleJoin} className="flex flex-col gap-6">
-              <label className="block">
-                <span className="font-mono text-[11px] tracking-widest text-strip-ink/50">YOUR NAME</span>
-                <input
-                  autoFocus
-                  className="w-full bg-transparent border-0 border-b-2 border-strip-ink/20 focus:border-clearance outline-none px-0 py-2 text-xl font-medium placeholder:font-normal placeholder:text-strip-ink/35 transition-colors"
-                  placeholder="So others know who they're negotiating with"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  disabled={!title}
-                />
-              </label>
-              <Button disabled={loading || !title} className="self-start">
-                {loading ? 'JOINING…' : 'JOIN EVENT →'}
-              </Button>
-            </form>
-          </>
-        )}
-        {error && <p className="font-mono text-sm text-clearance">{error}</p>}
-      </Strip>
+    <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-12 sm:pt-16 pb-24 grid gap-10 lg:gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] items-start">
+      <motion.div variants={stagger(0.08)} initial="hidden" animate="show" className="min-w-0">
+        <motion.h1 variants={rise} className="font-display font-bold text-[clamp(3rem,8vw,5.5rem)] leading-[0.92] tracking-tight text-strip">
+          {event ? event.title : '…'}
+        </motion.h1>
+        <motion.p variants={rise} className="mt-4 text-[17px] text-strip/85">You’re invited. Here’s what happens next.</motion.p>
+        <motion.ol variants={rise} className="mt-8 space-y-3 max-w-[28rem]">
+          {NEXT.map((line) => (
+            <li key={line} className="flex gap-3 text-[16px] text-strip/85 leading-snug">
+              <span aria-hidden className="mt-2 h-px w-5 bg-amber shrink-0" />
+              {line}
+            </li>
+          ))}
+        </motion.ol>
+      </motion.div>
+
+      <motion.form onSubmit={handleJoin} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.15 }} className="min-w-0">
+        <Strip className="p-6 sm:p-8 flex flex-col gap-7">
+          <Field label="Your name" hint="what the group will see">
+            <input autoFocus required className={inputClass} placeholder="Kofi Mensah" value={name}
+              onChange={(e) => setName(e.target.value)} disabled={!event} maxLength={60} />
+          </Field>
+          <Button arrow={!loading} disabled={loading || !event} className="self-start">
+            {loading ? 'BOARDING…' : 'JOIN THE EVENT'}
+          </Button>
+          {error && <p role="alert" className="text-sm text-clearance-dim -mt-3">{error}</p>}
+        </Strip>
+      </motion.form>
     </div>
   )
 }

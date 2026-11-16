@@ -92,7 +92,9 @@ export default function NegotiationLiveView() {
           ) : (
             <FairnessMeter model={model} />
           )}
-          <StripBoard model={model} viewerId={viewerId} highlight={highlight} onHover={setHighlight} />
+          <div className="lg:max-h-[calc(100svh-22rem)] lg:overflow-y-auto lg:pr-1 -mr-1 pr-1">
+            <StripBoard model={model} viewerId={viewerId} highlight={highlight} onHover={setHighlight} />
+          </div>
         </div>
       </div>
 

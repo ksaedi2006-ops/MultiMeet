@@ -3,7 +3,6 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -11,7 +10,8 @@ from app.agents import get_agents
 from app.bus import bus
 from app.database import get_db
 from app.members import announce_member, find_member, member_status
-from app.negotiation import event_slots, start_negotiation
+from app.negotiation import event_slots, launch_negotiation
+from app.sample import populate_in_background
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -56,6 +56,51 @@ async def create_event(payload: schemas.EventCreate, requested_by: str, db: Sess
     db.commit()
     await announce_member(db, meeting.id, requested_by, "member_joined")
     return event_out(db, meeting)
+
+
+@router.post("/sample", response_model=schemas.EventOut)
+async def create_sample_event(user_id: str, count: int = 14, autostart: bool = True, title: str | None = None,
+                              timezone: str = "America/New_York", db: Session = Depends(get_db)):
+    """One click: a new event, a crowd of generated students joining it, and (by default) the
+    negotiation starting by itself once they have all checked in."""
+    from datetime import date, timedelta
+
+    from zoneinfo import ZoneInfo
+
+    if not db.get(models.User, user_id):
+        raise HTTPException(status_code=404, detail="User not found")
+    count = max(3, min(40, count))
+    try:
+        today = datetime.now(ZoneInfo(timezone)).date()
+    except Exception:
+        raise HTTPException(status_code=422, detail="Unknown time zone")
+    group = models.Group(name=title or "Sample negotiation")
+    db.add(group)
+    db.flush()
+    meeting = models.MeetingRequest(
+        group_id=group.id, requested_by=user_id, title=title or "Sample negotiation",
+        duration_minutes=60, start_date=today + timedelta(days=1), end_date=today + timedelta(days=12),
+        timezone=timezone, earliest_hour=9, latest_hour=21, weekdays=[0, 1, 2, 3, 4],
+    )
+    db.add(meeting)
+    db.add(models.GroupMember(group_id=group.id, user_id=user_id, role="admin", ready=True))
+    db.commit()
+    await announce_member(db, meeting.id, user_id, "member_joined")
+    populate_in_background(meeting.id, count, stagger=0.35, autostart=autostart, agents=get_agents())
+    return event_out(db, meeting)
+
+
+@router.post("/{event_id}/sample")
+async def add_sample_people(event_id: str, user_id: str, count: int = 12, db: Session = Depends(get_db)):
+    """Add generated students to an existing, unstarted event (organiser only). They check in."""
+    meeting = get_meeting_or_404(db, event_id)
+    if meeting.requested_by != user_id:
+        raise HTTPException(status_code=403, detail="Only the organiser can add sample people")
+    if meeting.status != "open":
+        raise HTTPException(status_code=409, detail="The negotiation has already started")
+    count = max(1, min(40, count))
+    populate_in_background(event_id, count, stagger=0.3, autostart=False, agents=get_agents())
+    return {"adding": count}
 
 
 @router.get("/{event_id}", response_model=schemas.EventOut)
@@ -132,15 +177,8 @@ async def start(event_id: str, user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=409, detail="The date range has no upcoming times left")
 
     agents = get_agents()
-    db.add(models.NegotiationSession(meeting_request_id=meeting.id, agent_backend=agents.name))
-    meeting.status = "negotiating"
-    try:
-        db.commit()
-    except IntegrityError:
-        db.rollback()
+    if not await launch_negotiation(db, meeting, agents):
         raise HTTPException(status_code=409, detail="The negotiation has already started")
-
-    start_negotiation(meeting.id, agents)
     waiting = [member_status(db, m)["name"] for m in members if not m.ready]
     return {"started": True, "participants": len(ready), "left_out": waiting, "agent_backend": agents.name}
 

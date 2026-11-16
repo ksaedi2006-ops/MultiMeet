@@ -51,6 +51,7 @@ class SimulatedAgents:
     carrier = "SIM"
 
     async def parse_preference(self, text: str) -> ParsedPreference:
+        text = text.replace("\u2019", "'").replace("\u2018", "'")  # smart quotes from pasted or suggested text
         strength = "hard" if HARD_WORDS.search(text) else "soft"
         rules: list[PreferenceRule] = []
         lower = text.lower()

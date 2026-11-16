@@ -90,6 +90,19 @@ async def upload_calendar(
     return calendar_out(user)
 
 
+@router.post("/{user_id}/calendar/sample")
+async def use_sample_calendar(
+    user_id: str, timezone: str = "America/New_York", event_id: str | None = None, db: Session = Depends(get_db)
+):
+    """Fill this person's calendar with a plausible randomized student week."""
+    from app.sample import sample_calendar_for
+
+    user = get_user_or_404(db, user_id)
+    sample_calendar_for(db, user, timezone)
+    await announce_member(db, event_id, user_id)
+    return calendar_out(user)
+
+
 @router.patch("/{user_id}/calendar/override")
 def override_event_kind(user_id: str, payload: schemas.CalendarOverride, db: Session = Depends(get_db)):
     """Reclassify every occurrence of an event title as hard or soft."""

@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 export default function Strip({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`bg-strip text-strip-ink rounded-[3px] border-t-4 border-clearance shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] ${className}`}
+      className={`bg-strip text-strip-ink border-t-4 border-clearance shadow-[0_20px_60px_-15px_rgba(0,0,0,0.6)] ${className}`}
     >
       {children}
     </div>

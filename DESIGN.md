@@ -257,6 +257,15 @@ A canvas instrument: glass fill, mist range rings and bearing ticks, day labels 
 ### Stamp
 A rectangular ink stamp with a 2px orange border (3px when large) and orange lettering. It lands with an overshooting spring (280/14), going from 1.9× scale and +8° to rest at -4°. The large size sets the word in display and the detail in mono, filled with `glass` so the sweep and runway never cross the lettering. The small and medium sizes are mono throughout.
 
+### Flow Pages
+The pages before the negotiation share its system. Each is a two-column spread on the board: display headline, one plain sentence, a manila form or list on one side, a live visual on the other, all staggering in on the same ease. The progress nav above them shows the steps the viewer actually does, with a drawn check for finished steps and an amber rule that slides between positions.
+
+- **Landing** puts the radar scope in the hero, replaying a recorded 14-agent negotiation on a loop, with the sample runner (8, 16 or 30 generated people) beside the primary action. It ends with the four-step protocol as drawn rules that fill as they scroll into view.
+- **Flight plan** is a printed form on a manila strip with ruled underlines that light on focus, segmented chips for length and days, and a preview grid of the times that will be searched, repainting as settings change.
+- **Frequency** pairs the invite link and a roster of strips (CAL, rules, checked-in state) with a holding-pattern scope that gains an aircraft as each person joins. A FILED stamp lands on arrival.
+- **Manifest** is a drop zone, a list of commitments that flip between fixed and movable, and a week grid where fixed blocks are solid manila and movable blocks are hatched.
+- **Briefing** is a transcript where the agent's replies carry the rules it understood as chips, beside a rulebook of strips that can be removed.
+
 ## Do's and Don'ts
 
 ### Do:
