@@ -134,7 +134,7 @@ def leximin_select(u: Profile, d: dict[str, float], slots: list[str]) -> Selecti
 
 
 def maxmin_raw_select(scores: dict[str, dict[str, int]], slots: list[str]) -> Selection:
-    """B3, the current MeetMind rule: max-min over raw self-reported 0-100 scores, then the
+    """B3, the old MultiMeet rule: max-min over raw self-reported 0-100 scores, then the
     average, then time order (app/scheduling/fairness.rank_slots, unchanged)."""
     if not slots:
         return Selection(None, "maxmin_raw", "no_slots")

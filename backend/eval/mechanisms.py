@@ -157,7 +157,7 @@ def _b3_scores(rep: Report, model: UtilityModel, slots: list[str]) -> dict[str, 
 
 
 def run_b3(reports: list[Report], slots: list[str], *, rounds: bool = True) -> Result:
-    """The current MeetMind rule, with its old mediator loop: up to 2 agents scoring below
+    """The old MultiMeet rule, with its old mediator loop: up to 2 agents scoring below
     70 on each of the top 3, then top 2 slots, concede on their costliest rule there."""
     models = {r.uid: r.model for r in reports}
     scores = {r.uid: _b3_scores(r, models[r.uid], slots) for r in reports}
