@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-16T14:41:35+00:00",
+  "generatedAt": "2026-11-16T18:00:00+00:00",
   "title": "Design System: MultiMeet",
   "extensions": {
     "colorMeta": {
@@ -49,6 +49,21 @@
           "#d8f2ff"
         ]
       },
+      "console": {
+        "role": "neutral",
+        "displayName": "Console",
+        "canonical": "oklch(26.0% 0.027 251.1)",
+        "tonalRamp": [
+          "#040c16",
+          "#1b2632",
+          "#374350",
+          "#566371",
+          "#778493",
+          "#99a7b6",
+          "#bccbdb",
+          "#e3f0fe"
+        ]
+      },
       "glass": {
         "role": "neutral",
         "displayName": "Scope Glass",
@@ -77,6 +92,21 @@
           "#b0a488",
           "#d5c8ac",
           "#faedd0"
+        ]
+      },
+      "strip-dim": {
+        "role": "neutral",
+        "displayName": "Manila Pressed",
+        "canonical": "oklch(86.1% 0.056 88.8)",
+        "tonalRamp": [
+          "#100a00",
+          "#2f2301",
+          "#4e401c",
+          "#6e603b",
+          "#90815c",
+          "#b3a47d",
+          "#d8c8a0",
+          "#feedc5"
         ]
       },
       "strip-ink": {
@@ -169,6 +199,51 @@
           "#daf2ff"
         ]
       },
+      "holder-steel": {
+        "role": "neutral",
+        "displayName": "Holder Steel",
+        "canonical": "oklch(51.0% 0.049 241.6)",
+        "tonalRamp": [
+          "#000c18",
+          "#0c283b",
+          "#29455a",
+          "#48657b",
+          "#69869d",
+          "#8ba9c1",
+          "#aecee7",
+          "#e0f1fe"
+        ]
+      },
+      "holder-ochre": {
+        "role": "neutral",
+        "displayName": "Holder Ochre",
+        "canonical": "oklch(56.1% 0.088 81.0)",
+        "tonalRamp": [
+          "#110a00",
+          "#322202",
+          "#563d05",
+          "#7b5b1d",
+          "#9d7d41",
+          "#c1a064",
+          "#e7c487",
+          "#feeccd"
+        ]
+      },
+      "holder-person": {
+        "role": "neutral",
+        "displayName": "Holder Person",
+        "canonical": "oklch(52.9% 0.030 243.1)",
+        "tonalRamp": [
+          "#020c17",
+          "#182733",
+          "#344451",
+          "#536471",
+          "#738593",
+          "#95a8b7",
+          "#b9ccdc",
+          "#e0f1ff"
+        ]
+      },
       "score-low": {
         "role": "tertiary",
         "displayName": "Score Ink, Unwanted",
@@ -218,11 +293,15 @@
     "typographyMeta": {
       "display": {
         "displayName": "Display",
-        "purpose": "Event title in the status bar; the cleared time on the decision brief."
+        "purpose": "The meeting's title in the negotiation panel; the booked time on the decision brief."
+      },
+      "display-step": {
+        "displayName": "Display Step",
+        "purpose": "Each step's own heading in its panel; panel-side headings at 1.6rem."
       },
       "headline": {
         "displayName": "Headline",
-        "purpose": "Panel statements (check-in count, failure)."
+        "purpose": "Panel statements (who is ready, failure) and your name on your card."
       },
       "stamp": {
         "displayName": "Stamp",
@@ -230,34 +309,43 @@
       },
       "body": {
         "displayName": "Body",
-        "purpose": "Radio transcript and decision explanation."
+        "purpose": "Explainer, ticker transcript, preferences chat, decision explanation."
       },
       "body-sm": {
         "displayName": "Body Small",
-        "purpose": "Log message text and panel notes."
+        "purpose": "Step name in the top bar, log message text, notes, the legend, the elapsed clock."
       },
       "figure": {
         "displayName": "Figure",
-        "purpose": "Least-happy and average values."
+        "purpose": "Least-happy and average values, followed by /100."
       },
       "data": {
         "displayName": "Data",
-        "purpose": "Clocks, speakers, scope labels, status words."
+        "purpose": "Log clocks (12-hour, meeting's zone), day labels, phase readouts."
       },
       "name-tag": {
-        "displayName": "Callsign",
-        "purpose": "Strip callsigns and radio speaker chips."
+        "displayName": "Name Tag",
+        "purpose": "People's first names on dots and rows; speaker chips."
       },
       "label": {
         "displayName": "Label",
-        "purpose": "Panel headings, definition terms, console button text."
+        "purpose": "Panel headings, definition terms, button text."
+      },
+      "hand": {
+        "displayName": "Hand",
+        "purpose": "The notes on Your card only (owner-approved fourth voice)."
       }
     },
     "shadows": [
       {
-        "name": "strip-lift",
+        "name": "card-lift",
+        "value": "0 1px 0 rgba(0,0,0,0.35), 0 6px 14px -8px rgba(0,0,0,0.6)",
+        "purpose": "Each paper card."
+      },
+      {
+        "name": "row-lift",
         "value": "0 6px 14px -8px rgba(0,0,0,0.7)",
-        "purpose": "Each flight strip in the bay."
+        "purpose": "Each person row on the negotiation step."
       },
       {
         "name": "brief-lift",
@@ -269,7 +357,7 @@
       {
         "name": "ease-out-expo",
         "value": "cubic-bezier(0.16, 1, 0.3, 1)",
-        "purpose": "Page and decision-brief entrances."
+        "purpose": "Panel width changes, the right panel sliding away, step-name swaps, decision-brief entrance."
       },
       {
         "name": "duration-quick",
@@ -282,9 +370,24 @@
         "purpose": "Score-track flex, cell inking, fairness markers."
       },
       {
-        "name": "spring-strip",
+        "name": "spring-row",
         "value": "spring stiffness 260 damping 28",
-        "purpose": "Strips entering and cocking out 14px when the tower calls."
+        "purpose": "Person rows entering."
+      },
+      {
+        "name": "spring-card",
+        "value": "spring stiffness 210 damping 28",
+        "purpose": "Paper card shared-layout moves (Schedule a meeting opening into the form)."
+      },
+      {
+        "name": "write-on",
+        "value": "clip-path inset(0 100% 0 0) to inset(0 0% 0 0), 900ms, cubic-bezier(0.45, 0, 0.2, 1)",
+        "purpose": "A handwritten note being written on Your card."
+      },
+      {
+        "name": "idle-tour",
+        "value": "after 20s idle, one person every 3s",
+        "purpose": "First screen: points at each person so their tag shows; stops on any input."
       },
       {
         "name": "spring-stamp",
@@ -294,23 +397,27 @@
       {
         "name": "sweep",
         "value": "5200ms period",
-        "purpose": "Radar sweep; phosphor paint decays behind it."
+        "purpose": "Scope sweep; phosphor paint decays behind it."
       },
       {
         "name": "landing",
         "value": "1100ms delay, 520ms stagger, 1500ms per aircraft",
-        "purpose": "Finale: least-compromised lands first."
+        "purpose": "Finale: dots come in to the chosen time one by one."
       },
       {
         "name": "reduced-motion",
         "value": "jump to end state",
-        "purpose": "Global CSS clamp, MotionConfig reducedMotion=user, ticker and scope skip animation."
+        "purpose": "Global CSS clamp, MotionConfig reducedMotion=user; ticker, explainer and scope skip animation; no idle tour."
       }
     ],
     "breakpoints": [
       {
         "name": "sm",
         "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
       },
       {
         "name": "lg",
@@ -323,16 +430,16 @@
       "name": "Clearance Button",
       "kind": "button",
       "refersTo": "button-clearance",
-      "description": "Committing action (start, add to calendar). Safety-orange fill, manila mono label.",
-      "html": "<button class=\"ds-btn-clearance\">ADD TO CALENDAR (.ICS)</button>",
+      "description": "Committing action (create, run, start, add to my calendar). Safety-orange fill, manila mono label.",
+      "html": "<button class=\"ds-btn-clearance\">ADD TO MY CALENDAR</button>",
       "css": ".ds-btn-clearance{display:inline-flex;align-items:center;height:40px;padding:0 16px;border:0;border-radius:2px;background:var(--color-clearance,#d4551c);color:var(--color-strip,#ecdfc2);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.05em;cursor:pointer;transition:background-color .15s}.ds-btn-clearance:hover{background:var(--color-clearance-dim,#a13f13)}.ds-btn-clearance:focus-visible{outline:2px solid var(--color-amber,#e8a93a);outline-offset:2px}.ds-btn-clearance:disabled{background:rgba(212,85,28,.4);cursor:not-allowed}"
     },
     {
       "name": "Console Button",
       "kind": "button",
       "refersTo": "button-console",
-      "description": "Playback control on the board: hairline border, amber on hover, inline stroke icon.",
-      "html": "<div style=\"background:#22313f;padding:16px\"><button class=\"ds-btn-console\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.8h2.8\"/></svg>REPLAY</button></div>",
+      "description": "Playback control on the console furniture: hairline border, amber on hover, inline stroke icon.",
+      "html": "<div style=\"background:#1a2531;padding:16px\"><button class=\"ds-btn-console\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.8h2.8\"/></svg>REPLAY</button></div>",
       "css": ".ds-btn-console{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px;border:1px solid var(--color-board-line,#3c5266);border-radius:2px;background:transparent;color:rgba(236,223,194,.8);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;letter-spacing:.05em;cursor:pointer;transition:color .15s,border-color .15s}.ds-btn-console:hover{border-color:var(--color-amber,#e8a93a);color:var(--color-amber,#e8a93a)}.ds-btn-console:focus-visible{outline:2px solid var(--color-amber,#e8a93a);outline-offset:2px}.ds-btn-console:disabled{opacity:.35;pointer-events:none}"
     },
     {
@@ -344,66 +451,100 @@
       "css": ".ds-btn-ink{height:40px;padding:0 16px;border:1px solid rgba(42,32,21,.3);border-radius:2px;background:transparent;color:var(--color-strip-ink,#2a2015);font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.05em;cursor:pointer;transition:border-color .15s,background-color .15s}.ds-btn-ink:hover{border-color:var(--color-strip-ink,#2a2015)}.ds-btn-ink:focus-visible{outline:2px solid var(--color-amber,#e8a93a);outline-offset:2px}.ds-btn-ink[aria-pressed=true]{background:var(--color-strip-ink,#2a2015);color:var(--color-strip,#ecdfc2);border-color:var(--color-strip-ink,#2a2015)}"
     },
     {
-      "name": "Flight Strip",
+      "name": "Top Bar",
+      "kind": "nav",
+      "refersTo": "top-bar",
+      "description": "The console's 44px bar: wordmark with amber mark, the step name in plain sans, the sound toggle (off by default), the local clock.",
+      "html": "<header class=\"ds-bar\"><a class=\"ds-bar-mark\" href=\"#\"><svg viewBox=\"0 0 16 16\" width=\"14\" height=\"14\" aria-hidden=\"true\"><path d=\"M8 1.5 13.6 4.75v6.5L8 14.5 2.4 11.25v-6.5z\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\"/><circle cx=\"8\" cy=\"8\" r=\"1.6\" fill=\"currentColor\"/></svg><span>MULTIMEET</span></a><div class=\"ds-bar-step\">Your preferences</div><button class=\"ds-bar-sound\" aria-pressed=\"false\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M2.5 6h2.5l3.5-3v10l-3.5-3H2.5z\"/><path d=\"m11 6 4 4m0-4-4 4\"/></svg><span>Sound off</span></button><span class=\"ds-bar-clock\">3:42 PM</span></header>",
+      "css": ".ds-bar{display:flex;align-items:stretch;height:44px;background-color:var(--color-console,#1a2531);border-bottom:1px solid var(--color-board-line,#3c5266);font:400 11px/1 'IBM Plex Mono',monospace;letter-spacing:.14em}.ds-bar-mark{display:flex;align-items:center;gap:10px;padding:0 20px;border-right:1px solid var(--color-board-line,#3c5266);color:var(--color-amber,#e8a93a);text-decoration:none;transition:background-color .18s}.ds-bar-mark:hover{background:rgba(42,59,75,.6)}.ds-bar-mark span{font:700 17px/1 'Big Shoulders Display',sans-serif;letter-spacing:.06em;color:var(--color-strip,#ecdfc2)}.ds-bar-step{flex:1;display:flex;align-items:center;padding:0 16px;font:400 14px/1 'IBM Plex Sans',sans-serif;letter-spacing:normal;color:var(--color-strip,#ecdfc2)}.ds-bar-sound{display:flex;align-items:center;gap:8px;padding:0 16px;border:0;border-left:1px solid var(--color-board-line,#3c5266);background:none;color:var(--color-mist,#93aabd);font:400 13px/1 'IBM Plex Sans',sans-serif;cursor:pointer;transition:color .18s}.ds-bar-sound:hover{color:var(--color-strip,#ecdfc2)}.ds-bar-sound[aria-pressed=true]{color:var(--color-amber,#e8a93a)}.ds-bar-sound:focus-visible,.ds-bar-mark:focus-visible{outline:2px solid var(--color-amber,#e8a93a);outline-offset:2px}.ds-bar-clock{display:flex;align-items:center;padding:0 20px;border-left:1px solid var(--color-board-line,#3c5266);color:var(--color-mist,#93aabd);font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Paper Card",
+      "kind": "card",
+      "refersTo": "paper-card",
+      "description": "Manila ruled into boxes with a coloured end and icon: plan (orange, only Schedule a meeting / New meeting), sample (steel), recent (ochre), person (neutral).",
+      "html": "<div class=\"ds-cab\"><div class=\"ds-card\"><div class=\"ds-end ds-plan\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 3.5h10v9.5H3zM3 6.5h10M6 2v3M10 2v3M8 8.5v3M6.5 10h3\"/></svg></div><div class=\"ds-boxes\"><div class=\"ds-box\"><b>Schedule a meeting</b><span>Invite people. Their agents settle the time.</span></div></div></div><div class=\"ds-card\"><div class=\"ds-end ds-person\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 8a2.75 2.75 0 1 0 0-5.5A2.75 2.75 0 0 0 8 8zM3 13.5c.6-2.5 2.6-4 5-4s4.4 1.5 5 4\"/></svg></div><div class=\"ds-boxes\"><div class=\"ds-box\"><i>Your name</i><b class=\"ds-sm\">Kofi Mensah</b></div></div></div><div class=\"ds-card\"><div class=\"ds-end ds-event\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM8 5v3l2 1.5\"/></svg></div><div class=\"ds-boxes ds-two\"><div class=\"ds-box\"><i>Recent</i><b class=\"ds-sm\">CS Club weekly</b></div><div class=\"ds-box\"><i>Created</i><span>Nov 16</span></div></div></div></div>",
+      "css": ".ds-cab{background-color:var(--color-console,#1a2531);padding:16px;display:flex;flex-direction:column;gap:8px}.ds-card{display:flex;align-items:stretch;border-radius:2px;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35),0 6px 14px -8px rgba(0,0,0,.6);cursor:pointer}.ds-end{width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--color-strip,#ecdfc2)}.ds-plan{background:var(--color-clearance,#d4551c)}.ds-person{background:var(--color-holder-person,#5d6e7c)}.ds-event{background:var(--color-holder-ochre,#8f6f33)}.ds-boxes{flex:1;display:grid;gap:1px;background:rgba(42,32,21,.25)}.ds-two{grid-template-columns:1fr auto}.ds-box{position:relative;background:var(--color-strip,#ecdfc2);color:var(--color-strip-ink,#2a2015);padding:20px 12px 10px;transition:background-color .18s}.ds-box:first-child:last-child:not(:has(i)){padding-top:10px}.ds-card:hover .ds-box{background:var(--color-strip-dim,#e0d0a8)}.ds-box i{position:absolute;left:12px;top:6px;font:normal 400 11px/1 'IBM Plex Sans',sans-serif;color:rgba(42,32,21,.6)}.ds-box b{display:block;font:700 26px/1 'Big Shoulders Display',sans-serif}.ds-box b.ds-sm{font-size:20px}.ds-box span{display:block;margin-top:6px;font:400 14px/1.35 'IBM Plex Sans',sans-serif;color:rgba(42,32,21,.8)}"
+    },
+    {
+      "name": "Your Card Note",
       "kind": "custom",
-      "refersTo": "person-card",
-      "description": "One person: callsign, name, status word, and a score track inked manila to amber-brown; the winning cell carries an inset orange ring.",
-      "html": "<div style=\"background:#22313f;padding:16px\"><div class=\"ds-strip\"><div class=\"ds-strip-id\"><div><span class=\"ds-strip-call\">AVA</span> <span class=\"ds-strip-tag\">SIM</span></div><div class=\"ds-strip-row\"><span class=\"ds-strip-name\">Ava Chen</span><span class=\"ds-strip-status\">CLEARED</span></div></div><div class=\"ds-strip-track\"><i style=\"background:#dcd1b6;opacity:.4\"></i><i style=\"background:#e1b97b;opacity:.4\"></i><i class=\"ds-closed\"></i><i class=\"ds-win\" style=\"background:#846025\"></i><i style=\"background:#e2ac4e;opacity:.4\"></i><i class=\"ds-closed\"></i><i style=\"background:#c29340;opacity:.4\"></i><i style=\"background:rgba(42,32,21,.08)\"></i></div></div></div>",
-      "css": ".ds-strip{display:flex;align-items:stretch;height:48px;background:var(--color-strip,#ecdfc2);color:var(--color-strip-ink,#2a2015);border-radius:2px;overflow:hidden;box-shadow:0 6px 14px -8px rgba(0,0,0,.7);outline:2px solid transparent;transition:outline-color .18s}.ds-strip:hover{outline-color:var(--color-amber,#e8a93a)}.ds-strip-id{width:10.5rem;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;padding:0 10px;border-right:1px solid rgba(42,32,21,.15)}.ds-strip-call{font:600 14px/1 'IBM Plex Mono',monospace;letter-spacing:.025em}.ds-strip-tag{font:400 10px/1 'IBM Plex Mono',monospace;letter-spacing:.05em;color:rgba(42,32,21,.65)}.ds-strip-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px}.ds-strip-name{font:400 12px/1 'IBM Plex Sans',sans-serif}.ds-strip-status{font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.025em;color:var(--color-clearance-dim,#a13f13)}.ds-strip-track{flex:1;display:flex;gap:1px;padding:4px 12px 4px 0}.ds-strip-track i{flex:1 1 0;border-radius:1px}.ds-strip-track i.ds-closed{flex:0 0 1.5px;background:rgba(42,32,21,.28)}.ds-strip-track i.ds-win{box-shadow:inset 0 0 0 2px var(--color-clearance,#d4551c)}"
+      "refersTo": "paper-card-holder-person",
+      "description": "Owner-approved exception: the rules your agent understood, handwritten on Your card and written on left to right. Musts in burnt orange.",
+      "html": "<div class=\"ds-cab2\"><div class=\"ds-card2\"><div class=\"ds-end2\"><svg viewBox=\"0 0 16 16\" width=\"15\" height=\"15\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M8 8a2.75 2.75 0 1 0 0-5.5A2.75 2.75 0 0 0 8 8zM3 13.5c.6-2.5 2.6-4 5-4s4.4 1.5 5 4\"/></svg></div><div class=\"ds-boxes2\"><div class=\"ds-box2\"><b>Ava Chen</b><span>3 fixed and 2 movable commitments</span></div><div class=\"ds-box2\"><p class=\"ds-hand ds-must\">Must: not before 11 AM</p><p class=\"ds-hand\">done by 6 PM</p></div></div></div></div>",
+      "css": "@keyframes ds-write{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}.ds-cab2{background-color:var(--color-console,#1a2531);padding:16px}.ds-card2{display:flex;border-radius:2px;overflow:hidden;box-shadow:0 1px 0 rgba(0,0,0,.35),0 6px 14px -8px rgba(0,0,0,.6)}.ds-end2{width:28px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--color-holder-person,#5d6e7c);color:var(--color-strip,#ecdfc2)}.ds-boxes2{flex:1;display:flex;flex-direction:column;gap:1px;background:rgba(42,32,21,.25)}.ds-box2{background:var(--color-strip,#ecdfc2);color:var(--color-strip-ink,#2a2015);padding:10px 12px}.ds-box2 b{display:block;font:700 24px/1 'Big Shoulders Display',sans-serif}.ds-box2 span{display:block;margin-top:4px;font:400 13px/1.4 'IBM Plex Sans',sans-serif;color:rgba(42,32,21,.7)}.ds-hand{margin:2px 0;font:500 24px/1.25 'Caveat','Comic Neue',cursive;color:var(--color-strip-ink,#2a2015);animation:ds-write .9s cubic-bezier(.45,0,.2,1) both}.ds-hand:hover{animation:ds-write .9s cubic-bezier(.45,0,.2,1)}.ds-must{color:var(--color-clearance-dim,#a13f13)}@media (prefers-reduced-motion:reduce){.ds-hand{animation:none}}"
+    },
+    {
+      "name": "Person Row",
+      "kind": "custom",
+      "refersTo": "person-row",
+      "description": "One person on the negotiation step: name, plain status, and a score track inked manila to amber-brown; the winning cell carries an inset orange ring.",
+      "html": "<div style=\"background:#1a2531;padding:16px\"><div class=\"ds-row\"><div class=\"ds-row-id\"><span class=\"ds-row-name\">Ava Chen <em>(you)</em></span><span class=\"ds-row-status\">Booked</span></div><div class=\"ds-row-track\"><i style=\"background:#dcd1b6;opacity:.4\"></i><i style=\"background:#e1b97b;opacity:.4\"></i><i class=\"ds-closed\"></i><i class=\"ds-win\" style=\"background:#846025\"></i><i style=\"background:#e2ac4e;opacity:.4\"></i><i class=\"ds-closed\"></i><i style=\"background:#c29340;opacity:.4\"></i><i style=\"background:rgba(42,32,21,.08)\"></i></div></div></div>",
+      "css": ".ds-row{display:flex;align-items:stretch;height:48px;background:var(--color-strip,#ecdfc2);color:var(--color-strip-ink,#2a2015);border-radius:2px;overflow:hidden;box-shadow:0 6px 14px -8px rgba(0,0,0,.7);outline:2px solid transparent;transition:outline-color .18s}.ds-row:hover{outline-color:var(--color-amber,#e8a93a)}.ds-row-id{width:10.5rem;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;padding:0 10px;border-right:1px solid rgba(42,32,21,.15)}.ds-row-name{font:600 14px/1 'IBM Plex Sans',sans-serif}.ds-row-name em{font-style:normal;font-weight:400;color:rgba(42,32,21,.65)}.ds-row-status{margin-top:6px;font:600 12px/1 'IBM Plex Sans',sans-serif;color:var(--color-clearance-dim,#a13f13)}.ds-row-track{flex:1;display:flex;gap:1px;padding:4px 12px 4px 0}.ds-row-track i{flex:1 1 0;border-radius:1px}.ds-row-track i.ds-closed{flex:0 0 1.5px;background:rgba(42,32,21,.28)}.ds-row-track i.ds-win{box-shadow:inset 0 0 0 2px var(--color-clearance,#d4551c)}"
     },
     {
       "name": "Console Panel (Fairness)",
       "kind": "card",
       "refersTo": "console-panel",
       "description": "Hairline panel on the board with a mono label heading; shown here as the fairness meter.",
-      "html": "<div style=\"background:#22313f;padding:16px\"><section class=\"ds-panel\"><div class=\"ds-panel-head\"><h2>FAIRNESS</h2><span>Leading: Wed Nov 18, 3:00 PM</span></div><dl class=\"ds-panel-figs\"><div><dt class=\"ds-sig\">LEAST HAPPY</dt><dd>78</dd></div><div><dt class=\"ds-amb\">AVERAGE</dt><dd>84</dd></div></dl></section></div>",
-      "css": ".ds-panel{border:1px solid var(--color-board-line,#3c5266);border-radius:2px;padding:12px 16px;background:rgba(42,59,75,.6);color:var(--color-strip,#ecdfc2)}.ds-panel-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:400 11px/1.33 'IBM Plex Mono',monospace}.ds-panel-head h2{margin:0;font:inherit;letter-spacing:.18em;color:var(--color-mist,#93aabd)}.ds-panel-head span{color:rgba(236,223,194,.8)}.ds-panel-figs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 0;font-family:'IBM Plex Mono',monospace}.ds-panel-figs dt{font-size:11px;letter-spacing:.14em}.ds-panel-figs dd{margin:0;font-size:24px;font-weight:600;line-height:1.25;font-variant-numeric:tabular-nums}.ds-sig{color:var(--color-signal,#f4844f)}.ds-amb{color:var(--color-amber,#e8a93a)}"
+      "html": "<div style=\"background:#1a2531;padding:16px\"><section class=\"ds-panel\"><div class=\"ds-panel-head\"><h2>FAIRNESS</h2><span>In the lead: Wed Nov 18, 3:00 PM</span></div><dl class=\"ds-panel-figs\"><div><dt class=\"ds-sig\">LEAST HAPPY</dt><dd>78<small>/100</small></dd></div><div><dt class=\"ds-amb\">AVERAGE</dt><dd>84<small>/100</small></dd></div></dl><p class=\"ds-panel-note\">Scores are out of 100: how much each person likes the time.</p></section></div>",
+      "css": ".ds-panel{border:1px solid var(--color-board-line,#3c5266);border-radius:2px;padding:12px 16px;background:rgba(42,59,75,.6);color:var(--color-strip,#ecdfc2)}.ds-panel-head{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:400 11px/1.33 'IBM Plex Mono',monospace}.ds-panel-head h2{margin:0;font:inherit;letter-spacing:.18em;color:var(--color-mist,#93aabd)}.ds-panel-head span{color:rgba(236,223,194,.8)}.ds-panel-figs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 0;font-family:'IBM Plex Mono',monospace}.ds-panel-figs dt{font-size:11px;letter-spacing:.14em}.ds-panel-figs dd{margin:0;font-size:24px;font-weight:600;line-height:1.25;font-variant-numeric:tabular-nums}.ds-sig{color:var(--color-signal,#f4844f)}.ds-amb{color:var(--color-amber,#e8a93a)}.ds-panel-figs dd small{font-size:13px;font-weight:400;opacity:.6}.ds-panel-note{margin:8px 0 0;font:400 13px/1.5 'IBM Plex Sans',sans-serif;color:var(--color-mist,#93aabd)}"
     },
     {
-      "name": "Radio Ticker",
+      "name": "Ticker",
       "kind": "custom",
       "refersTo": "speaker-chip-mediator",
-      "description": "Latest transmission under the scope: speaker chip plus Plex Sans transcript with an amber block cursor while typing.",
-      "html": "<div style=\"background:#22313f;padding:16px\"><div class=\"ds-ticker\"><span class=\"ds-chip-twr\">TWR</span><p>Cleared for Wed Nov 18, 3:00 PM. All agents, land.<span class=\"ds-cursor\"></span></p></div><div class=\"ds-ticker\" style=\"margin-top:8px\"><span class=\"ds-chip-agent\">AVA</span><p>Flexing +12 for Thursday afternoon.</p></div></div>",
-      "css": ".ds-ticker{display:flex;align-items:flex-start;gap:12px}.ds-ticker p{margin:0;font:400 15px/1.375 'IBM Plex Sans',sans-serif;color:rgba(236,223,194,.9)}.ds-chip-twr,.ds-chip-agent{flex-shrink:0;padding:2px 6px;border-radius:2px;font:600 12px/1.33 'IBM Plex Mono',monospace;letter-spacing:.05em}.ds-chip-twr{background:var(--color-strip,#ecdfc2);color:var(--color-board,#22313f)}.ds-chip-agent{background:rgba(232,169,58,.15);color:var(--color-amber,#e8a93a)}.ds-cursor{display:inline-block;width:8px;height:14px;margin-left:2px;vertical-align:-2px;background:rgba(232,169,58,.8)}"
+      "description": "Latest message in the negotiation panel: speaker chip plus Plex Sans transcript with an amber block cursor while typing.",
+      "html": "<div style=\"background:#1a2531;padding:16px\"><div class=\"ds-ticker\"><span class=\"ds-chip-med\">Mediator</span><p>Booked: Wed Nov 18, 3:00 PM. Everyone can make it.<span class=\"ds-cursor\"></span></p></div><div class=\"ds-ticker\" style=\"margin-top:8px\"><span class=\"ds-chip-agent\">Ava</span><p>Can move. Thursday afternoon works if it helps.</p></div></div>",
+      "css": ".ds-ticker{display:flex;align-items:flex-start;gap:12px}.ds-ticker p{margin:0;font:400 15px/1.375 'IBM Plex Sans',sans-serif;color:rgba(236,223,194,.9)}.ds-chip-med,.ds-chip-agent{flex-shrink:0;padding:2px 6px;border-radius:2px;font:600 12px/1.33 'IBM Plex Sans',sans-serif;white-space:nowrap}.ds-chip-med{background:var(--color-strip,#ecdfc2);color:var(--color-board,#22313f)}.ds-chip-agent{background:rgba(232,169,58,.15);color:var(--color-amber,#e8a93a)}.ds-cursor{display:inline-block;width:8px;height:14px;margin-left:2px;vertical-align:-2px;background:rgba(232,169,58,.8)}"
     },
     {
-      "name": "Clearance Stamp",
+      "name": "Booked Stamp",
       "kind": "custom",
       "refersTo": "stamp-large",
       "description": "The signature mark: lands with an overshooting spring when the decision becomes official; filled with scope glass.",
-      "html": "<div style=\"background:#0c131d;padding:32px;display:flex;justify-content:center\"><div class=\"ds-stamp\"><span class=\"ds-stamp-word\">CLEARED</span><span class=\"ds-stamp-detail\">WED NOV 18, 3:00 PM</span></div></div>",
-      "css": "@keyframes ds-stamp-land{from{transform:scale(1.9) rotate(8deg);opacity:0}70%{transform:scale(.96) rotate(-4.5deg);opacity:1}to{transform:scale(1) rotate(-4deg);opacity:1}}.ds-stamp{display:inline-flex;flex-direction:column;align-items:center;padding:10px 24px;border:3px solid var(--color-clearance,#d4551c);border-radius:2px;background:var(--color-glass,#0c131d);color:var(--color-clearance,#d4551c);transform:rotate(-4deg);animation:ds-stamp-land .6s cubic-bezier(.16,1,.3,1) both}.ds-stamp:hover{animation:none;transform:rotate(-4deg) scale(1.02)}.ds-stamp-word{font:700 48px/1 'Big Shoulders Display',sans-serif;letter-spacing:.12em}.ds-stamp-detail{margin-top:4px;font:600 14px/1 'IBM Plex Mono',monospace;letter-spacing:.2em}@media (prefers-reduced-motion:reduce){.ds-stamp{animation:none}}"
+      "html": "<div style=\"background:#0c131d;padding:32px;display:flex;justify-content:center\"><div class=\"ds-stamp\"><span class=\"ds-stamp-word\">BOOKED</span></div></div>",
+      "css": "@keyframes ds-stamp-land{from{transform:scale(1.9) rotate(8deg);opacity:0}70%{transform:scale(.96) rotate(-4.5deg);opacity:1}to{transform:scale(1) rotate(-4deg);opacity:1}}.ds-stamp{display:inline-flex;flex-direction:column;align-items:center;padding:10px 24px;border:3px solid var(--color-clearance,#d4551c);border-radius:2px;background:var(--color-glass,#0c131d);color:var(--color-clearance,#d4551c);transform:rotate(-4deg);animation:ds-stamp-land .6s cubic-bezier(.16,1,.3,1) both}.ds-stamp:hover{animation:none;transform:rotate(-4deg) scale(1.02)}.ds-stamp-word{font:700 48px/1 'Big Shoulders Display',sans-serif;letter-spacing:.12em}@media (prefers-reduced-motion:reduce){.ds-stamp{animation:none}}"
     }
   ],
   "narrative": {
-    "northStar": "The Night Tower",
-    "overview": "MultiMeet is a control tower after dark. The ground is a steel-blue console board; the radar scope is a darker pane of glass set into it; live traffic is amber phosphor; people are manila flight strips racked in a bay; and safety orange appears only when something is closed, called, or cleared. The screen shows the mechanism at work: every agent is an aircraft, every candidate time a fix on the rim, and the decision is a landing followed by an ink stamp.\n\nDensity is operational. Small mono readouts, hairline rules and tight strip rows sit beside one large instrument (the scope) and a few loud display-face statements (the event title, the cleared time, the stamp). Contrast comes from the material, not from effects. Phosphor is drawn as afterglow on the canvas, never as CSS glow. Strips lift off the board with a soft drop shadow, and panels are outlined in hairlines. Nothing is blurred or glassy.\n\nThe identity is binding (PRODUCT.md): go deeper into the tower and person-card world rather than replacing it.",
+    "northStar": "The Night Console, Spoken Plainly",
+    "overview": "MultiMeet looks like an instrument and talks like a person. The scope is a pane of glass on a dark floor; the left and right panels around it are console furniture; people's agents are amber dots that drift toward the times they prefer; people and forms are manila paper cards; and safety orange appears only when a time is crossed out, someone is asked to move, or a time is booked. The look borrows from a radar room. The words never do: every label, status and sentence is plain English a stranger on a phone understands in five seconds (PRODUCT.md).\n\nThe whole app is one console that never reloads. Every screen, from the first one to Booked, is a step of it: the scope stays mounted, and a route only changes the step, which moves the scope's camera and swaps what the left and right panels hold.\n\nDensity is operational. Small readouts, hairline rules and tight rows sit beside one large instrument (the scope) and a few loud display-face statements (step titles, the booked time, the stamp). Contrast comes from the material, not from effects. Phosphor afterglow lives on the scope canvas only; cards lift off the console with a soft drop shadow, and panels are outlined in hairlines. Nothing is blurred or glassy.",
     "keyCharacteristics": [
-      "Steel-blue board, darker scope glass, manila strips, amber live traffic, orange reserved for closure and clearance.",
-      "Three faces, three jobs: Big Shoulders Display announces, Plex Mono reads out data, Plex Sans speaks prose.",
+      "Dark cab floor under the scope, grained console furniture around it, manila cards, amber live state, orange reserved for crossed-out, asked and booked.",
+      "Three faces, three jobs: Big Shoulders Display announces, Plex Mono reads out data, Plex Sans speaks prose and names. One handwritten exception, on your own card.",
       "Hairline borders and 2px corners everywhere; the only round shapes are the scope and status pips.",
-      "Motion runs on a continuous sweep, critically damped flight and one-shot pulses, and every animation respects reduced motion."
+      "Motion runs on a continuous sweep, eased camera moves, critically damped drift and one-shot pulses, and every animation respects reduced motion."
     ],
     "rules": [
       {
         "name": "The Reserved Orange Rule",
-        "body": "Safety orange marks closures, clearances, tower calls, the runway, the winning cell, primary actions and the stamp, and nothing else. If an element is merely important, use amber or manila instead.",
+        "body": "Safety orange marks crossed-out times, people being asked, the chosen-time corridor, the winning cell, primary actions, the plan card and the stamp, and nothing else. If an element is merely important, use amber or manila instead. A person's card is never orange.",
         "section": "colors"
       },
       {
         "name": "The Signal-for-Text Rule",
-        "body": "Orange text on the board is always `signal`, and orange text on manila is always `clearance-dim`. Raw `clearance` appears as text only inside the stamp.",
+        "body": "Orange text on the console is always `signal`, and orange text on manila is always `clearance-dim`. Raw `clearance` appears as text only inside the stamp.",
         "section": "colors"
       },
       {
         "name": "The Ink-Not-Orange Rule",
-        "body": "Scores are inked manila → amber → amber-brown. A high score is never orange, because orange already means \"closed\" or \"cleared\".",
+        "body": "Scores are inked manila → amber → amber-brown. A high score is never orange, because orange already means \"can't make it\" or \"booked\".",
+        "section": "colors"
+      },
+      {
+        "name": "The Console Ground Rule",
+        "body": "The page ground is the cab floor; the panels and top bar are `console` furniture with its faint grain. This is the owner-approved console look (approved at the prototype checkpoint). The flat `board` fill is not used as a ground.",
         "section": "colors"
       },
       {
         "name": "The Three Voices Rule",
-        "body": "Plex Mono is for data only (scores, times, callsigns, readouts, controls). Plex Sans is for prose. Big Shoulders Display is for titles, the cleared time and the stamp. A sentence set in mono, or a number set in display, is wrong.",
+        "body": "Plex Mono is for data only (scores, times, readouts, controls). Plex Sans is for prose and people's names. Big Shoulders Display is for titles, the booked time and the stamp. A sentence set in mono, or a number set in display, is wrong. The one exception is the Handwritten Note Rule below.",
+        "section": "typography"
+      },
+      {
+        "name": "The Handwritten Note Rule",
+        "body": "On \"Your card\" in the preferences step, each rule your agent understood is written in the hand face (`--font-hand`, 24px) and written on left to right with a clip-path reveal (`inset(0 100% 0 0)` → `inset(0 0% 0 0)`, 0.9s, `cubic-bezier(0.45, 0, 0.2, 1)`). Musts read \"Must: …\" in `clearance-dim`; preferences are in `strip-ink`; the empty note (\"Nothing yet: …\") is 22px at strip-ink 45%. This fourth voice is owner-approved for that one element only. Nothing else uses the hand face, not even the chat beside it.",
         "section": "typography"
       },
       {
@@ -413,27 +554,32 @@
       },
       {
         "name": "The No-Glow Rule",
-        "body": "No CSS glows, no blur or frosted plates, and no coloured halos. Phosphor afterglow belongs to the canvas sweep. Ink, text and borders never emit light.",
+        "body": "No CSS glows, no blur or frosted plates, and no coloured halos. Phosphor afterglow belongs to the scope canvas (a WebGL persistence buffer, about 0.86 decay per 60Hz frame, with fine grain; a plain canvas fallback without WebGL2). Ink, text and borders never emit light. The console's grain and the floor's radial falloff are texture and tone, not light: they are flat, uncoloured, and never sit behind or around an element to make it glow.",
         "section": "elevation"
       }
     ],
     "dos": [
-      "**Do** reserve `clearance` for closures, clearances, tower calls, the runway, the winning cell, primary actions and the stamp.",
-      "**Do** use `signal` for orange text on the board and `clearance-dim` for orange text on manila.",
-      "**Do** ink scores along the manila → amber → amber-brown ramp.",
-      "**Do** set data in Plex Mono with tabular figures, prose in Plex Sans, and titles, the cleared time and the stamp in Big Shoulders Display.",
+      "**Do** reserve `clearance` for crossed-out times, people being asked, the chosen-time corridor, the winning cell, primary actions, the plan card and the stamp.",
+      "**Do** use `signal` for orange text on the console and `clearance-dim` for orange text on manila.",
+      "**Do** ink scores along the manila → amber → amber-brown ramp, and show them as \"/100\" with a one-line note on what the scale means.",
+      "**Do** write every label, status and sentence so a stranger on a phone understands it in five seconds, with 12-hour times everywhere.",
+      "**Do** set data in Plex Mono with tabular figures, prose in Plex Sans, and titles, the booked time and the stamp in Big Shoulders Display.",
       "**Do** fill anything that sits on the scope with `glass`.",
-      "**Do** separate panels on the board with 1px `board-line` hairlines and 2px corners, and let only manila cast shadows.",
+      "**Do** build new steps on the one console: the cab floor as the ground, `console` furniture for the panels, the scope's camera moved by panel widths.",
+      "**Do** separate panels on the console with 1px `board-line` hairlines and 2px corners, and let only manila cast shadows.",
       "**Do** give every timed or looping motion a reduced-motion path that jumps to the end state."
     ],
     "donts": [
-      "**Don't** set a high score, a leading time or emphasis in safety orange.",
-      "**Don't** use raw `clearance` as small text on the board or on manila.",
+      "**Don't** set a high score, a leading time or emphasis in safety orange, or give a person's card an orange end.",
+      "**Don't** use raw `clearance` as small text on the console or on manila.",
       "**Don't** put a small tracked label above a heading as an eyebrow.",
+      "**Don't** use the hand face anywhere but the notes on Your card.",
       "**Don't** add glows, blur or frosted plates, or coloured halos.",
-      "**Don't** use coloured side borders as accents. The orange routing stripe belongs only on a manila card's top edge.",
+      "**Don't** use coloured side borders as accents. The orange edge belongs only on the decision brief's top edge.",
       "**Don't** use text glyphs (✓, →) as icons. Draw icons as inline 16px-grid SVG strokes.",
-      "**Don't** label simulated agents as real. SIM tags and the SIMULATED AGENTS chip stay visible."
+      "**Don't** label simulated agents as real. Disclose it once, in plain words (\"simulated agents\"), rather than tagging every dot.",
+      "**Don't** play sound unless the viewer turned it on.",
+      "**Don't** put aviation words on screen: tower, runway, approach, cleared, holding, fixes, callsigns, flight plan, frequency, manifest, briefing, ATIS or Zulu time. If a stranger would need a glossary, rewrite it."
     ]
   }
 }

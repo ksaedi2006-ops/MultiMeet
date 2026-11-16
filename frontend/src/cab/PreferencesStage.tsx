@@ -221,7 +221,7 @@ export default function PreferencesStage() {
         </BayStrip>
       </div>
       <p className="mt-3 text-[13px] text-mist">
-        <span className="text-clearance-dim font-semibold">Must</span> crosses times out before anyone negotiates.
+        <span className="text-signal font-semibold">Must</span> crosses times out before anyone negotiates.
         Everything else is a preference your agent weighs.
       </p>
     </div>
