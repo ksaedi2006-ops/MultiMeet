@@ -208,3 +208,49 @@ which would flatter Ours.
 | 8 | 9 | 2 to 32 |
 
 Feasible-set sizes are reported with the results. Nothing else changed.
+
+## Amendment 2 (2026-11-16, written after the first results and before running anything below)
+
+**Status.** These variants were chosen after seeing the first results (docs/eval/RESULTS.md), so this run is confirmatory only in the sense that the decision rule below is fixed before the run. They come from the research report's own recommendations: capped intensity, a fairness floor, and hard-constraint budgets. The original thresholds and results stand unchanged. This amendment adds rows; it rewrites none.
+
+### New mechanisms
+
+Same instances, seeds, honest model and metrics as before.
+
+| ID | What it is |
+|---|---|
+| Ours-L2 | As Ours, but utilities are range-normalized and then scaled to a fixed L2 budget, the report's quadratic-voting-style cap, instead of Borda. Intensity is kept, but its total is bounded. |
+| Ours-range | As Ours, with range normalization instead of Borda. |
+| Ours-floor | As Ours (Borda), with a fairness floor τ = 0.2 on normalized gains, used as a preference. If no slot meets the floor for everyone, the plain Nash pick is used instead of "no meeting". |
+| Ours-L2-floor | Ours-L2 with the same τ = 0.2 preference floor. |
+
+Every new mechanism faces all the original attackers: inflater, victim, fake hard, stubborn and pair.
+
+### New attacker: fake hard constraints under a budget
+
+The fake-hard attacker gets a budget of 2 tokens; calendar-verified busy blocks stay free.
+
+- **What a token buys:** one declared hard rule from the product's vocabulary. Each token is one of:
+  - "avoid weekday d";
+  - "nothing before h:00" for h = 9…17;
+  - "nothing after h:00" for h = 10…18.
+  These are applied in the attacker's own time zone.
+- **How the attacker plays:** it chooses up to 2 rules greedily to maximize its true utility at the outcome. Each candidate is scored by the one-shot version of the mechanism (B3 uses B3-oneshot), and then the chosen rules are played through the full mechanism.
+- **Why the honest agents are unaffected:** sample people declare at most one hard rule, so the budget never binds for them.
+- **Mechanisms:** B1, B3, B4, B5, Ours and the four new variants.
+
+This models the report's hard-token proposal. The report's suggested size is 2 per week. The attacker's greedy search is a heuristic, not an exact best response.
+
+### Decision rule, fixed now
+
+The new default is the variant (Ours or one of the four above) with the highest mean ratio to the oracle, pooled over n. It must satisfy all of these:
+
+- **(a)** mean manipulation gain ≤ 0 for each of inflater, victim and colluding pair (pooled; lying must not pay on average);
+- **(b)** Pareto-optimality ≥ 98% at every n;
+- **(c)** the mean ratio to the oracle ≥ 0.95 at every n.
+
+If no variant satisfies (a)–(c), the default stays Ours (Borda).
+
+**Hard tokens.** These are adopted in the product if, under the winning default, the budgeted fake-hard attacker's mean gain falls below the unbudgeted attacker's, and the paired-bootstrap 95% CI of the difference lies entirely below 0.
+
+**Q2 against B3.** Re-checked for the winner exactly as preregistered, and reported whether it passes or not.
