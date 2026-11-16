@@ -16,11 +16,11 @@ interface Props {
 function describe(m: TowerModel): string {
   const open = m.slots.filter((s) => !s.closed).length
   const lead = m.shortlist[0] && m.slots.find((s) => s.id === m.shortlist[0].slot_id)
-  const parts = [`Radar view of the negotiation: ${m.agents.length} agents`]
+  const parts = [`Map of the negotiation: ${m.agents.length} people's agents`]
   if (m.slots.length) parts.push(`${open} of ${m.slots.length} times still open`)
   if (lead) parts.push(`leading ${lead.label}`)
-  if (m.decision?.slot) parts.push(`cleared for ${m.decision.slot.label}`)
-  return parts.join(', ') + '. The strip board and tower log below list the same details.'
+  if (m.decision?.slot) parts.push(`booked for ${m.decision.slot.label}`)
+  return parts.join(', ') + '. The table and activity list below give the same details.'
 }
 
 export default function RadarScope({ model, highlight, onHover, onLanded, frame, label }: Props) {

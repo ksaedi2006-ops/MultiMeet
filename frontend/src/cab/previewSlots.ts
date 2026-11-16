@@ -13,7 +13,7 @@ export interface PlanWindow {
 }
 
 function dayLabel(d: Date) {
-  return d.toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short', day: 'numeric' }).toUpperCase()
+  return `${d.toLocaleDateString('en-US', { timeZone: 'UTC', weekday: 'short' })} ${d.getUTCDate()}`
 }
 
 /**

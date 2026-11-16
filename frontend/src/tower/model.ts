@@ -1,4 +1,5 @@
 import type { LogEvent, MemberPayload, RankedInfo, SlotInfo } from '../api/events'
+import { blockerPhrase, fullTime } from '../lib/timeLabels'
 
 export type Phase = 'holding' | 'filtering' | 'scoring' | 'asking' | 'decided' | 'escalated' | 'failed'
 
@@ -42,7 +43,7 @@ export interface LogLine {
   seq: number
   at: string | null
   round: number
-  speaker: string // callsign, TWR or SYS
+  speaker: string // a person's short name, 'Mediator' or 'Update'
   tone: 'sys' | 'agent' | 'tower' | 'close' | 'clear' | 'warn'
   text: string
   privateNote?: string
@@ -95,18 +96,26 @@ export const emptyModel: TowerModel = {
   rsvps: {},
 }
 
+/**
+ * The short name shown on someone's dot and in the activity list: their first name, with a
+ * last initial (then a number) only when two people share it.
+ */
 export function callsignFor(name: string, taken: Set<string>): string {
-  const base = (name.trim().split(/\s+/)[0] || 'AGT').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 6) || 'AGT'
-  let sign = base
-  for (let n = 2; taken.has(sign); n++) sign = `${base.slice(0, 5)}${n}`
-  return sign
+  const words = name.trim().split(/\s+/).filter(Boolean)
+  const first = words[0] || 'Guest'
+  if (!taken.has(first)) return first
+  const withInitial = words[1] ? `${first} ${words[1][0].toUpperCase()}.` : first
+  if (!taken.has(withInitial)) return withInitial
+  let n = 2
+  while (taken.has(`${first} ${n}`)) n++
+  return `${first} ${n}`
 }
 
 function dayInfo(iso: string, tz: string | null) {
   const d = new Date(iso)
   const opts = { timeZone: tz ?? undefined }
   const key = d.toLocaleDateString('en-CA', opts)
-  const label = d.toLocaleDateString('en-US', { ...opts, weekday: 'short', day: 'numeric' }).toUpperCase()
+  const label = `${d.toLocaleDateString('en-US', { ...opts, weekday: 'short' })} ${d.toLocaleDateString('en-US', { ...opts, day: 'numeric' })}`
   return { key, label }
 }
 
@@ -133,7 +142,7 @@ function setAgent(agents: Agent[], id: string, patch: Partial<Agent>): Agent[] {
 
 export function reduce(model: TowerModel, e: LogEvent): TowerModel {
   const m: TowerModel = { ...model, lastSeq: e.seq }
-  const sign = (id: string) => m.agents.find((a) => a.id === id)?.callsign ?? 'AGT'
+  const sign = (id: string) => m.agents.find((a) => a.id === id)?.callsign ?? 'Someone'
   const line = (l: Omit<LogLine, 'seq' | 'at' | 'round'>) => {
     m.log = [...m.log, { seq: e.seq, at: e.at, round: m.round, ...l }]
   }
@@ -147,10 +156,10 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       if (m.phase === 'holding') {
         m.agents = setAgent(m.agents, e.user_id, { status: e.ready ? 'ready' : 'holding' })
       }
-      if (!known) line({ speaker: 'SYS', tone: 'sys', text: `${e.name} joined the frequency.` })
+      if (!known) line({ speaker: 'Update', tone: 'sys', text: `${e.name} joined.` })
       else if (e.type === 'member_updated' && e.ready) {
         const before = model.agents.find((a) => a.id === e.user_id)
-        if (before && !before.ready) line({ speaker: sign(e.user_id), tone: 'agent', text: 'Checked in, ready to negotiate.' })
+        if (before && !before.ready) line({ speaker: sign(e.user_id), tone: 'agent', text: 'Ready to negotiate.' })
       }
       return m
     }
@@ -174,9 +183,8 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
         return { ...s, index, dayKey: key, dayLabel: label, closed: false, blockers: [], rank: null }
       })
       line({
-        speaker: 'TWR', tone: 'tower',
-        text: `Negotiation open. ${e.participants.length} agents, ${e.slots.length} candidate times${
-          e.agent_backend === 'simulated' ? ' (simulated agents)' : ''}.`,
+        speaker: 'Mediator', tone: 'tower',
+        text: `Starting. ${e.participants.length} people, ${e.slots.length} possible times.`,
       })
       return m
     }
@@ -185,13 +193,13 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       m.slots = m.slots.map((s) => (closed.has(s.id) ? { ...s, closed: true, blockers: closed.get(s.id)! } : s))
       const causes = new Map<string, number>()
       e.closed.forEach((c) => c.blockers.forEach((b) => {
-        const k = `${b.name.split(' ')[0]}: ${b.reason.replace(/^Rule: /, '')}`
+        const k = blockerPhrase(b.name, b.reason)
         causes.set(k, (causes.get(k) ?? 0) + 1)
       }))
       const top = [...causes.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([k]) => k)
       line({
-        speaker: 'SYS', tone: 'close',
-        text: `Closed ${e.closed.length} of ${m.slots.length} times on hard conflicts${top.length ? ` (${top.join('; ')})` : ''}. ${e.open.length} remain.`,
+        speaker: 'Update', tone: 'close',
+        text: `Crossed out ${e.closed.length} of ${m.slots.length} times someone can't make${top.length ? `, e.g. ${top.join('; ')}` : ''}. ${e.open.length} left.`,
       })
       return m
     }
@@ -199,8 +207,8 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       m.round = e.round
       m.phase = e.kind === 'score' ? 'scoring' : 'asking'
       line({
-        speaker: 'TWR', tone: 'tower',
-        text: e.kind === 'score' ? 'Round 1: all agents, score the open times.' : `Round ${e.round}: asking for flexibility on the shortlist.`,
+        speaker: 'Mediator', tone: 'tower',
+        text: e.kind === 'score' ? 'Round 1: everyone rates the times that are left.' : `Round ${e.round}: asking a few people if they can move something.`,
       })
       return m
     }
@@ -209,7 +217,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       return m
     case 'agent_failed':
       m.agents = setAgent(m.agents, e.user_id, { fallback: true })
-      line({ speaker: sign(e.user_id), tone: 'warn', text: `Agent error (${e.error}). Using a simulated stand-in.` })
+      line({ speaker: sign(e.user_id), tone: 'warn', text: `Agent error (${e.error}). Using a stand-in.` })
       return m
     case 'agent_scored': {
       m.scores = { ...m.scores, [e.user_id]: e.scores }
@@ -221,7 +229,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       const best = Object.entries(e.scores).sort((a, b) => b[1] - a[1])[0]
       line({
         speaker: sign(e.user_id), tone: 'agent', text: e.summary,
-        privateNote: best ? `Top pick ${slotLabel(best[0])} at ${best[1]}.` : undefined,
+        privateNote: best ? `Your agent's favourite: ${fullTime(slotLabel(best[0]))} (${best[1]}/100).` : undefined,
       })
       return m
     }
@@ -232,8 +240,8 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       const lead = e.ranked[0]
       if (lead) {
         line({
-          speaker: 'TWR', tone: 'tower',
-          text: `Leading: ${slotLabel(lead.slot_id)}. Least happy at ${lead.min_score}, average ${Math.round(lead.avg_score)}.`,
+          speaker: 'Mediator', tone: 'tower',
+          text: `In the lead: ${fullTime(slotLabel(lead.slot_id))}. Least-happy person ${lead.min_score}/100, average ${Math.round(lead.avg_score)}.`,
         })
       }
       return m
@@ -244,7 +252,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
         text: e.text, seq: e.seq, reply: null,
       }]
       m.agents = setAgent(m.agents, e.to_user_id, { status: 'asked' })
-      line({ speaker: 'TWR', tone: 'tower', text: `${sign(e.to_user_id)}: ${e.text}` })
+      line({ speaker: 'Mediator', tone: 'tower', text: e.text })
       return m
     }
     case 'agent_reply': {
@@ -255,7 +263,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       m.agents = setAgent(m.agents, e.user_id, {
         status: 'replied', reply: { response: e.response, delta: e.new_score - e.old_score, seq: e.seq },
       })
-      const tag = e.response === 'flex' ? `FLEX +${e.new_score - e.old_score}` : e.response.toUpperCase()
+      const tag = e.response === 'flex' ? 'Can move' : e.response === 'hold' ? "Won't move" : 'Agrees'
       line({ speaker: sign(e.user_id), tone: 'agent', text: `${tag}. ${e.text}` })
       return m
     }
@@ -267,14 +275,14 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
         question: e.question, seq: e.seq,
       }
       line(e.status === 'converged'
-        ? { speaker: 'TWR', tone: 'clear', text: `Cleared for ${e.slot?.label}. All agents, land.` }
-        : { speaker: 'TWR', tone: 'warn', text: `Holding for instructions. ${e.question ?? e.explanation}` })
+        ? { speaker: 'Mediator', tone: 'clear', text: `Booked: ${e.slot ? fullTime(e.slot.label) : ''}.` }
+        : { speaker: 'Mediator', tone: 'warn', text: `No time works for everyone. ${e.question ?? e.explanation}` })
       return m
     }
     case 'negotiation_failed':
       m.phase = 'failed'
       m.error = e.error
-      line({ speaker: 'SYS', tone: 'warn', text: e.error })
+      line({ speaker: 'Update', tone: 'warn', text: e.error })
       return m
     case 'rsvp':
       m.rsvps = { ...m.rsvps, [e.user_id]: e.response }

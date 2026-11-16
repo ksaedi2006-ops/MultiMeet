@@ -24,7 +24,7 @@ function RuleChip({ rule }: { rule: Rule }) {
   return (
     <span className={`inline-flex items-center gap-1.5 rounded-[2px] border px-2 py-0.5 font-mono text-[11px] tracking-wide ${
       rule.strength === 'hard' ? 'border-signal text-signal' : 'border-mist/60 text-mist'}`}>
-      <span className="font-semibold">{rule.strength === 'hard' ? 'HARD' : 'SOFT'}</span>
+      <span className="font-semibold">{rule.strength === 'hard' ? 'MUST' : 'PREFER'}</span>
       <span className="text-strip">{rule.summary}</span>
     </span>
   )
@@ -98,7 +98,7 @@ export default function AgentChat() {
       await setReady(eventId, await getOrCreateUserId())
       navigate(`/event/${eventId}/negotiate`)
     } catch (err) {
-      setError(errorMessage(err, "Couldn't check in. Try again."))
+      setError(errorMessage(err, "Couldn't mark you ready. Try again."))
       setCheckingIn(false)
     }
   }
@@ -111,7 +111,7 @@ export default function AgentChat() {
       <div className="max-w-5xl mx-auto px-5 sm:px-8 pt-10 pb-24 grid gap-10 lg:gap-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <motion.div variants={stagger(0.07)} initial="hidden" animate="show" className="min-w-0 flex flex-col">
           <motion.h1 variants={rise} className="font-display font-bold text-5xl sm:text-6xl leading-[0.95] tracking-tight text-strip">
-            Brief your agent
+            Your preferences
           </motion.h1>
 
           <motion.div variants={rise} ref={log} role="log" aria-label="Conversation with your agent"
@@ -187,7 +187,7 @@ export default function AgentChat() {
         <motion.aside initial={{ opacity: 0, x: 28 }} animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.7, ease: EASE, delay: 0.2 }} className="min-w-0 lg:pt-24">
           <h2 className="font-display font-bold text-2xl tracking-tight text-strip">What your agent will enforce</h2>
-          <p className="mt-1 text-sm text-mist">Hard rules close times before anyone negotiates. Soft rules lower a time’s score.</p>
+          <p className="mt-1 text-sm text-mist">“Must” rules cross times out before anyone negotiates. “Prefer” rules make a time less likely.</p>
 
           <ul className="mt-5 flex flex-col gap-1.5" aria-live="polite">
             <AnimatePresence initial={false}>
@@ -197,9 +197,9 @@ export default function AgentChat() {
                     initial={{ opacity: 0, x: 22 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 22 }}
                     transition={{ duration: 0.4, ease: EASE }}
                     className="flex items-center gap-3 bg-strip text-strip-ink rounded-[2px] px-3 py-2.5">
-                    <span className={`font-mono text-[11px] font-semibold tracking-wider w-10 shrink-0 ${
+                    <span className={`font-mono text-[11px] font-semibold tracking-wider w-14 shrink-0 ${
                       r.strength === 'hard' ? 'text-clearance-dim' : 'text-strip-ink/65'}`}>
-                      {r.strength === 'hard' ? 'HARD' : 'SOFT'}
+                      {r.strength === 'hard' ? 'MUST' : 'PREFER'}
                     </span>
                     <span className="flex-1 min-w-0 text-[15px] leading-snug">{r.summary}</span>
                     <button type="button" onClick={() => remove(p.id)} aria-label={`Remove rule: ${r.summary}`}
@@ -219,7 +219,7 @@ export default function AgentChat() {
 
           <div className="mt-8 border-t border-board-line pt-6">
             <Button arrow={!checkingIn} onClick={checkIn} disabled={checkingIn} className="w-full sm:w-auto">
-              {checkingIn ? 'CHECKING IN…' : 'CHECK IN'}
+              {checkingIn ? 'SAVING…' : 'I’M READY'}
             </Button>
             <p className="mt-3 text-sm text-mist">You can still change this until the organiser starts the negotiation.</p>
           </div>

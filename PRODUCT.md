@@ -27,7 +27,7 @@ Code decides what is possible; agents argue about what is preferable. Hard calen
 
 ## Operating Context
 
-- Linear guest flow, no accounts: create event (title, date range, duration, daily window, weekdays, time zone) → share invite link with a live roster → upload a .ics calendar → brief your agent in chat → organiser starts the negotiation → live negotiation view → decision with RSVP and add-to-calendar.
+- Linear guest flow, no accounts: create event (title, date range, duration, daily window, weekdays, time zone) → share invite link with a live roster → upload a .ics calendar → tell your agent your preferences in chat → organiser starts the negotiation → live negotiation view → decision with RSVP and add-to-calendar.
 - Every negotiation step is an event in a replayable, sequence-numbered log streamed over WebSockets; the live view is built from that stream and can be replayed.
 - Demo data: `backend/scripts/seed_demo_group.py` adds seven personas with recurring calendars and preferences, or runs a full negotiation from the terminal.
 
@@ -42,7 +42,10 @@ Code decides what is possible; agents argue about what is preferable. Hard calen
 ## Brand Commitments
 
 - Name: MeetMind.
-- The user has made the air-traffic-control tower / flight-strip board identity binding: keep it and go deeper rather than replace it.
+- Visual identity: a radar-style scope on a dark console, manila paper cards, safety-orange marks. The scope stays the hero.
+- Plain language, always (direction set 2026-11-16): the look borrows from air-traffic control but the words never do. A recruiter on a phone must understand any screen in five seconds with no glossary.
+- Vocabulary: people and their agents (dots labelled with first names), times (marks on the ring), the mediator (centre), "can't make it" (crossed-out times), "Can move" / "Won't move" / "Agrees" (replies), "Booked" (the chosen time), "No time works" (no agreement). Steps: New meeting, Invite people, Your calendar, Your preferences, Negotiating, Booked.
+- Not used anywhere user-visible: tower, TWR, runway, approach, cleared, holding, fixes, callsigns, flight plan, frequency, manifest, briefing, ATIS, Zulu time.
 
 ## Evidence on Hand
 
@@ -52,7 +55,7 @@ Code decides what is possible; agents argue about what is preferable. Hard calen
 ## Product Principles
 
 1. Show the mechanism, not a spinner: every agent action is visible and attributable.
-2. Constraints are enforced, not suggested: a blocked time visibly closes and names its cause.
+2. Constraints are enforced, not suggested: a time someone can't make is visibly crossed out and names whose commitment did it.
 3. Fairness is explained: the decision always says who compromised and what the fallback is.
 4. Honest about machinery: failures and simulated agents are labelled, never hidden.
 5. Legible to a stranger: the screen must make sense without a presenter.

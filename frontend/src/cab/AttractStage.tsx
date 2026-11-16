@@ -4,15 +4,15 @@ import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { createSampleEvent, errorMessage, getOrCreateUserId, getSavedName, setUserName } from '../api/client'
 import type { LogEvent } from '../api/events'
-import Stamp from '../components/Stamp'
 import { EASE } from '../lib/motion'
 import { getRecents, rememberEvent } from '../lib/recents'
 import demoLog from '../tower/demo-log.json'
 import RadioTicker from '../tower/RadioTicker'
 import { usePlayback } from '../tower/usePlayback'
 import Atis from './Atis'
-import BayStrip, { Box, EmptyHolder } from './BayStrip'
+import BayStrip, { Box } from './BayStrip'
 import { useFixture, useScopeFeed } from './context'
+import ChosenTime from '../tower/ChosenTime'
 
 const SIZES = [8, 16, 30] as const
 
@@ -27,7 +27,7 @@ function Arrow() {
 
 const pull = 'transition-transform duration-300 ease-out-expo hover:translate-x-1.5 focus-within:translate-x-1.5'
 
-/** Attract mode: the recorded run flies on the scope, the ATIS reads the pitch, the bay offers strips. */
+/** The first screen: a recorded negotiation replays on the scope, the right panel explains it, the left offers what to do. */
 export default function AttractStage() {
   const navigate = useNavigate()
   const bay = useFixture('bay')
@@ -54,12 +54,14 @@ export default function AttractStage() {
   const onLanded = useCallback(() => setLanded(true), [])
   const overlay = useMemo(
     () =>
-      landed && model.decision ? (
-        <Stamp label={model.decision.status === 'converged' ? 'CLEARED' : 'HOLD'} detail={model.decision.slot?.label.toUpperCase()} size="lg" />
-      ) : null,
-    [landed, model.decision],
+      landed && model.decision ? <ChosenTime decision={model.decision} timezone={model.timezone} /> : null,
+    [landed, model.decision, model.timezone],
   )
-  useScopeFeed({ model, onLanded, overlay, label: `Radar scope replaying a recorded negotiation between ${model.agents.length} simulated agents.` })
+  useScopeFeed({
+    model, onLanded, overlay,
+    label: `Replay of ${model.agents.length} people's agents negotiating a meeting time.`,
+    legend: 'Each dot is someone’s agent, drifting toward the times they prefer. Crossed-out times are ones someone can’t make.',
+  })
 
   async function runSample() {
     setError(null)
@@ -78,21 +80,16 @@ export default function AttractStage() {
 
   const strips = (
     <div className="px-4 lg:px-5 py-5">
-      <div className="flex items-baseline justify-between font-mono text-[11px] tracking-[0.16em]">
-        <h2 className="text-strip">STRIP BAY</h2>
-        <span className="text-mist tabular-nums">{2 + recents.length} ACTIVE</span>
-      </div>
+      <h2 className="sr-only">Get started</h2>
       <motion.ul className="mt-3 flex flex-col gap-2" initial="hidden" animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.15 } } }}>
         <motion.li className={pull} variants={{ hidden: { opacity: 0, x: -24 }, show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE } } }}>
-          <button type="button" onClick={() => navigate('/new')} className="block w-full text-left group" aria-label="New flight plan: schedule a meeting">
-            <BayStrip holder="plan" code="FPL" layoutId="strip-fpl">
-              <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] gap-px h-full">
-                <Box code="ACID">
-                  <span className="block font-display font-extrabold text-[30px] leading-[0.9] text-strip-ink">NEW</span>
-                </Box>
-                <Box code="RMK">
-                  <span className="block text-[14px] leading-snug text-strip-ink">Schedule a meeting. Invite people; their agents settle the time.</span>
+          <button type="button" onClick={() => navigate('/new')} className="block w-full text-left group">
+            <BayStrip holder="plan" layoutId="strip-fpl">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-px h-full">
+                <Box>
+                  <span className="block font-display font-bold text-[26px] leading-none text-strip-ink">Schedule a meeting</span>
+                  <span className="block mt-1.5 text-[14px] leading-snug text-strip-ink/80">Invite people. Their agents settle the time.</span>
                 </Box>
                 <div className="bg-clearance text-strip flex items-center px-3.5 group-hover:bg-clearance-dim transition-colors"><Arrow /></div>
               </div>
@@ -101,18 +98,19 @@ export default function AttractStage() {
         </motion.li>
 
         <motion.li className={pull} variants={{ hidden: { opacity: 0, x: -24 }, show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE } } }}>
-          <BayStrip holder="sim" code="SMPL">
+          <BayStrip holder="sim">
             <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-px">
-              <Box code="RMK">
-                <span className="block text-[14px] leading-snug text-strip-ink">
-                  Invent {size} students with real weeks and watch their agents negotiate.
+              <Box>
+                <span className="block font-display font-bold text-[26px] leading-none text-strip-ink">Run a sample</span>
+                <span className="block mt-1.5 text-[14px] leading-snug text-strip-ink/80">
+                  Invent {size} students with realistic weeks and watch their agents negotiate.
                 </span>
               </Box>
               <button type="button" onClick={runSample} disabled={busy}
                 className="row-span-2 bg-strip-ink text-strip px-3.5 font-mono text-[11px] tracking-[0.14em] hover:bg-board transition-colors disabled:opacity-60">
-                {busy ? 'LAUNCHING' : 'RUN'}
+                {busy ? 'STARTING' : 'RUN'}
               </button>
-              <Box code="ACFT" className="!pt-3.5 !pb-1.5">
+              <Box code="People" className="!pb-2">
                 <div role="radiogroup" aria-label="How many sample people" className="flex gap-1.5">
                   {SIZES.map((n) => (
                     <button key={n} type="button" role="radio" aria-checked={size === n} onClick={() => setSize(n)}
@@ -131,22 +129,17 @@ export default function AttractStage() {
         {recents.map((r) => (
           <motion.li key={r.id} className={pull} variants={{ hidden: { opacity: 0, x: -24 }, show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE } } }}>
             <button type="button" onClick={() => navigate(`/event/${r.id}/negotiate`)} className="block w-full text-left" aria-label={`Open ${r.title}`}>
-              <BayStrip holder="event" code="EVT">
+              <BayStrip holder="event">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-px">
-                  <Box code="ACID"><span className="block truncate font-display font-bold text-[20px] leading-none text-strip-ink">{r.title}</span></Box>
-                  <Box code="FILED">
-                    <span className="block font-mono text-[12px] text-strip-ink tabular-nums">
-                      {new Date(r.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }).toUpperCase()}
+                  <Box code="Recent"><span className="block truncate font-display font-bold text-[20px] leading-none text-strip-ink">{r.title}</span></Box>
+                  <Box code="Created">
+                    <span className="block text-[14px] text-strip-ink tabular-nums">
+                      {new Date(r.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                     </span>
                   </Box>
                 </div>
               </BayStrip>
             </button>
-          </motion.li>
-        ))}
-        {Array.from({ length: Math.max(1, 4 - recents.length) }, (_, i) => (
-          <motion.li key={`empty-${i}`} className="hidden lg:block" variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.6 } } }}>
-            <EmptyHolder />
           </motion.li>
         ))}
       </motion.ul>
@@ -156,10 +149,12 @@ export default function AttractStage() {
   const comms = (
     <div className="flex flex-col min-h-full">
       <Atis />
-      <section aria-label="Recorded run" className="mt-auto px-5 lg:px-6 py-5 border-t border-board-line">
-        <div className="flex items-center justify-between font-mono text-[11px] tracking-[0.16em] text-mist mb-3">
-          <span>ON FREQUENCY · RECORDED RUN</span>
-          <span className="tabular-nums">{model.agents.length || 14} SIM</span>
+      <section aria-label="What's happening in the replay" className="mt-auto px-5 lg:px-6 py-5 border-t border-board-line">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <span className="text-[13px] text-mist">Replay of a recorded run</span>
+          <span className="px-2 py-0.5 border border-mist/40 rounded-[2px] text-[12px] text-mist whitespace-nowrap">
+            {model.agents.length || 14} people · simulated agents
+          </span>
         </div>
         <RadioTicker model={model} />
       </section>

@@ -9,6 +9,8 @@ export interface ScopeFeed {
   onLanded?: () => void
   /** Drawn centred on the scope wherever the camera has put it (the stamp, for one). */
   overlay?: ReactNode
+  /** One plain line under the scope saying what the marks mean. */
+  legend?: string
 }
 
 export interface Cab {
@@ -36,8 +38,8 @@ export function useFixture(which: 'bay' | 'panel'): HTMLElement | null {
 /** A stage hands the persistent scope what to show; the scope itself never remounts. */
 export function useScopeFeed(f: ScopeFeed) {
   const { feed } = useCab()
-  const { model, label, onLanded, overlay } = f
+  const { model, label, onLanded, overlay, legend } = f
   useEffect(() => {
-    feed({ model, label, onLanded, overlay })
-  }, [feed, model, label, onLanded, overlay])
+    feed({ model, label, onLanded, overlay, legend })
+  }, [feed, model, label, onLanded, overlay, legend])
 }

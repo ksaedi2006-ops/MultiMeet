@@ -10,7 +10,7 @@ const SIZES: Record<Size, string> = {
 }
 
 /** The signature mark: a rectangular ink clearance stamp that lands when something becomes official. */
-export default function Stamp({ label = 'CLEARED', detail, size = 'md' }: { label?: string; detail?: string; size?: Size }) {
+export default function Stamp({ label = 'BOOKED', detail, size = 'md' }: { label?: string; detail?: string; size?: Size }) {
   return (
     <motion.div
       initial={{ scale: 1.9, opacity: 0, rotate: 8 }}

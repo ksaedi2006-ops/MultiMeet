@@ -3,19 +3,19 @@ import { motion } from 'framer-motion'
 
 export type Holder = 'plan' | 'sim' | 'event'
 
-/** Strip holders are coloured plastic carriers; the colour says what kind of traffic it is. */
+/** The coloured end of a card says what kind of card it is. */
 const HOLDER: Record<Holder, string> = {
   plan: 'bg-clearance text-strip',
   sim: 'bg-holder-steel text-strip',
   event: 'bg-holder-ochre text-strip',
 }
 
-/** A boxed field on a strip, with its printed field code in the corner. */
+/** A ruled box on a card, with an optional small label in the corner. */
 export function Box({ code, className = '', children }: { code?: string; className?: string; children: ReactNode }) {
   return (
-    <div className={`relative bg-strip px-3 pt-4 pb-2 min-w-0 ${className}`}>
+    <div className={`relative bg-strip px-3 ${code ? 'pt-5' : 'pt-2.5'} pb-2.5 min-w-0 ${className}`}>
       {code && (
-        <span aria-hidden className="absolute left-1.5 top-1 font-mono text-[9px] leading-none tracking-[0.12em] text-strip-ink/55">
+        <span aria-hidden className="absolute left-3 top-1.5 text-[11px] leading-none text-strip-ink/60">
           {code}
         </span>
       )}
@@ -24,32 +24,32 @@ export function Box({ code, className = '', children }: { code?: string; classNa
   )
 }
 
+const ICONS: Record<Holder, string> = {
+  plan: 'M3 3.5h10v9.5H3zM3 6.5h10M6 2v3M10 2v3M8 8.5v3M6.5 10h3',
+  sim: 'M5 3.5v9l7-4.5z',
+  event: 'M8 2.5a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11zM8 5v3l2 1.5',
+}
+
 interface Props {
   holder: Holder
-  code: string
   layoutId?: string
   className?: string
   children: ReactNode
 }
 
 /**
- * A flight strip seated in its holder: the carrier end with its code set sideways, then the
- * manila strip ruled into boxes (children are laid out as a grid by the caller; the 1px gaps
- * between boxes show the printed rules).
+ * A paper card: a coloured end with an icon, then manila ruled into boxes (children are laid
+ * out as a grid by the caller; the 1px gaps between boxes show the printed rules).
  */
-export default function BayStrip({ holder, code, layoutId, className = '', children }: Props) {
+export default function BayStrip({ holder, layoutId, className = '', children }: Props) {
   return (
     <motion.div layoutId={layoutId} transition={{ type: 'spring', stiffness: 210, damping: 28 }}
       className={`flex items-stretch rounded-[2px] overflow-hidden shadow-[0_1px_0_rgba(0,0,0,0.35),0_6px_14px_-8px_rgba(0,0,0,0.6)] ${className}`}>
       <div aria-hidden className={`w-7 shrink-0 flex items-center justify-center ${HOLDER[holder]}`}>
-        <span className="font-mono text-[10px] font-semibold tracking-[0.2em] [writing-mode:vertical-rl] rotate-180">{code}</span>
+        <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.5"
+          strokeLinecap="round" strokeLinejoin="round"><path d={ICONS[holder]} /></svg>
       </div>
       <div className="on-strip flex-1 min-w-0 bg-strip-ink/25">{children}</div>
     </motion.div>
   )
-}
-
-/** An empty holder in the bay, waiting for a strip. */
-export function EmptyHolder() {
-  return <div aria-hidden className="h-14 rounded-[2px] border border-board-line/80 bg-black/15" />
 }

@@ -28,10 +28,10 @@ export default function TowerLog({ model, viewerId }: { model: TowerModel; viewe
   let lastRound = -1
 
   return (
-    <section aria-label="Tower log" className="border border-board-line rounded-[2px] flex flex-col min-h-0 bg-board-raised/40">
-      <h2 className="px-4 py-2 border-b border-board-line font-mono text-[11px] tracking-[0.18em] text-mist">TOWER LOG</h2>
+    <section aria-label="What's happening" className="border border-board-line rounded-[2px] flex flex-col min-h-0 bg-board-raised/40">
+      <h2 className="px-4 py-2 border-b border-board-line font-mono text-[11px] tracking-[0.18em] text-mist">WHAT’S HAPPENING</h2>
       <ol ref={list} role="log" className="flex-1 overflow-y-auto px-4 py-2 font-mono text-[12px] leading-relaxed min-h-0">
-        {lines.length === 0 && <li className="text-mist py-1">Nothing on frequency yet.</li>}
+        {lines.length === 0 && <li className="text-mist py-1">Nothing yet.</li>}
         {lines.map((l) => {
           const divider = l.round !== lastRound && l.round > 0
           lastRound = l.round
@@ -44,7 +44,7 @@ export default function TowerLog({ model, viewerId }: { model: TowerModel; viewe
                   <span className="h-px flex-1 bg-board-line" />
                 </div>
               )}
-              <div className="grid grid-cols-[4.5rem_4.5rem_1fr] gap-x-2 py-0.5">
+              <div className="grid grid-cols-[4.5rem_5.5rem_1fr] gap-x-2 py-0.5">
                 <span className="text-mist/70 tabular-nums">{clock(l.at)}</span>
                 <span className={`${TONE[l.tone]} font-semibold truncate`}>{l.speaker}</span>
                 <span className="text-strip/90 font-sans text-[13px]">

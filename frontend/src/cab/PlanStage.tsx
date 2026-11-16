@@ -11,7 +11,7 @@ import BayStrip, { Box } from './BayStrip'
 import { useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
 
-const DAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 const LENGTHS = [30, 45, 60, 90, 120]
 
@@ -20,7 +20,7 @@ const dayOffset = (n: number) => {
   d.setDate(d.getDate() + n)
   return d.toLocaleDateString('en-CA')
 }
-const hhmm = (h: number) => `${String(h % 24).padStart(2, '0')}00`
+const hourLabel = (h: number) => (h % 24 === 0 ? 'Midnight' : h === 12 ? 'Noon' : `${h % 12} ${h % 24 < 12 ? 'AM' : 'PM'}`)
 
 const zones = (() => {
   try {
@@ -33,13 +33,13 @@ const zones = (() => {
 const field = 'w-full bg-transparent text-strip-ink outline-none placeholder:text-strip-ink/35'
 const focusBox = 'focus-within:bg-strip-dim transition-colors'
 const chip = (on: boolean) =>
-  `h-8 min-w-10 px-2 rounded-[2px] font-mono text-xs tracking-wider border transition-colors ${
+  `h-8 min-w-11 px-2.5 rounded-[2px] text-[13px] border transition-colors ${
     on ? 'bg-strip-ink text-strip border-strip-ink' : 'border-strip-ink/30 text-strip-ink hover:border-strip-ink'}`
 
 /**
- * Filing the flight plan: the NEW strip comes out of the bay and opens into a printed form.
+ * Creating a meeting: the "Schedule a meeting" card slides out and opens into a paper form.
  * The scope previews the search live; every change to days, hours or length redraws the
- * fixes on the rim before anything is sent.
+ * times on the ring before anything is sent.
  */
 export default function PlanStage() {
   const navigate = useNavigate()
@@ -70,7 +70,11 @@ export default function PlanStage() {
   )
   const model = useMemo(() => ({ ...emptyModel, slots }), [slots])
   const days = new Set(slots.map((s) => s.dayKey)).size
-  useScopeFeed({ model, label: `Radar scope previewing ${slots.length} candidate meeting times over ${days} days.` })
+  useScopeFeed({
+    model,
+    label: `Preview of the ${slots.length} possible meeting times over ${days} days.`,
+    legend: 'Each mark on the ring is a time the agents will consider, grouped by day. Point at one to read it.',
+  })
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && !loading && navigate('/')
@@ -103,7 +107,7 @@ export default function PlanStage() {
     }
   }
 
-  const select = `${field} font-mono text-[15px] cursor-pointer [color-scheme:light] appearance-none`
+  const select = `${field} text-[15px] cursor-pointer [color-scheme:light] appearance-none`
   const content = (
     <div className="px-4 lg:px-6 py-5">
       <div className="flex items-center justify-between font-mono text-[11px] tracking-[0.16em]">
@@ -111,61 +115,60 @@ export default function PlanStage() {
           <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
             <path d="M13 8H3M7 4 3 8l4 4" />
           </svg>
-          BACK TO BAY
+          BACK
         </button>
         <span className="hidden lg:inline text-mist">ESC TO CANCEL</span>
       </div>
-      <h1 className="mt-5 font-display font-bold text-[2.6rem] leading-[0.95] tracking-tight text-strip">File a flight plan</h1>
+      <h1 className="mt-5 font-display font-bold text-[2.6rem] leading-[0.95] tracking-tight text-strip">New meeting</h1>
       <p className="mt-2 text-[15px] text-strip/80 max-w-[34rem]">
-        Say what you’re scheduling and when it could happen. The scope shows every time the agents will consider.
+        Say what it’s for and when it could happen. The circle shows every time the agents will consider.
       </p>
 
       <form onSubmit={file} className="relative mt-5">
-        <BayStrip holder="plan" code="FPL" layoutId="strip-fpl">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.35, delay: 0.25 }}
-            className="grid grid-cols-2 sm:grid-cols-6 gap-px">
-            <Box code="1 ACID · WHAT" className={`col-span-2 sm:col-span-4 ${focusBox}`}>
+        <BayStrip holder="plan" layoutId="strip-fpl">
+          <div className="grid grid-cols-2 sm:grid-cols-6 gap-px">
+            <Box code="What’s it for" className={`col-span-2 sm:col-span-4 ${focusBox}`}>
               <input autoFocus required aria-label="Title" maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)}
                 placeholder="CS Club weekly" className={`${field} font-display font-bold text-[26px] leading-tight`} />
             </Box>
-            <Box code="2 ORIG · YOU" className={`col-span-2 ${focusBox}`}>
+            <Box code="Your name" className={`col-span-2 ${focusBox}`}>
               <input required aria-label="Your name" maxLength={60} value={name} onChange={(e) => setName(e.target.value)}
                 placeholder="Ava Chen" className={`${field} text-[16px] py-1.5`} />
             </Box>
-            <Box code="3 FROM" className={`sm:col-span-2 ${focusBox}`}>
+            <Box code="From" className={`sm:col-span-2 ${focusBox}`}>
               <input type="date" required aria-label="Search from" value={start} min={dayOffset(0)}
                 onChange={(e) => setStart(e.target.value)} className={select} />
             </Box>
-            <Box code="4 UNTIL" className={`sm:col-span-2 ${focusBox}`}>
+            <Box code="Until" className={`sm:col-span-2 ${focusBox}`}>
               <input type="date" required aria-label="Search until" value={end} min={start}
                 onChange={(e) => setEnd(e.target.value)} className={select} />
             </Box>
-            <Box code="5 ZONE" className={`col-span-2 ${focusBox}`}>
+            <Box code="Time zone" className={`col-span-2 ${focusBox}`}>
               <select aria-label="Time zone" value={tz} onChange={(e) => setTz(e.target.value)} className={`${select} truncate`}>
                 {(zones.includes(tz) ? zones : [tz, ...zones]).map((z) => <option key={z} value={z}>{z.replace(/_/g, ' ')}</option>)}
               </select>
             </Box>
-            <Box code="6 LENGTH" className="col-span-2 sm:col-span-3">
+            <Box code="Length" className="col-span-2 sm:col-span-4">
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Meeting length">
                 {LENGTHS.map((m) => (
                   <button key={m} type="button" aria-pressed={duration === m} onClick={() => setDuration(m)} className={chip(duration === m)}>
-                    {m < 60 ? `${m}M` : `${m / 60}H`}
+                    {m < 60 ? `${m} min` : `${m / 60} hr`}
                   </button>
                 ))}
               </div>
             </Box>
-            <Box code="7 WINDOW · LOCAL" className={`col-span-2 sm:col-span-3 ${focusBox}`}>
-              <div className="flex items-center gap-2 font-mono text-[15px] text-strip-ink">
+            <Box code="Between" className={`col-span-2 ${focusBox}`}>
+              <div className="flex items-center gap-2 text-[15px] text-strip-ink">
                 <select aria-label="Earliest start" value={earliest} onChange={(e) => setEarliest(Number(e.target.value))} className={`${select} !w-auto`}>
-                  {Array.from({ length: 16 }, (_, i) => i + 6).map((h) => <option key={h} value={h}>{hhmm(h)}</option>)}
+                  {Array.from({ length: 16 }, (_, i) => i + 6).map((h) => <option key={h} value={h}>{hourLabel(h)}</option>)}
                 </select>
-                <span aria-hidden className="text-strip-ink/50">—</span>
+                <span aria-hidden className="text-strip-ink/50">and</span>
                 <select aria-label="Must end by" value={latest} onChange={(e) => setLatest(Number(e.target.value))} className={`${select} !w-auto`}>
-                  {Array.from({ length: 16 }, (_, i) => i + 9).map((h) => <option key={h} value={h}>{hhmm(h)}</option>)}
+                  {Array.from({ length: 16 }, (_, i) => i + 9).map((h) => <option key={h} value={h}>{hourLabel(h)}</option>)}
                 </select>
               </div>
             </Box>
-            <Box code="8 DAYS" className="col-span-2 sm:col-span-4">
+            <Box code="Days" className="col-span-2 sm:col-span-4">
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Days of the week">
                 {DAYS.map((d, i) => (
                   <button key={d} type="button" aria-pressed={weekdays.includes(i)} aria-label={DAY_NAMES[i]}
@@ -177,17 +180,17 @@ export default function PlanStage() {
             </Box>
             <button disabled={loading || Boolean(problem)}
               className="col-span-2 min-h-14 bg-clearance text-strip font-mono text-[13px] tracking-[0.18em] flex items-center justify-center gap-2 hover:bg-clearance-dim disabled:bg-clearance/45 disabled:cursor-not-allowed transition-colors">
-              {loading ? 'FILING' : 'FILE'}
+              {loading ? 'CREATING' : 'CREATE MEETING'}
               {!loading && (
                 <svg viewBox="0 0 16 16" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                   <path d="M3 8h10M9 4l4 4-4 4" />
                 </svg>
               )}
             </button>
-          </motion.div>
+          </div>
         </BayStrip>
         {filed && (
-          <div className="absolute right-6 -top-4 pointer-events-none"><Stamp label="FILED" size="md" /></div>
+          <div className="absolute right-6 -top-4 pointer-events-none"><Stamp label="CREATED" size="md" /></div>
         )}
       </form>
 
@@ -197,7 +200,7 @@ export default function PlanStage() {
           <span role="alert" className="text-signal">{problem.toUpperCase()}</span>
         ) : (
           <span className="text-mist">
-            <span className="text-amber">{slots.length}</span> CANDIDATE TIMES ON THE SCOPE · {days} {days === 1 ? 'DAY' : 'DAYS'}
+            <span className="text-amber">{slots.length}</span> POSSIBLE TIMES OVER {days} {days === 1 ? 'DAY' : 'DAYS'}
           </span>
         )}
       </motion.p>

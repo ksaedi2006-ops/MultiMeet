@@ -1,12 +1,17 @@
 import type { Agent, TowerModel } from '../model'
 import { layoutRim, scoreTarget, separate, type Layout } from './geometry'
 import { Phosphor } from './phosphor'
+import { blockerPhrase, dayAndClock, fullTime } from '../../lib/timeLabels'
 
 const AMBER = '232,169,58'
 const ORANGE = '212,85,28'
+const ORANGE_TEXT = '244,132,79' // --color-signal, orange that reads as text on the glass
 const MIST = '147,170,189' // --color-mist
 const STRIP = '236,223,194'
 const MONO = '"IBM Plex Mono", ui-monospace, monospace'
+const SANS = '"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif'
+/** Above this many people, tags show only the name unless someone is pointed at or busy. */
+const CROWD = 12
 
 const SWEEP_PERIOD = 5200
 const CLOSE_STAGGER = 45
@@ -83,6 +88,9 @@ export class ScopeEngine {
   private ghosts = new Map<string, { angle: number; at: number }>()
   private sectorsShown = new Map<string, { start: number; end: number; label: string; born: number }>()
   private departing: Departing[] = []
+  private hoverSlot: string | null = null
+  private leaders: string[] = [] // up to three open times in the lead, best first
+  private leaderRects: { x: number; y: number; w: number; h: number }[] = []
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -97,7 +105,11 @@ export class ScopeEngine {
     this.observer.observe(canvas)
     this.resize()
     canvas.addEventListener('pointermove', this.onPointer)
-    canvas.addEventListener('pointerleave', () => this.opts.onHover?.(null))
+    canvas.addEventListener('pointerdown', this.onPointer)
+    canvas.addEventListener('pointerleave', () => {
+      this.hoverSlot = null
+      this.opts.onHover?.(null)
+    })
   }
 
   setOptions(opts: EngineOptions) {
@@ -122,6 +134,7 @@ export class ScopeEngine {
     cancelAnimationFrame(this.raf)
     this.observer.disconnect()
     this.canvas.removeEventListener('pointermove', this.onPointer)
+    this.canvas.removeEventListener('pointerdown', this.onPointer)
   }
 
   /** Feed the latest model; one-shot effects start for anything new since last time. */
@@ -180,8 +193,32 @@ export class ScopeEngine {
       if (scores && model.phase !== 'escalated') raw.set(agent.id, scoreTarget(scores, this.layout, open))
     }
     this.targets = separate(raw, 0.16)
+    this.leaders = this.findLeaders(model, open)
     this.model = model
     this.prevSeq = model.lastSeq
+  }
+
+  /**
+   * The times in the lead: the mediator's shortlist once there is one, before that the open
+   * times whose least-happy person is happiest, so the labels move as scores arrive.
+   */
+  private findLeaders(model: TowerModel, open: Set<string>): string[] {
+    if (model.decision) return []
+    const ranked = model.slots.filter((s) => s.rank && !s.closed).sort((a, b) => a.rank! - b.rank!)
+    if (ranked.length) return ranked.slice(0, 3).map((s) => s.id)
+    const rows = Object.values(model.scores)
+    if (rows.length === 0) return []
+    return [...open]
+      .map((id) => {
+        const vals = rows.map((r) => r[id]).filter((v): v is number => v !== undefined)
+        const min = vals.length ? Math.min(...vals) : -1
+        const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : -1
+        return { id, min, avg }
+      })
+      .filter((x) => x.min >= 0)
+      .sort((a, b) => b.min - a.min || b.avg - a.avg)
+      .slice(0, 3)
+      .map((x) => x.id)
   }
 
   private reset() {
@@ -276,6 +313,21 @@ export class ScopeEngine {
       }
     }
     this.opts.onHover?.(best)
+    // Not on a dot: the nearest time on the ring, if the pointer is close to it.
+    this.hoverSlot = null
+    if (best) return
+    let bestSlot: string | null = null
+    let bestSlotD = 16
+    for (const s of this.model.slots) {
+      const a = this.bearing(s.id)
+      if (a === undefined) continue
+      const d = Math.hypot(cx + Math.cos(a) * Rf - px, cy + Math.sin(a) * Rf - py)
+      if (d < bestSlotD) {
+        bestSlotD = d
+        bestSlot = s.id
+      }
+    }
+    this.hoverSlot = bestSlot
   }
 
   // ---------- frame ----------
@@ -303,8 +355,91 @@ export class ScopeEngine {
     this.drawGhosts(g, now)
     this.drawTower(g, now)
     this.drawDeparting(g, now)
+    this.drawLeaderLabels(g)
     this.drawPlanes(g, now, sweep)
+    this.drawTimeReadout(g)
     this.phosphor?.render(this.offscreen!, dt * 1000, this.opts.reducedMotion ? 0 : 1)
+  }
+
+  /** The leading times get their clock time written beside them, just inside the ring. */
+  private drawLeaderLabels({ cx, cy, Rf, scale }: ReturnType<ScopeEngine['geometry']>) {
+    const { ctx, model } = this
+    this.leaderRects = []
+    if (!model || this.leaders.length === 0) return
+    const placed = this.leaderRects
+    const fs = Math.round(12.5 * scale)
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    this.leaders.forEach((id, i) => {
+      const s = model.slots.find((x) => x.id === id)
+      const a = this.bearing(id)
+      if (!s || a === undefined) return
+      const text = dayAndClock(s.label) // the day too, so two leaders at 4:30 on different days aren't confused
+      ctx.font = `${i === 0 ? 600 : 500} ${fs}px ${MONO}`
+      const w = ctx.measureText(text).width + 10
+      const h = fs + 8
+      // Step inward until the label clears the ones already written.
+      let r = Rf - 24 * scale
+      let rect = { x: 0, y: 0, w, h }
+      for (let k = 0; k < 6; k++) {
+        rect = { x: cx + Math.cos(a) * r - w / 2, y: cy + Math.sin(a) * r - h / 2, w, h }
+        const hit = placed.some((p) => rect.x < p.x + p.w && p.x < rect.x + rect.w && rect.y < p.y + p.h && p.y < rect.y + rect.h)
+        if (!hit) break
+        r -= h + 2
+      }
+      placed.push(rect)
+      ctx.fillStyle = 'rgba(11,20,28,0.85)'
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+      ctx.fillStyle = i === 0 ? `rgb(${AMBER})` : `rgba(${AMBER},0.85)`
+      ctx.fillText(text, rect.x + w / 2, rect.y + h / 2 + 1)
+    })
+  }
+
+  /** Pointing at a time on the ring reads it out: when, and how many people can make it. */
+  private drawTimeReadout({ cx, cy, Rf, scale }: ReturnType<ScopeEngine['geometry']>) {
+    const { ctx, model } = this
+    if (!model || !this.hoverSlot) return
+    const s = model.slots.find((x) => x.id === this.hoverSlot)
+    const a = this.bearing(this.hoverSlot)
+    if (!s || a === undefined) return
+    const total = model.agents.length
+    const blocked = new Set(s.blockers.map((b) => b.user_id)).size
+    const line1 = total ? `${fullTime(s.label)} · ${total - blocked} of ${total} can make it` : fullTime(s.label)
+    const line2 = s.closed && s.blockers.length
+      ? `Can't: ${blockerPhrase(s.blockers[0].name, s.blockers[0].reason)}${s.blockers.length > 1 ? ` +${s.blockers.length - 1} more` : ''}`
+      : null
+    const f1 = Math.round(13 * scale)
+    const f2 = Math.round(12 * scale)
+    ctx.font = `600 ${f1}px ${SANS}`
+    let w = ctx.measureText(line1).width
+    if (line2) {
+      ctx.font = `400 ${f2}px ${SANS}`
+      w = Math.max(w, ctx.measureText(line2).width)
+    }
+    w += 16
+    const h = f1 + 12 + (line2 ? f2 + 6 : 0)
+    const fx = cx + Math.cos(a) * Rf
+    const fy = cy + Math.sin(a) * Rf
+    // Sit inside the ring, toward the centre, and stay on the canvas.
+    let x = fx - Math.cos(a) * (28 * scale) - w / 2
+    let y = fy - Math.sin(a) * (28 * scale) - h / 2
+    x = Math.max(4, Math.min(this.size.w - w - 4, x))
+    y = Math.max(4, Math.min(this.size.h - h - 4, y))
+    ctx.fillStyle = 'rgba(11,20,28,0.94)'
+    ctx.fillRect(x, y, w, h)
+    ctx.strokeStyle = `rgba(${STRIP},0.35)`
+    ctx.lineWidth = 1
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1)
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'alphabetic'
+    ctx.font = `600 ${f1}px ${SANS}`
+    ctx.fillStyle = `rgb(${STRIP})`
+    ctx.fillText(line1, x + 8, y + 6 + f1)
+    if (line2) {
+      ctx.font = `400 ${f2}px ${SANS}`
+      ctx.fillStyle = `rgb(${ORANGE_TEXT})`
+      ctx.fillText(line2, x + 8, y + 6 + f1 + 6 + f2)
+    }
   }
 
   private drawGhosts({ cx, cy, Rf, scale }: ReturnType<ScopeEngine['geometry']>, now: number) {
@@ -437,7 +572,7 @@ export class ScopeEngine {
     const { ctx, model } = this
     if (!model) return
     const winner = model.decision?.status === 'converged' ? model.decision.slot?.id : null
-    const anyRank = model.slots.some((s) => s.rank)
+    const anyRank = this.leaders.length > 0 && model.shortlist.length > 0
     ctx.textAlign = 'center'
     ctx.textBaseline = 'middle'
     for (const s of model.slots) {
@@ -475,12 +610,12 @@ export class ScopeEngine {
         this.triangle(x, y, angle, 9 * scale, `rgb(${ORANGE})`, true)
         continue
       }
-      if (s.rank) {
-        this.triangle(x, y, angle, 7 * scale, `rgba(${AMBER},0.95)`, true)
-        ctx.font = `600 ${Math.round(11 * scale)}px ${MONO}`
-        ctx.fillStyle = `rgba(${AMBER},0.95)`
-        const [lx, ly] = [cx + Math.cos(angle) * (Rf - 18 * scale), cy + Math.sin(angle) * (Rf - 18 * scale)]
-        ctx.fillText(String(s.rank), lx, ly)
+      if (this.leaders.includes(s.id)) {
+        this.triangle(x, y, angle, (this.leaders[0] === s.id ? 8 : 6.5) * scale * pop, `rgba(${AMBER},0.95)`, true)
+        continue
+      }
+      if (this.hoverSlot === s.id) {
+        this.triangle(x, y, angle, 6.5 * scale, `rgba(${STRIP},0.95)`, false)
         continue
       }
       const dim = anyRank ? 0.28 : 0.6
@@ -706,33 +841,38 @@ export class ScopeEngine {
     const f1 = Math.round(12.5 * scale)
     const f2 = Math.round(11.5 * scale)
     const s = 3.8 * scale
+    const crowded = model.agents.length > CROWD
 
-    interface Drawn { agent: Agent; p: Plane; x: number; y: number; line2: { text: string; rgb: string }; w: number }
+    interface Drawn { agent: Agent; p: Plane; x: number; y: number; line2: { text: string; rgb: string } | null; w: number; h: number }
     const drawn: Drawn[] = []
     for (const agent of model.agents) {
       const p = this.planes.get(agent.id)
       if (!p || p.landed) continue
-      const line2 = this.tagStatus(agent, model, lead, now)
-      ctx.font = `600 ${f1}px ${MONO}`
+      const status = this.tagStatus(agent, model, lead, now)
+      // In a crowd only the name shows, unless this person is pointed at or the mediator is talking to them.
+      const line2 = !crowded || status.urgent || this.opts.highlight === agent.id ? status : null
+      ctx.font = `600 ${f1}px ${SANS}`
       const w1 = ctx.measureText(agent.callsign).width
-      ctx.font = `500 ${f2}px ${MONO}`
-      const w = Math.max(w1, ctx.measureText(line2.text).width) + 8
-      drawn.push({ agent, p, x: cx + p.x * Rf, y: cy + p.y * Rf, line2, w })
+      ctx.font = `500 ${f2}px ${SANS}`
+      const w = Math.max(w1, line2 ? ctx.measureText(line2.text).width : 0) + 8
+      drawn.push({ agent, p, x: cx + p.x * Rf, y: cy + p.y * Rf, line2, w, h: f1 + 6 + (line2 ? f2 + 3 : 0) })
     }
 
-    // Place each data tag at whichever leader position collides least with blips and
-    // tags already placed, the way controllers drag tags off each other.
-    const h = f1 + f2 + 8
+    // Place each tag at whichever position beside its dot collides least with dots and
+    // tags already placed.
     const off = 14 * scale
     const tower = 22 * scale
+    const mediatorW = 64 * scale
     const placed: { x: number; y: number; w: number; h: number }[] = [
-      { x: cx - tower / 2, y: cy - tower / 2, w: tower, h: tower * 1.4 }, // TWR glyph and label
+      { x: cx - mediatorW / 2, y: cy - tower / 2, w: mediatorW, h: tower * 1.5 }, // the mediator's mark and label
       ...drawn.map((d) => ({ x: d.x - s - 2, y: d.y - s - 2, w: 2 * s + 4, h: 2 * s + 4 })),
+      ...this.leaderRects, // name tags steer around the leading-time labels
     ]
     const overlap = (a: { x: number; y: number; w: number; h: number }, b: typeof a) =>
       Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)) *
       Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y))
     const tags = drawn.map((d) => {
+      const h = d.h
       const options = [
         { dx: off, dy: -off - h }, { dx: -off - d.w, dy: -off - h },
         { dx: off, dy: off }, { dx: -off - d.w, dy: off },
@@ -752,7 +892,7 @@ export class ScopeEngine {
           best = o
         }
       }
-      const rect = { x: d.x + best.dx, y: d.y + best.dy, w: d.w, h }
+      const rect = { x: d.x + best.dx, y: d.y + best.dy, w: d.w, h: d.h }
       placed.push(rect)
       return rect
     })
@@ -794,49 +934,50 @@ export class ScopeEngine {
       ctx.stroke()
       ctx.fillStyle = 'rgba(11,20,28,0.78)'
       ctx.fillRect(tag.x, tag.y, tag.w, tag.h)
-      ctx.font = `600 ${f1}px ${MONO}`
-      ctx.fillStyle = `rgba(${STRIP},${0.6 + 0.4 * painted})`
+      ctx.font = `600 ${f1}px ${SANS}`
+      ctx.fillStyle = `rgba(${STRIP},${0.7 + 0.3 * painted})`
       ctx.fillText(agent.callsign, tag.x + 4, tag.y + f1 + 1)
-      ctx.font = `500 ${f2}px ${MONO}`
-      ctx.fillStyle = `rgba(${line2.rgb},0.95)`
-      ctx.fillText(line2.text, tag.x + 4, tag.y + f1 + f2 + 4)
+      if (line2) {
+        ctx.font = `500 ${f2}px ${SANS}`
+        ctx.fillStyle = `rgba(${line2.rgb},0.95)`
+        ctx.fillText(line2.text, tag.x + 4, tag.y + f1 + f2 + 4)
+      }
     })
   }
 
-  private tagStatus(agent: Agent, model: TowerModel, lead: string | undefined, now: number): { text: string; rgb: string } {
-    const sim = agent.fallback || model.backend === 'simulated' ? ' SIM' : ''
-    if (model.decision?.status === 'escalated') return { text: 'HOLDING', rgb: MIST }
-    if (model.decision && this.decisionAt !== null) {
-      const order = this.landingOrder.indexOf(agent.id)
-      const start = this.decisionAt + LAND_DELAY + Math.max(0, order) * LAND_STAGGER
-      return { text: now >= start ? 'FINAL' : 'CLEARED', rgb: ORANGE }
-    }
+  private tagStatus(agent: Agent, model: TowerModel, _lead: string | undefined, now: number): { text: string; rgb: string; urgent?: boolean } {
+    if (model.decision?.status === 'escalated') return { text: 'No time works', rgb: MIST }
+    if (model.decision) return { text: 'Booked', rgb: ORANGE_TEXT }
     if (agent.reply) {
       const at = model.asks.find((a) => a.reply?.seq === agent.reply!.seq)
       const firstSeen = at ? this.replyFx.get(at.id) : undefined
       if (firstSeen !== undefined && now - firstSeen < 2800) {
         const r = agent.reply.response
         return r === 'flex'
-          ? { text: `FLEX +${agent.reply.delta}`, rgb: AMBER }
+          ? { text: 'Can move', rgb: AMBER, urgent: true }
           : r === 'hold'
-            ? { text: 'HOLD', rgb: MIST }
-            : { text: 'ACCEPT', rgb: AMBER }
+            ? { text: "Won't move", rgb: MIST, urgent: true }
+            : { text: 'Agrees', rgb: AMBER, urgent: true }
       }
     }
     switch (agent.status) {
       case 'holding':
-        return { text: `BRIEFING${sim}`, rgb: MIST }
+        return { text: 'Setting up', rgb: MIST }
       case 'ready':
-        return { text: `READY${sim}`, rgb: AMBER }
+        return { text: 'Ready', rgb: AMBER }
       case 'thinking':
-        return { text: `SCAN${'.'.repeat(1 + (Math.floor(now / 300) % 3))}`, rgb: AMBER }
+        return { text: `Thinking${'.'.repeat(1 + (Math.floor(now / 300) % 3))}`, rgb: AMBER }
       case 'asked':
-        return { text: 'TWR CALL', rgb: ORANGE }
+        return { text: 'Asked to move', rgb: ORANGE_TEXT, urgent: true }
+      case 'failed':
+        return { text: 'Agent error', rgb: MIST }
       default: {
         const scores = model.scores[agent.id]
-        if (!scores) return { text: `READY${sim}`, rgb: AMBER }
-        const value = lead ? scores[lead] : Math.max(...Object.values(scores))
-        return { text: `${lead ? 'LDR' : 'BEST'} ${String(value ?? 0).padStart(3, '0')}${sim}`, rgb: AMBER }
+        if (!scores) return { text: 'Ready', rgb: AMBER }
+        const open = new Set(model.slots.filter((s) => !s.closed).map((s) => s.id))
+        const top = Object.entries(scores).filter(([id]) => open.has(id)).sort((a, b) => b[1] - a[1])[0]
+        const slot = top && model.slots.find((s) => s.id === top[0])
+        return { text: slot ? `Likes ${dayAndClock(slot.label)}` : 'Rated the times', rgb: AMBER }
       }
     }
   }
@@ -861,9 +1002,9 @@ export class ScopeEngine {
     ctx.beginPath()
     ctx.arc(cx, cy, 1.8 * scale, 0, Math.PI * 2)
     ctx.fill()
-    ctx.font = `600 ${Math.round(9 * scale)}px ${MONO}`
+    ctx.font = `600 ${Math.round(10.5 * scale)}px ${SANS}`
     ctx.textAlign = 'center'
     ctx.fillStyle = `rgba(${STRIP},0.6)`
-    ctx.fillText('TWR', cx, cy + r + 12 * scale)
+    ctx.fillText('Mediator', cx, cy + r + 12 * scale)
   }
 }

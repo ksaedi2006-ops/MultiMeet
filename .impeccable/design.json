@@ -244,7 +244,7 @@
         "displayName": "Data",
         "purpose": "Clocks, speakers, scope labels, status words."
       },
-      "callsign": {
+      "name-tag": {
         "displayName": "Callsign",
         "purpose": "Strip callsigns and radio speaker chips."
       },
@@ -346,7 +346,7 @@
     {
       "name": "Flight Strip",
       "kind": "custom",
-      "refersTo": "flight-strip",
+      "refersTo": "person-card",
       "description": "One person: callsign, name, status word, and a score track inked manila to amber-brown; the winning cell carries an inset orange ring.",
       "html": "<div style=\"background:#22313f;padding:16px\"><div class=\"ds-strip\"><div class=\"ds-strip-id\"><div><span class=\"ds-strip-call\">AVA</span> <span class=\"ds-strip-tag\">SIM</span></div><div class=\"ds-strip-row\"><span class=\"ds-strip-name\">Ava Chen</span><span class=\"ds-strip-status\">CLEARED</span></div></div><div class=\"ds-strip-track\"><i style=\"background:#dcd1b6;opacity:.4\"></i><i style=\"background:#e1b97b;opacity:.4\"></i><i class=\"ds-closed\"></i><i class=\"ds-win\" style=\"background:#846025\"></i><i style=\"background:#e2ac4e;opacity:.4\"></i><i class=\"ds-closed\"></i><i style=\"background:#c29340;opacity:.4\"></i><i style=\"background:rgba(42,32,21,.08)\"></i></div></div></div>",
       "css": ".ds-strip{display:flex;align-items:stretch;height:48px;background:var(--color-strip,#ecdfc2);color:var(--color-strip-ink,#2a2015);border-radius:2px;overflow:hidden;box-shadow:0 6px 14px -8px rgba(0,0,0,.7);outline:2px solid transparent;transition:outline-color .18s}.ds-strip:hover{outline-color:var(--color-amber,#e8a93a)}.ds-strip-id{width:10.5rem;flex-shrink:0;display:flex;flex-direction:column;justify-content:center;padding:0 10px;border-right:1px solid rgba(42,32,21,.15)}.ds-strip-call{font:600 14px/1 'IBM Plex Mono',monospace;letter-spacing:.025em}.ds-strip-tag{font:400 10px/1 'IBM Plex Mono',monospace;letter-spacing:.05em;color:rgba(42,32,21,.65)}.ds-strip-row{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px}.ds-strip-name{font:400 12px/1 'IBM Plex Sans',sans-serif}.ds-strip-status{font:600 11px/1 'IBM Plex Mono',monospace;letter-spacing:.025em;color:var(--color-clearance-dim,#a13f13)}.ds-strip-track{flex:1;display:flex;gap:1px;padding:4px 12px 4px 0}.ds-strip-track i{flex:1 1 0;border-radius:1px}.ds-strip-track i.ds-closed{flex:0 0 1.5px;background:rgba(42,32,21,.28)}.ds-strip-track i.ds-win{box-shadow:inset 0 0 0 2px var(--color-clearance,#d4551c)}"
@@ -362,7 +362,7 @@
     {
       "name": "Radio Ticker",
       "kind": "custom",
-      "refersTo": "speaker-chip-tower",
+      "refersTo": "speaker-chip-mediator",
       "description": "Latest transmission under the scope: speaker chip plus Plex Sans transcript with an amber block cursor while typing.",
       "html": "<div style=\"background:#22313f;padding:16px\"><div class=\"ds-ticker\"><span class=\"ds-chip-twr\">TWR</span><p>Cleared for Wed Nov 18, 3:00 PM. All agents, land.<span class=\"ds-cursor\"></span></p></div><div class=\"ds-ticker\" style=\"margin-top:8px\"><span class=\"ds-chip-agent\">AVA</span><p>Flexing +12 for Thursday afternoon.</p></div></div>",
       "css": ".ds-ticker{display:flex;align-items:flex-start;gap:12px}.ds-ticker p{margin:0;font:400 15px/1.375 'IBM Plex Sans',sans-serif;color:rgba(236,223,194,.9)}.ds-chip-twr,.ds-chip-agent{flex-shrink:0;padding:2px 6px;border-radius:2px;font:600 12px/1.33 'IBM Plex Mono',monospace;letter-spacing:.05em}.ds-chip-twr{background:var(--color-strip,#ecdfc2);color:var(--color-board,#22313f)}.ds-chip-agent{background:rgba(232,169,58,.15);color:var(--color-amber,#e8a93a)}.ds-cursor{display:inline-block;width:8px;height:14px;margin-left:2px;vertical-align:-2px;background:rgba(232,169,58,.8)}"
@@ -378,7 +378,7 @@
   ],
   "narrative": {
     "northStar": "The Night Tower",
-    "overview": "MeetMind is a control tower after dark. The ground is a steel-blue console board; the radar scope is a darker pane of glass set into it; live traffic is amber phosphor; people are manila flight strips racked in a bay; and safety orange appears only when something is closed, called, or cleared. The screen shows the mechanism at work: every agent is an aircraft, every candidate time a fix on the rim, and the decision is a landing followed by an ink stamp.\n\nDensity is operational. Small mono readouts, hairline rules and tight strip rows sit beside one large instrument (the scope) and a few loud display-face statements (the event title, the cleared time, the stamp). Contrast comes from the material, not from effects. Phosphor is drawn as afterglow on the canvas, never as CSS glow. Strips lift off the board with a soft drop shadow, and panels are outlined in hairlines. Nothing is blurred or glassy.\n\nThe identity is binding (PRODUCT.md): go deeper into the tower and flight-strip world rather than replacing it.",
+    "overview": "MeetMind is a control tower after dark. The ground is a steel-blue console board; the radar scope is a darker pane of glass set into it; live traffic is amber phosphor; people are manila flight strips racked in a bay; and safety orange appears only when something is closed, called, or cleared. The screen shows the mechanism at work: every agent is an aircraft, every candidate time a fix on the rim, and the decision is a landing followed by an ink stamp.\n\nDensity is operational. Small mono readouts, hairline rules and tight strip rows sit beside one large instrument (the scope) and a few loud display-face statements (the event title, the cleared time, the stamp). Contrast comes from the material, not from effects. Phosphor is drawn as afterglow on the canvas, never as CSS glow. Strips lift off the board with a soft drop shadow, and panels are outlined in hairlines. Nothing is blurred or glassy.\n\nThe identity is binding (PRODUCT.md): go deeper into the tower and person-card world rather than replacing it.",
     "keyCharacteristics": [
       "Steel-blue board, darker scope glass, manila strips, amber live traffic, orange reserved for closure and clearance.",
       "Three faces, three jobs: Big Shoulders Display announces, Plex Mono reads out data, Plex Sans speaks prose.",

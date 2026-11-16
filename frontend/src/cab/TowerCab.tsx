@@ -20,8 +20,8 @@ function useMedia(query: string) {
 }
 
 /**
- * The tower cab: one console that stays mounted for the whole visit. The scope, the strip
- * bay and the comms panel are permanent fixtures; routes only change the stage, which moves
+ * The console: one layout that stays mounted for the whole visit. The scope, the left
+ * panel and the right panel are permanent fixtures; routes only change the stage, which moves
  * the camera and swaps what the bay and panel hold.
  */
 export default function TowerCab() {
@@ -64,6 +64,12 @@ export default function TowerCab() {
           <div ref={layer} className="relative h-[max(52svh,min(100vw,88svh))] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
             <RadarScope model={scope.model} label={scope.label} frame={frame}
               highlight={highlight} onHover={setHighlight} onLanded={onLanded} />
+            {frame && scope.legend && (
+              <p className="absolute text-center text-[13px] leading-snug text-mist px-2"
+                style={{ left: frame.x, width: frame.w, top: frame.y + frame.h + 6 }}>
+                {scope.legend}
+              </p>
+            )}
             {frame && scope.overlay && (
               <div className="absolute pointer-events-none flex items-center justify-center"
                 style={{ left: frame.x, top: frame.y, width: frame.w, height: frame.h }}>
@@ -72,13 +78,13 @@ export default function TowerCab() {
             )}
           </div>
 
-          <aside ref={setBay} aria-label="Strip bay"
+          <aside ref={setBay} aria-label={stage.id === 'plan' ? 'New meeting form' : 'Get started'}
             style={{ ['--bay-w' as string]: `${widths.bay}px` }}
-            className="console relative lg:absolute lg:left-0 lg:top-0 lg:bottom-0 lg:w-[var(--bay-w)] border-t lg:border-t-0 lg:border-r border-board-line transition-[width] duration-700 ease-out-expo lg:overflow-y-auto lg:overflow-x-hidden" />
+            className="console relative order-2 lg:order-none lg:absolute lg:left-0 lg:top-0 lg:bottom-0 lg:w-[var(--bay-w)] border-t lg:border-t-0 lg:border-r border-board-line transition-[width] duration-700 ease-out-expo lg:overflow-y-auto lg:overflow-x-hidden" />
 
-          <aside ref={setPanel} aria-label="Comms"
+          <aside ref={setPanel} aria-label="About MeetMind"
             style={{ ['--panel-w' as string]: `${widths.panel || 400}px` }}
-            className={`console relative lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[var(--panel-w)] border-t lg:border-t-0 lg:border-l border-board-line lg:overflow-y-auto transition-[transform,opacity] duration-700 ease-out-expo ${
+            className={`console relative order-1 lg:order-none lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[var(--panel-w)] border-t lg:border-t-0 lg:border-l border-board-line lg:overflow-y-auto transition-[transform,opacity] duration-700 ease-out-expo ${
               stage.panel === 0 ? 'hidden lg:block lg:translate-x-full lg:opacity-0 lg:pointer-events-none' : ''}`} />
         </div>
       </div>

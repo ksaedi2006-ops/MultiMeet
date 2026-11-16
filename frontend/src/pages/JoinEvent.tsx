@@ -11,7 +11,7 @@ import { rememberEvent } from '../lib/recents'
 const NEXT = [
   'Show your agent your calendar, or skip it.',
   'Tell it what you will and won’t do.',
-  'Check in. The organiser starts the negotiation.',
+  'Say you’re ready. The organiser starts the negotiation.',
 ]
 
 export default function JoinEvent() {
@@ -79,7 +79,7 @@ export default function JoinEvent() {
               onChange={(e) => setName(e.target.value)} disabled={!event} maxLength={60} />
           </Field>
           <Button arrow={!loading} disabled={loading || !event} className="self-start">
-            {loading ? 'BOARDING…' : 'JOIN THE EVENT'}
+            {loading ? 'JOINING…' : 'JOIN THE MEETING'}
           </Button>
           {error && <p role="alert" className="text-sm text-clearance-dim -mt-3">{error}</p>}
         </Strip>

@@ -15,14 +15,14 @@ export default function FairnessMeter({ model }: { model: TowerModel }) {
       <div className="flex items-baseline justify-between gap-3">
         <h2 className="font-mono text-[11px] tracking-[0.18em] text-mist">FAIRNESS</h2>
         <span className="font-mono text-[11px] text-strip/80 truncate">
-          {label ? `${decided ? 'Cleared' : 'Leading'}: ${label}` : 'Waiting for scores'}
+          {label ? `${decided ? 'Booked' : 'In the lead'}: ${label}` : 'Waiting for ratings'}
         </span>
       </div>
       <div className="relative h-7 mt-3" aria-hidden>
         <div className="absolute inset-x-0 top-3 h-px bg-board-line" />
         <div className="absolute top-1 bottom-1 w-px bg-mist/60" style={{ left: '50%' }} />
         <span className="absolute -bottom-3 font-mono text-[9px] text-mist -translate-x-1/2" style={{ left: '50%' }}>
-          COMFORT 50
+          OK AT 50
         </span>
         {min !== null && avg !== null && (
           <>
@@ -52,7 +52,7 @@ export default function FairnessMeter({ model }: { model: TowerModel }) {
         </div>
       </dl>
       {!decided && unhappy.length > 0 && (
-        <p className="mt-2 text-xs text-strip/70">Below comfort: {unhappy.join(', ')}</p>
+        <p className="mt-2 text-xs text-strip/70">Unhappy with it: {unhappy.join(', ')}</p>
       )}
     </section>
   )

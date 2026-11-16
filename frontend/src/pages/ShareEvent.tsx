@@ -88,12 +88,12 @@ export default function ShareEvent() {
         <motion.div variants={stagger(0.07)} initial="hidden" animate="show" className="min-w-0">
           <motion.div variants={rise} className="flex items-start justify-between gap-4">
             <h1 className="font-display font-bold text-5xl sm:text-6xl leading-[0.95] tracking-tight text-strip">
-              Share it
+              Invite people
             </h1>
-            {filed && <div className="pt-2 pr-1"><Stamp label="FILED" size="md" /></div>}
+            {filed && <div className="pt-2 pr-1"><Stamp label="CREATED" size="md" /></div>}
           </motion.div>
           <motion.p variants={rise} className="mt-4 text-[17px] leading-relaxed text-strip/85 max-w-[30rem]">
-            Send this link to everyone you want in “{event?.title ?? '…'}”. Their agents show up on the scope as they join.
+            Send this link to everyone you want in “{event?.title ?? '…'}”. Their agents show up on the circle as they join.
           </motion.p>
 
           <motion.div variants={rise} className="mt-7 flex items-stretch border border-board-line rounded-[2px] overflow-hidden bg-board-raised/60">
@@ -109,9 +109,9 @@ export default function ShareEvent() {
 
           <motion.section variants={rise} className="mt-9" aria-label="Who has joined">
             <div className="flex items-baseline justify-between">
-              <h2 className="font-display font-bold text-2xl tracking-tight text-strip">On the frequency</h2>
+              <h2 className="font-display font-bold text-2xl tracking-tight text-strip">Who’s joined</h2>
               <span className="font-mono text-xs text-mist tabular-nums" aria-live="polite">
-                {members.length} joined · {ready} checked in
+                {members.length} joined · {ready} ready
               </span>
             </div>
             <ul className="mt-3 flex flex-col gap-1.5 max-h-[22rem] overflow-y-auto pr-1">
@@ -131,12 +131,12 @@ export default function ShareEvent() {
                       {m.role === 'admin' && <span className="ml-2 font-mono text-[11px] text-strip-ink/65">ORGANISER</span>}
                     </span>
                     <span className="hidden sm:flex items-center gap-1.5">
-                      <Pill on={m.calendar_events > 0}>CAL</Pill>
+                      <Pill on={m.calendar_events > 0}>CALENDAR</Pill>
                       <Pill on={m.rules > 0}>{m.rules > 0 ? `${m.rules} ${m.rules === 1 ? 'RULE' : 'RULES'}` : 'RULES'}</Pill>
                     </span>
                     <span className={`font-mono text-[11px] tracking-wider w-[5.5rem] text-right ${
                       m.ready ? 'text-clearance-dim font-semibold' : 'text-strip-ink/65'}`}>
-                      {m.ready ? 'CHECKED IN' : 'BRIEFING'}
+                      {m.ready ? 'READY' : 'SETTING UP'}
                     </span>
                   </motion.li>
                 ))}
@@ -178,7 +178,7 @@ export default function ShareEvent() {
             <RadarScope model={model} highlight={highlight} onHover={setHighlight} onLanded={() => {}} />
           </div>
           <p className="mt-2 text-center font-mono text-[11px] tracking-wider text-mist">
-            HOLDING PATTERN · {members.length} {members.length === 1 ? 'AGENT' : 'AGENTS'} ON THE FREQUENCY
+            {members.length} {members.length === 1 ? 'PERSON’S AGENT' : 'PEOPLE’S AGENTS'} WAITING TO NEGOTIATE
           </p>
         </motion.div>
       </div>

@@ -4,15 +4,13 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { EASE } from '../lib/motion'
 import type { StageSpec } from './stages'
 
-function zulu(d: Date) {
-  return `${String(d.getUTCHours()).padStart(2, '0')}${String(d.getUTCMinutes()).padStart(2, '0')}:${String(d.getUTCSeconds()).padStart(2, '0')}Z`
-}
+const local = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
-/** The slim status strip along the top of the console: who we are, what stage, what time. */
+/** The slim bar along the top: the product, the current step in plain words, the local time. */
 export default function CabBar({ stage }: { stage: StageSpec }) {
-  const [now, setNow] = useState(() => zulu(new Date()))
+  const [now, setNow] = useState(() => local(new Date()))
   useEffect(() => {
-    const id = window.setInterval(() => setNow(zulu(new Date())), 1000)
+    const id = window.setInterval(() => setNow(local(new Date())), 15000)
     return () => window.clearInterval(id)
   }, [])
 
@@ -24,12 +22,12 @@ export default function CabBar({ stage }: { stage: StageSpec }) {
           <circle cx="8" cy="8" r="1.6" fill="currentColor" />
         </svg>
         <span className="font-display font-bold text-[17px] tracking-[0.06em] text-strip leading-none">
-          MEETMIND <span className="text-mist font-semibold">TWR</span>
+          MEETMIND
         </span>
       </Link>
       <div className="relative flex-1 min-w-0 flex items-center px-4 overflow-hidden">
         <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span key={stage.id} className="text-amber whitespace-nowrap truncate"
+          <motion.span key={stage.id} className="font-sans text-[14px] tracking-normal text-strip whitespace-nowrap truncate"
             initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }}
             transition={{ duration: 0.45, ease: EASE }}>
             {stage.name}

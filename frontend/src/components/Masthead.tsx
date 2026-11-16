@@ -1,18 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
-function formatZulu(d: Date) {
-  const hh = String(d.getUTCHours()).padStart(2, '0')
-  const mm = String(d.getUTCMinutes()).padStart(2, '0')
-  const ss = String(d.getUTCSeconds()).padStart(2, '0')
-  return `${hh}:${mm}:${ss}`
-}
+const formatLocal = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
 export default function Masthead() {
-  const [time, setTime] = useState(() => formatZulu(new Date()))
+  const [time, setTime] = useState(() => formatLocal(new Date()))
 
   useEffect(() => {
-    const id = setInterval(() => setTime(formatZulu(new Date())), 1000)
+    const id = setInterval(() => setTime(formatLocal(new Date())), 15000)
     return () => clearInterval(id)
   }, [])
 
@@ -25,7 +20,7 @@ export default function Masthead() {
         </span>
       </Link>
       <span className="font-mono text-xs text-mist tracking-wider tabular-nums hidden sm:inline">
-        {time}Z
+        {time}
       </span>
     </header>
   )

@@ -3,13 +3,13 @@ import type { TowerModel } from './model'
 import type { Playback } from './usePlayback'
 
 const PHASE: Record<TowerModel['phase'], string> = {
-  holding: 'HOLDING',
-  filtering: 'CLOSING BLOCKED TIMES',
-  scoring: 'ROUND 1 · SCORING',
-  asking: 'ASKING FOR FLEX',
-  decided: 'CLEARED',
-  escalated: 'HOLDING FOR INSTRUCTIONS',
-  failed: 'NEGOTIATION FAILED',
+  holding: 'WAITING FOR PEOPLE',
+  filtering: 'CROSSING OUT TIMES PEOPLE CAN’T MAKE',
+  scoring: 'ROUND 1 · RATING TIMES',
+  asking: 'ASKING PEOPLE TO MOVE',
+  decided: 'BOOKED',
+  escalated: 'NO TIME WORKS',
+  failed: 'NEGOTIATION STOPPED',
 }
 
 function Icon({ d }: { d: string }) {
@@ -41,7 +41,7 @@ interface Props {
 }
 
 export default function StatusBar({ title, model, playback, connection }: Props) {
-  const phase = model.phase === 'asking' ? `ROUND ${model.round} · ASKING FOR FLEX` : PHASE[model.phase]
+  const phase = model.phase === 'asking' ? `ROUND ${model.round} · ASKING PEOPLE TO MOVE` : PHASE[model.phase]
   const live = connection === 'live'
   const btn =
     'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[2px] font-mono text-[11px] tracking-wider text-strip/80 border border-board-line hover:border-amber hover:text-amber transition-colors disabled:opacity-35 disabled:pointer-events-none'
@@ -57,7 +57,7 @@ export default function StatusBar({ title, model, playback, connection }: Props)
         </span>
         {playback.started && <span className="text-mist tabular-nums">T+{mmss(playback.clock)}</span>}
         {model.backend === 'simulated' && (
-          <span className="px-1.5 py-0.5 border border-mist/40 text-mist rounded-[2px] text-[10px]">SIMULATED AGENTS</span>
+          <span className="px-2 py-0.5 border border-mist/40 text-mist rounded-[2px] font-sans text-[12px] tracking-normal">Simulated agents, not live AI</span>
         )}
       </div>
       <div className="flex items-center gap-2 ml-auto">
@@ -85,7 +85,7 @@ export default function StatusBar({ title, model, playback, connection }: Props)
         )}
         <span className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-mist pl-2 whitespace-nowrap" role="status">
           <span className={`w-1.5 h-1.5 rounded-full ${live ? 'bg-amber' : 'bg-mist/50'}`} />
-          {live ? 'ON FREQUENCY' : connection === 'closed' ? 'NO SUCH EVENT' : 'ACQUIRING'}
+          {live ? 'LIVE' : connection === 'closed' ? 'NOT FOUND' : 'CONNECTING'}
         </span>
       </div>
     </div>

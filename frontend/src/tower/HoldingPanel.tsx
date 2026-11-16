@@ -8,7 +8,7 @@ interface Props {
   viewerId: string | null
 }
 
-/** Before the negotiation: who has checked in, and the organiser's Start control. */
+/** Before the negotiation: who is ready, and the organiser's Start control. */
 export default function HoldingPanel({ event, model, viewerId }: Props) {
   const [starting, setStarting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -28,15 +28,15 @@ export default function HoldingPanel({ event, model, viewerId }: Props) {
   }
 
   return (
-    <section aria-label="Check-in status" className="border border-board-line rounded-[2px] px-4 py-4 bg-board-raised/60">
+    <section aria-label="Who is ready" className="border border-board-line rounded-[2px] px-4 py-4 bg-board-raised/60">
       <p className="font-display font-bold text-2xl leading-tight text-strip">
-        {ready.length} of {model.agents.length} checked in
+        {ready.length} of {model.agents.length} ready
       </p>
       <p className="mt-1 text-sm text-strip/75 leading-relaxed">
         {waiting.length === 0
-          ? 'Everyone has briefed their agent.'
-          : `Still briefing: ${waiting.map((a) => a.name.split(' ')[0]).join(', ')}.`}{' '}
-        Only checked-in agents take part.
+          ? 'Everyone has set up their agent.'
+          : `Still setting up: ${waiting.map((a) => a.name.split(' ')[0]).join(', ')}.`}{' '}
+        Only people who are ready take part.
       </p>
       {organiser ? (
         <>
@@ -48,7 +48,7 @@ export default function HoldingPanel({ event, model, viewerId }: Props) {
           >
             {starting ? 'STARTING…' : waiting.length ? `START WITH ${ready.length}` : 'START NEGOTIATION'}
           </button>
-          {ready.length === 0 && <p className="mt-2 text-xs text-mist">Check in yourself first from the briefing step.</p>}
+          {ready.length === 0 && <p className="mt-2 text-xs text-mist">Mark yourself ready first, on the preferences step.</p>}
         </>
       ) : (
         <p className="mt-3 font-mono text-xs tracking-wider text-mist">THE ORGANISER STARTS THE NEGOTIATION</p>

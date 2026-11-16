@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import type { TowerModel } from './model'
 
-/** The latest transmission, typed out like a radio transcript under the scope. */
+/** The latest thing said, typed out under the scope. */
 export default function RadioTicker({ model }: { model: TowerModel }) {
-  const latest = [...model.log].reverse().find((l) => l.speaker !== 'SYS' || l.tone === 'close')
+  const latest = [...model.log].reverse().find((l) => l.speaker !== 'Update' || l.tone === 'close')
   const text = latest ? latest.text : 'Standing by.'
-  const speaker = latest?.speaker ?? 'TWR'
+  const speaker = latest?.speaker ?? 'Mediator'
   const reduced = useReducedMotion()
   const [shown, setShown] = useState(0)
 
@@ -27,8 +27,8 @@ export default function RadioTicker({ model }: { model: TowerModel }) {
 
   return (
     <div className="flex items-start gap-3 min-h-[2.75rem]">
-      <span className={`shrink-0 px-1.5 py-0.5 font-mono text-[12px] font-semibold tracking-wider rounded-[2px] ${
-        speaker === 'TWR' ? 'bg-strip text-board' : 'bg-amber/15 text-amber'}`}
+      <span className={`shrink-0 px-1.5 py-0.5 text-[12px] font-semibold rounded-[2px] whitespace-nowrap ${
+        speaker === 'Mediator' ? 'bg-strip text-board' : 'bg-amber/15 text-amber'}`}
       >
         {speaker}
       </span>

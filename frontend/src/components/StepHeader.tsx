@@ -4,11 +4,11 @@ import { EASE } from '../lib/motion'
 export type Step = 'plan' | 'share' | 'manifest' | 'briefing' | 'approach'
 
 const STEPS: { key: Step; label: string }[] = [
-  { key: 'plan', label: 'Flight plan' },
-  { key: 'share', label: 'Frequency' },
-  { key: 'manifest', label: 'Manifest' },
-  { key: 'briefing', label: 'Briefing' },
-  { key: 'approach', label: 'Approach' },
+  { key: 'plan', label: 'New meeting' },
+  { key: 'share', label: 'Invite people' },
+  { key: 'manifest', label: 'Your calendar' },
+  { key: 'briefing', label: 'Your preferences' },
+  { key: 'approach', label: 'Negotiating' },
 ]
 
 // The fill remembers where the last page left it, so progress slides rather than jumps.

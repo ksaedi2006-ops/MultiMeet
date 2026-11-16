@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { currentUserId, errorMessage, getEvent, type EventInfo } from '../api/client'
 import { useEventLog } from '../api/useEventLog'
-import Stamp from '../components/Stamp'
+import ChosenTime from '../tower/ChosenTime'
 import DecisionBrief from '../tower/DecisionBrief'
 import FairnessMeter from '../tower/FairnessMeter'
 import HoldingPanel from '../tower/HoldingPanel'
@@ -47,8 +47,6 @@ export default function NegotiationLiveView() {
   }
 
   const decided = model.decision && landed
-  const stampLabel = model.decision?.status === 'converged' ? 'CLEARED' : 'HOLD'
-  const stampDetail = model.decision?.slot?.label.toUpperCase()
 
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16">
@@ -70,12 +68,16 @@ export default function NegotiationLiveView() {
                   {/* Plain darkening of the glass so the ink reads; ink itself doesn't glow. */}
                   <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgba(6,12,18,0.72)_0%,rgba(6,12,18,0.5)_45%,transparent_70%)]" />
                   <div className="relative">
-                    <Stamp label={stampLabel} detail={stampDetail} size="lg" />
+                    <ChosenTime decision={model.decision!} timezone={model.timezone} />
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
+          <p className="text-[13px] leading-snug text-mist text-center">
+            Each dot is someone’s agent, drifting toward the times they prefer. Crossed-out times are ones someone
+            can’t make. Point at a time to read it.
+          </p>
           <RadioTicker model={model} />
         </div>
 
