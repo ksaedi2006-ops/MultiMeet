@@ -1,4 +1,4 @@
-# MeetMind
+# MultiMeet
 
 Multi-agent AI scheduling platform. See [SPEC.md](./SPEC.md) for the full product and architecture spec.
 
@@ -31,7 +31,7 @@ cp .env.example .env  # fill in ANTHROPIC_API_KEY (required for agent/negotiatio
 uvicorn app.main:app --reload
 ```
 
-Uses SQLite by default (`backend/meetmind.db`, gitignored) — no database setup needed. Set `DATABASE_URL` in `.env` to point at Postgres instead if you want that.
+Uses SQLite by default (`backend/multimeet.db`, gitignored) — no database setup needed. Set `DATABASE_URL` in `.env` to point at Postgres instead if you want that.
 
 ### Frontend
 

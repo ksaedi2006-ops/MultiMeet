@@ -1,8 +1,8 @@
-# MeetMind — Multi-Agent Intelligent Scheduling Platform
+# MultiMeet — Multi-Agent Intelligent Scheduling Platform
 
 ## Project Overview
 
-MeetMind is a When2Meet replacement that uses a multi-agent AI architecture to make group scheduling effortless. Instead of manually painting availability grids, each user gets a personal AI scheduling agent that knows their calendar, understands their soft preferences, and negotiates on their behalf with other users' agents. A mediator agent coordinates the negotiation and finds the optimal meeting time and location that maximizes genuine group satisfaction — not just raw overlap.
+MultiMeet is a When2Meet replacement that uses a multi-agent AI architecture to make group scheduling effortless. Instead of manually painting availability grids, each user gets a personal AI scheduling agent that knows their calendar, understands their soft preferences, and negotiates on their behalf with other users' agents. A mediator agent coordinates the negotiation and finds the optimal meeting time and location that maximizes genuine group satisfaction — not just raw overlap.
 
 The core insight: scheduling is inherently a multi-party negotiation problem where each person has private information (their real preferences, their flexibility, their fatigue levels) and competing priorities. Multi-agent architecture is the natural fit because each agent genuinely advocates for different things, creating productive tension that results in better outcomes than a dumb heatmap.
 
@@ -418,7 +418,7 @@ nudge_log
    - Calendar connection status and classification review (see which events are marked hard vs soft, correct misclassifications)
 6. **Calendar View**
    - Weekly/daily view of synced calendar
-   - Color coding: hard blocks (red), soft blocks (yellow), free (green), scheduled via MeetMind (blue)
+   - Color coding: hard blocks (red), soft blocks (yellow), free (green), scheduled via MultiMeet (blue)
    - Overlay showing meeting proposals and their satisfaction scores
 7. **Analytics**
    - Personal: your meeting patterns, compromise frequency, agent accuracy
@@ -459,7 +459,7 @@ WebSocket connection (Socket.io or native WebSockets) between client and server 
 If presenting this at a hackathon, the demo flow should be:
 
 1. **The pain point (15 seconds).** "Everyone here has used When2Meet. You paint a grid, wait 3 days for responses, stare at a heatmap, and still argue in the group chat about which time to pick."
-2. **The product (15 seconds).** "MeetMind gives every group member an AI scheduling agent. You connect your calendar, tell it your preferences in plain English, and it negotiates on your behalf."
+2. **The product (15 seconds).** "MultiMeet gives every group member an AI scheduling agent. You connect your calendar, tell it your preferences in plain English, and it negotiates on your behalf."
 3. **Live demo — preference setup (20 seconds).** Show one user typing "I hate mornings and I need at least 30 minutes between my classes and meetings" and the agent parsing it into structured rules.
 4. **Live demo — create meeting (10 seconds).** Club president creates a meeting request for 8 members, Tuesday through Thursday next week, 1 hour.
 5. **Live demo — negotiation visualization (30 seconds).** THIS IS THE MONEY SHOT. Show the 8 agents activating simultaneously, evaluating slots, the mediator proposing options, agents pushing back, the candidate set narrowing, and convergence on a final time. Show the reasoning log scrolling in real time. The audience should be able to see agents advocate for their users — "Sarah's agent rejected 9am due to morning preference" — "Jake's agent offered flexibility on gym slot" — "Mediator proposed Tuesday 2pm" — "Consensus reached: satisfaction range 72-95."

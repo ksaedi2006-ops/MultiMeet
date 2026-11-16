@@ -95,8 +95,19 @@ export interface Decision {
   rsvps: Record<string, 'accepted' | 'declined'>
 }
 
-const USER_ID_KEY = 'meetmind_user_id'
-const USER_NAME_KEY = 'meetmind_user_name'
+const USER_ID_KEY = 'multimeet_user_id'
+const USER_NAME_KEY = 'multimeet_user_name'
+
+// Carry guest identity over from before the MeetMind -> MultiMeet rename.
+try {
+  for (const [from, to] of [['meetmind_user_id', USER_ID_KEY], ['meetmind_user_name', USER_NAME_KEY]]) {
+    const old = localStorage.getItem(from)
+    if (old !== null && localStorage.getItem(to) === null) localStorage.setItem(to, old)
+    localStorage.removeItem(from)
+  }
+} catch {
+  /* storage unavailable: nothing to migrate */
+}
 
 export function currentUserId(): string | null {
   return localStorage.getItem(USER_ID_KEY)

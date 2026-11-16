@@ -10,7 +10,7 @@ web
 
 College students scheduling club meetings, study groups and group-project sessions: an organiser creates an event and shares a link; members join, upload their calendar and tell their agent their preferences.
 
-The people who will mainly see MeetMind right now are evaluators, not schedulers:
+The people who will mainly see MultiMeet right now are evaluators, not schedulers:
 
 - **Hackathon judges** watching a roughly two-minute live demo on a projector, where the negotiation is the moment that has to land.
 - **Recruiters and portfolio visitors** opening the link on their own, often on a phone, with nobody explaining it.
@@ -41,7 +41,7 @@ Code decides what is possible; agents argue about what is preferable. Hard calen
 
 ## Brand Commitments
 
-- Name: MeetMind.
+- Name: MultiMeet.
 - Visual identity: a radar-style scope on a dark console, manila paper cards, safety-orange marks. The scope stays the hero.
 - Plain language, always (direction set 2026-11-16): the look borrows from air-traffic control but the words never do. A recruiter on a phone must understand any screen in five seconds with no glossary.
 - Vocabulary: people and their agents (dots labelled with first names), times (marks on the ring), the mediator (centre), "can't make it" (crossed-out times), "Can move" / "Won't move" / "Agrees" (replies), "Booked" (the chosen time), "No time works" (no agreement). Steps: New meeting, Invite people, Your calendar, Your preferences, Negotiating, Booked.

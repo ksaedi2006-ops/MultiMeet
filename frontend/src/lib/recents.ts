@@ -4,7 +4,16 @@ export interface RecentEvent {
   at: number
 }
 
-const KEY = 'meetmind_recent_events'
+const KEY = 'multimeet_recent_events'
+const OLD_KEY = 'meetmind_recent_events' // before the MeetMind -> MultiMeet rename
+
+try {
+  const old = localStorage.getItem(OLD_KEY)
+  if (old !== null && localStorage.getItem(KEY) === null) localStorage.setItem(KEY, old)
+  localStorage.removeItem(OLD_KEY)
+} catch {
+  /* storage unavailable: recents are a convenience */
+}
 
 export function getRecents(): RecentEvent[] {
   try {

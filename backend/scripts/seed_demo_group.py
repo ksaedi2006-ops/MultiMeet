@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fill a MeetMind event with seven fake participants for local testing.
+"""Fill a MultiMeet event with seven fake participants for local testing.
 
     python3 scripts/seed_demo_group.py <invite_code>
         Join an event you created in the browser (the invite code is the last part
@@ -60,7 +60,7 @@ def api(method: str, path: str, body: dict | None = None):
 
 def build_ics(events) -> str:
     anchor = date.today() - timedelta(days=date.today().weekday() + 7)  # a Monday in the past
-    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MeetMind Demo//EN"]
+    lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MultiMeet Demo//EN"]
     for i, (title, days, start, end) in enumerate(events):
         first = anchor + timedelta(days=["MO", "TU", "WE", "TH", "FR", "SA", "SU"].index(days.split(",")[0]))
         d = first.strftime("%Y%m%d")

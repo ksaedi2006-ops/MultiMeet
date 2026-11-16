@@ -1,5 +1,5 @@
 ---
-name: MeetMind
+name: MultiMeet
 description: Group scheduling negotiated by agents, shown on a radar-style scope in plain language
 colors:
   board: "#22313f"
@@ -134,13 +134,13 @@ components:
     padding: "10px 24px"
 ---
 
-# Design System: MeetMind
+# Design System: MultiMeet
 
 ## Overview
 
 **Creative North Star: "The Night Console, Spoken Plainly"**
 
-MeetMind looks like an instrument and talks like a person. The ground is a steel-blue console; the scope is a darker pane of glass set into it; people's agents are amber dots that drift toward the times they prefer; people and forms are manila paper cards; and safety orange appears only when a time is crossed out, someone is asked to move, or a time is booked. The look borrows from a radar room. The words never do: every label, status and sentence is plain English a stranger on a phone understands in five seconds (PRODUCT.md).
+MultiMeet looks like an instrument and talks like a person. The ground is a steel-blue console; the scope is a darker pane of glass set into it; people's agents are amber dots that drift toward the times they prefer; people and forms are manila paper cards; and safety orange appears only when a time is crossed out, someone is asked to move, or a time is booked. The look borrows from a radar room. The words never do: every label, status and sentence is plain English a stranger on a phone understands in five seconds (PRODUCT.md).
 
 The whole app is one console that never reloads. The scope stays mounted; a route only changes the step, which moves the scope's camera and swaps what the left and right panels hold.
 

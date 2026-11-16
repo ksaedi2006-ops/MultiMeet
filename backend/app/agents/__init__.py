@@ -34,8 +34,9 @@ class Agents(Protocol):
 
 @lru_cache(maxsize=1)
 def get_agents() -> Agents:
-    """MEETMIND_AGENTS=anthropic|simulated; defaults to Claude when an API key is set."""
-    choice = os.environ.get("MEETMIND_AGENTS", "auto").lower()
+    """MULTIMEET_AGENTS=anthropic|simulated; defaults to Claude when an API key is set.
+    The pre-rename MEETMIND_AGENTS is still honoured."""
+    choice = (os.environ.get("MULTIMEET_AGENTS") or os.environ.get("MEETMIND_AGENTS") or "auto").lower()
     if choice == "auto":
         choice = "anthropic" if os.environ.get("ANTHROPIC_API_KEY") else "simulated"
     if choice == "anthropic":

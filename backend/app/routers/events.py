@@ -238,14 +238,14 @@ def download_ics(event_id: str, db: Session = Depends(get_db)):
     fmt = "%Y%m%dT%H%M%SZ"
     start, end = _utc(decision.start), _utc(decision.end)
     body = "\r\n".join([
-        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MeetMind//EN", "BEGIN:VEVENT",
-        f"UID:{meeting.id}@meetmind", f"DTSTAMP:{datetime.now(timezone.utc).strftime(fmt)}",
+        "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MultiMeet//EN", "BEGIN:VEVENT",
+        f"UID:{meeting.id}@multimeet", f"DTSTAMP:{datetime.now(timezone.utc).strftime(fmt)}",
         f"DTSTART:{start.strftime(fmt)}", f"DTEND:{end.strftime(fmt)}",
         f"SUMMARY:{_ics_text(meeting.title)}", f"DESCRIPTION:{_ics_text(decision.explanation or '')}",
         "END:VEVENT", "END:VCALENDAR", "",
     ])
     return Response(body, media_type="text/calendar",
-                    headers={"Content-Disposition": 'attachment; filename="meetmind.ics"'})
+                    headers={"Content-Disposition": 'attachment; filename="multimeet.ics"'})
 
 
 def _utc(dt: datetime) -> datetime:

@@ -82,7 +82,7 @@ export default function TowerCab() {
             style={{ ['--bay-w' as string]: `${widths.bay}px` }}
             className="console relative order-2 lg:order-none lg:absolute lg:left-0 lg:top-0 lg:bottom-0 lg:w-[var(--bay-w)] border-t lg:border-t-0 lg:border-r border-board-line transition-[width] duration-700 ease-out-expo lg:overflow-y-auto lg:overflow-x-hidden" />
 
-          <aside ref={setPanel} aria-label="About MeetMind"
+          <aside ref={setPanel} aria-label="About MultiMeet"
             style={{ ['--panel-w' as string]: `${widths.panel || 400}px` }}
             className={`console relative order-1 lg:order-none lg:absolute lg:right-0 lg:top-0 lg:bottom-0 lg:w-[var(--panel-w)] border-t lg:border-t-0 lg:border-l border-board-line lg:overflow-y-auto transition-[transform,opacity] duration-700 ease-out-expo ${
               stage.panel === 0 ? 'hidden lg:block lg:translate-x-full lg:opacity-0 lg:pointer-events-none' : ''}`} />

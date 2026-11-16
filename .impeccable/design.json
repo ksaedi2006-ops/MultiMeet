@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-11-16T14:41:35+00:00",
-  "title": "Design System: MeetMind",
+  "title": "Design System: MultiMeet",
   "extensions": {
     "colorMeta": {
       "board": {
@@ -378,7 +378,7 @@
   ],
   "narrative": {
     "northStar": "The Night Tower",
-    "overview": "MeetMind is a control tower after dark. The ground is a steel-blue console board; the radar scope is a darker pane of glass set into it; live traffic is amber phosphor; people are manila flight strips racked in a bay; and safety orange appears only when something is closed, called, or cleared. The screen shows the mechanism at work: every agent is an aircraft, every candidate time a fix on the rim, and the decision is a landing followed by an ink stamp.\n\nDensity is operational. Small mono readouts, hairline rules and tight strip rows sit beside one large instrument (the scope) and a few loud display-face statements (the event title, the cleared time, the stamp). Contrast comes from the material, not from effects. Phosphor is drawn as afterglow on the canvas, never as CSS glow. Strips lift off the board with a soft drop shadow, and panels are outlined in hairlines. Nothing is blurred or glassy.\n\nThe identity is binding (PRODUCT.md): go deeper into the tower and person-card world rather than replacing it.",
+    "overview": "MultiMeet is a control tower after dark. The ground is a steel-blue console board; the radar scope is a darker pane of glass set into it; live traffic is amber phosphor; people are manila flight strips racked in a bay; and safety orange appears only when something is closed, called, or cleared. The screen shows the mechanism at work: every agent is an aircraft, every candidate time a fix on the rim, and the decision is a landing followed by an ink stamp.\n\nDensity is operational. Small mono readouts, hairline rules and tight strip rows sit beside one large instrument (the scope) and a few loud display-face statements (the event title, the cleared time, the stamp). Contrast comes from the material, not from effects. Phosphor is drawn as afterglow on the canvas, never as CSS glow. Strips lift off the board with a soft drop shadow, and panels are outlined in hairlines. Nothing is blurred or glassy.\n\nThe identity is binding (PRODUCT.md): go deeper into the tower and person-card world rather than replacing it.",
     "keyCharacteristics": [
       "Steel-blue board, darker scope glass, manila strips, amber live traffic, orange reserved for closure and clearance.",
       "Three faces, three jobs: Big Shoulders Display announces, Plex Mono reads out data, Plex Sans speaks prose.",

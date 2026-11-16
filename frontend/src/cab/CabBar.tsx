@@ -22,7 +22,7 @@ export default function CabBar({ stage }: { stage: StageSpec }) {
           <circle cx="8" cy="8" r="1.6" fill="currentColor" />
         </svg>
         <span className="font-display font-bold text-[17px] tracking-[0.06em] text-strip leading-none">
-          MEETMIND
+          MULTIMEET
         </span>
       </Link>
       <div className="relative flex-1 min-w-0 flex items-center px-4 overflow-hidden">

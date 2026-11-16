@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react'
 import { useReducedMotion } from 'framer-motion'
 
 const LINES = [
-  'MeetMind finds a meeting time without anyone filling in a grid.',
+  'MultiMeet finds a meeting time without anyone filling in a grid.',
   'Each person gets an AI agent that knows their calendar and what they’re willing to move.',
   'The agents negotiate. The time that’s best for the least-happy person wins, and you see why.',
   'Try a sample: invented students with real-looking weeks, start to finish in under a minute.',
 ]
 
 /**
- * What MeetMind is, typed out line by line beside the replay, the way a broadcast reads.
+ * What MultiMeet is, typed out line by line beside the replay, the way a broadcast reads.
  * Screen readers get the whole text at once.
  */
 export default function Atis() {

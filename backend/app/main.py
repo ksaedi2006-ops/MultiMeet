@@ -20,7 +20,7 @@ from app.database import SessionLocal  # noqa: E402
 from app.routers import events, users  # noqa: E402
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(levelname)s %(name)s: %(message)s")
-log = logging.getLogger("meetmind")
+log = logging.getLogger("multimeet")
 
 
 def migrate() -> None:
@@ -51,7 +51,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="MeetMind API", lifespan=lifespan)
+app = FastAPI(title="MultiMeet API", lifespan=lifespan)
 
 origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
 app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], allow_headers=["*"])

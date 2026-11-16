@@ -27,8 +27,9 @@ from app.scheduling.rules import ParsedPreference
 log = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
-AGENT_MODEL = os.environ.get("MEETMIND_AGENT_MODEL", "claude-opus-5-5")
-MEDIATOR_MODEL = os.environ.get("MEETMIND_MEDIATOR_MODEL", "claude-opus-5-5")
+# MULTIMEET_* first; the pre-rename MEETMIND_* names still work.
+AGENT_MODEL = os.environ.get("MULTIMEET_AGENT_MODEL") or os.environ.get("MEETMIND_AGENT_MODEL") or "claude-opus-5-5"
+MEDIATOR_MODEL = os.environ.get("MULTIMEET_MEDIATOR_MODEL") or os.environ.get("MEETMIND_MEDIATOR_MODEL") or "claude-opus-5-5"
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
 
