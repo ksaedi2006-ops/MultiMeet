@@ -2,7 +2,12 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
-RuleKind = Literal["not_before", "not_after", "avoid_weekdays", "buffer_minutes", "free_text"]
+RuleKind = Literal[
+    "not_before", "not_after", "avoid_weekdays", "buffer_minutes", "free_text",
+    # Preference-shape rules (docs/research/negotiation-layer.md, "Elicitation: rules, not scores").
+    # They only ever shape utilities; the hard-constraint filter ignores them.
+    "time_of_day", "day_weights", "max_per_day",
+]
 WEEKDAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 
@@ -13,7 +18,10 @@ class PreferenceRule(BaseModel):
         description=(
             "not_before: no meetings starting before `time`. not_after: no meetings ending after `time`. "
             "avoid_weekdays: no meetings on `weekdays`. buffer_minutes: keep `minutes` free around other "
-            "commitments. free_text: anything that doesn't fit the others."
+            "commitments. time_of_day: an ideal meeting time `time` with tolerance `width_minutes`. "
+            "day_weights: how good each weekday is, `day_weights[0..6]` from 0 (worst) to 1 (fine). "
+            "max_per_day: at most `max_count` commitments on a day. "
+            "free_text: anything that doesn't fit the others."
         )
     )
     strength: Literal["hard", "soft"] = Field(
@@ -28,6 +36,21 @@ class PreferenceRule(BaseModel):
         ),
     )
     minutes: Optional[int] = Field(default=None, description="For buffer_minutes.")
+    width_minutes: Optional[int] = Field(
+        default=None, description="For time_of_day: how far from the ideal time is still fine, in minutes (default 120)."
+    )
+    day_weights: Optional[list[float]] = Field(
+        default=None, description="For day_weights: seven numbers, Monday first, 0 = worst day, 1 = fine."
+    )
+    max_count: Optional[int] = Field(default=None, description="For max_per_day: the most commitments wanted on one day.")
+    weight: Optional[float] = Field(
+        default=None, ge=0, le=1,
+        description="How much this soft rule matters, 0 to 1. Leave empty unless the person says how strongly they feel.",
+    )
+    flex_floor: Optional[float] = Field(
+        default=None, ge=0, le=1,
+        description="The lowest weight the person would let their agent concede to in a negotiation. Leave empty if unsaid.",
+    )
     summary: str = Field(description="Short label for the rule as the person would read it, e.g. 'Nothing before 11:00'.")
 
 
