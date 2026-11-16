@@ -19,6 +19,7 @@ applied to a person's disagreement point d_i (which is not itself a slot).
 from __future__ import annotations
 
 import math
+from bisect import bisect_left, bisect_right
 from typing import Callable, Literal
 
 Scheme = Literal["borda", "range", "unit_sum", "l2", "none"]
@@ -47,10 +48,12 @@ def normalizer(raw: dict[str, float], scheme: Scheme = "borda") -> Callable[[flo
         if m == 1:
             return lambda x: 1.0 if round(x, _ROUND) >= values[0] else 0.0
 
-        def borda(x: float, values=values) -> float:
+        ordered = sorted(values)
+
+        def borda(x: float) -> float:
             x = round(x, _ROUND)
-            below = sum(1 for v in values if v < x)
-            equal = sum(1 for v in values if v == x)
+            below = bisect_left(ordered, x)
+            equal = bisect_right(ordered, x) - below
             if equal:  # x is one of the slots: ties share the rank, itself excluded
                 return (below + 0.5 * (equal - 1)) / (m - 1)
             return below / (m - 1)

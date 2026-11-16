@@ -33,6 +33,11 @@ from app.scheduling.slots import Slot
 DEFAULT_RULE_WEIGHT = 0.6  # a stated soft rule matters, but less than a busy commitment
 DEFAULT_EVENT_WEIGHT = 0.7  # moving a soft commitment (gym, lunch) costs something real
 DEFAULT_FLOOR_FRACTION = 0.5  # undeclared flexibility: an agent may concede to half the weight
+DEFAULT_EVENT_FLOOR = 0.0  # a movable commitment (gym, lunch) may be moved outright if the person agrees
+# Why the commitment floor is 0: under rank (Borda) normalization only the order of slots
+# matters, so halving one criterion's weight rarely reorders anything. A concession that
+# can never change the outcome is not a concession. Soft commitments are exactly the
+# things people say they could move, so their declared range defaults to "all the way".
 DEFAULT_TOD_WIDTH = 120  # minutes of tolerance around an ideal time of day
 GRADE_MINUTES = 120  # not_before / not_after penalties reach 1 this many minutes past the limit
 
@@ -173,5 +178,5 @@ def build_model(
             for sid, slot in slots.items()
         }
         weight = DEFAULT_EVENT_WEIGHT
-        criteria.append(Criterion(f"event:{title}", title, "event", weight, weight * DEFAULT_FLOOR_FRACTION, penalties))
+        criteria.append(Criterion(f"event:{title}", title, "event", weight, DEFAULT_EVENT_FLOOR, penalties))
     return UtilityModel(user_id, tuple(criteria))

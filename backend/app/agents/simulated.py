@@ -8,11 +8,14 @@ import hashlib
 import re
 
 from app.agents.types import (
+    AgentMove,
     Ask,
     AskPlan,
+    AskRenderView,
     AskView,
     DecisionView,
     Explanation,
+    MoveView,
     PersonView,
     Reply,
     ReplySheet,
@@ -71,10 +74,21 @@ class SimulatedAgents:
             t = _hhmm(*m.groups())
             rules.append(PreferenceRule(kind="not_after", strength=strength, time=t, weekdays=days or None,
                                         summary=f"Nothing after {t}{on_days}"))
-        if days and re.search(r"\b(avoid|no|not|free|off|keep|busy)\b", lower):
+        graded_day = bool(days and re.search(r"\b(rough|not great|aren't great|hard|tough|bad)\b", lower))
+        if days and not graded_day and re.search(r"\b(avoid|no|not|free|off|keep|busy)\b", lower):
             names = ", ".join(WEEKDAY_NAMES[d] for d in days)
             rules.append(PreferenceRule(kind="avoid_weekdays", strength=strength, weekdays=days,
                                         summary=f"Avoid {names}"))
+        if m := re.search(rf"\b(?:ideally|around|preferably|best)\s+(?:around\s+|at\s+)?{TIME}", lower):
+            t = _hhmm(*m.groups())
+            rules.append(PreferenceRule(kind="time_of_day", strength="soft", time=t, width_minutes=120,
+                                        summary=f"Ideally around {t}"))
+        if graded_day:
+            weights = [1.0] * 7
+            for d in days:
+                weights[d] = 0.3
+            rules.append(PreferenceRule(kind="day_weights", strength="soft", day_weights=weights,
+                                        summary=f"{', '.join(WEEKDAY_NAMES[d] for d in days)} not great"))
         if m := re.search(r"(\d{1,3})\s*(?:min|minute)s?\b.*\b(buffer|between|break|gap)", lower):
             mins = int(m.group(1))
             rules.append(PreferenceRule(kind="buffer_minutes", strength=strength, minutes=mins,
@@ -148,16 +162,44 @@ class SimulatedAgents:
                 replies.append(Reply(ask_id=ask.ask_id, response="flex", new_score=new, text=text))
         return ReplySheet(replies=replies)
 
+    async def render_ask(self, view: AskRenderView) -> str:
+        first = view.to_name.split()[0]
+        label = view.rule_label.removeprefix("Rule: ")
+        if view.rule_kind == "event":
+            return f"{first}, could {label} move for {view.target_label}? That time would work best for the group."
+        return f"{first}, could you bend '{label.lower()}' for {view.target_label}? It would help the group most."
+
+    async def move(self, view: MoveView) -> AgentMove:
+        """One structured move, decided from the same inputs a Claude agent gets."""
+        label = view.rule_label.removeprefix("Rule: ")
+        thing = label if view.rule_kind == "event" else label.lower()
+        if not view.target_hurts:
+            return AgentMove(move="accept", text=f"{view.target_label} already works for me.")
+        # Some asks are refused, deterministically per person and rule, so runs vary.
+        if _jitter(view.user_id, view.rule_id, "hold", spread=50) > 25:
+            return AgentMove(move="hold", text=(f"{label} matters that day; I can't move it." if view.rule_kind == "event"
+                                                else f"I'd rather keep my rule ({thing})."))
+        return AgentMove(move="flex", rule_id=view.rule_id, new_weight=view.floor,
+                         text=(f"I can move {label} for {view.target_label}." if view.rule_kind == "event"
+                               else f"I can bend my rule ({thing}) for {view.target_label}."))
+
     async def explain(self, d: DecisionView) -> Explanation:
         if d.status == "escalated":
             return Explanation(
                 explanation="No time worked for everyone without someone giving up something they marked firm.",
                 question="Which of the near-misses should we take, or can anyone loosen a firm rule?",
             )
+        if d.decisive and d.runner_up_label:
+            cost = f" ({d.decisive_reason.removeprefix('Rule: ').lower()})" if d.decisive_reason else ""
+            # True by construction: the pick is Pareto-optimal for the reports, so any time
+            # better for the bottleneck person is worse for someone else.
+            serves = (f" {d.bottleneck} is the person this time suits least; any time that suits them better"
+                      " would cost someone else." if d.bottleneck and d.bottleneck != d.decisive else "")
+            tie = (f" {d.tied_labels[0]} suits everyone exactly as well, so the earlier date won."
+                   if d.tied_labels else "")
+            return Explanation(explanation=(
+                f"The runner-up, {d.runner_up_label}, would have cost {d.decisive} the most{cost}.{serves}{tie}"
+            ).strip())
         low = min(d.scores.values()) if d.scores else 0
-        happy = sum(1 for s in d.scores.values() if s >= 70)
         moved = " once a commitment moved" if d.compromises else " with nobody giving anything up"
-        return Explanation(explanation=(
-            f"No other time leaves the least-happy person better off than {low}{moved}. "
-            f"{happy} of {len(d.scores)} people rate it 70 or higher."
-        ))
+        return Explanation(explanation=f"It was the only time left, and the least-happy person is at {low}{moved}.")

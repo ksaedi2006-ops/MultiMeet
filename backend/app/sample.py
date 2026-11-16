@@ -131,6 +131,23 @@ def make_person(rng: random.Random, name: str) -> Person:
         name_day = ["Mon", "Tue", "Wed", "Thu", "Fri"][day]
         p.rules.append((PreferenceRule(kind="avoid_weekdays", strength="soft", weekdays=[day],
                                        summary=f"Avoid {name_day}"), f"I try to keep {name_day}days free"))
+    # Graded preferences (docs/research/negotiation-layer.md, "rules, not scores"): an ideal
+    # time of day and a weekday someone would rather avoid. These give the solver real
+    # trade-offs to weigh, so the mediator has something to negotiate over.
+    if rng.random() < 0.5:
+        hour = rng.choice([10, 11, 13, 14, 15, 16])
+        width = rng.choice([90, 120, 180])
+        label = f"{hour % 12 or 12}{'am' if hour < 12 else 'pm'}"
+        p.rules.append((PreferenceRule(kind="time_of_day", strength="soft", time=f"{hour:02d}:00",
+                                       width_minutes=width, summary=f"Ideally around {label}"),
+                        f"Ideally around {label}"))
+    if rng.random() < 0.25:
+        day = rng.choice((0, 2, 4))
+        weights = [1.0] * 7
+        weights[day] = 0.3
+        name_day = ["Mon", "Tue", "Wed", "Thu", "Fri"][day]
+        p.rules.append((PreferenceRule(kind="day_weights", strength="soft", day_weights=weights,
+                                       summary=f"{name_day}days are rough"), f"{name_day}days are rough for me"))
     if rng.random() < 0.18:
         p.rules.append((PreferenceRule(kind="buffer_minutes", strength="soft", minutes=15,
                                        summary="15 min buffer around other things"),

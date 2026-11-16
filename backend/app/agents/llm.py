@@ -13,10 +13,13 @@ from pydantic import BaseModel
 from app.agents import prompts
 from app.agents.types import (
     AgentError,
+    AgentMove,
     AskPlan,
+    AskRenderView,
     AskView,
     DecisionView,
     Explanation,
+    MoveView,
     PersonView,
     ReplySheet,
     ScoreSheet,
@@ -104,4 +107,24 @@ class AnthropicAgents:
         return await self._structured(
             model=MEDIATOR_MODEL, system=prompts.MEDIATOR_EXPLAIN.format(title=decision.title),
             payload=asdict(decision), output=Explanation, effort="low",
+        )
+
+    async def render_ask(self, view: AskRenderView) -> str:
+        from pydantic import BaseModel as _Base
+
+        class _Sentence(_Base):
+            text: str
+
+        out = await self._structured(
+            model=MEDIATOR_MODEL, system=prompts.MEDIATOR_RENDER_ASK.format(title=view.title),
+            payload=asdict(view), output=_Sentence, effort="low",
+        )
+        return out.text
+
+    async def move(self, view: MoveView) -> AgentMove:
+        payload = asdict(view)
+        payload["rules"] = [r.model_dump(exclude_none=True) for r in view.rules]
+        return await self._structured(
+            model=AGENT_MODEL, system=prompts.PERSONAL_MOVER.format(name=view.name), payload=payload,
+            output=AgentMove, effort="low",
         )

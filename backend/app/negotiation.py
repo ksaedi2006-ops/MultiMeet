@@ -1,18 +1,26 @@
-"""The negotiation protocol.
+"""The negotiation, run as a background task and recorded on the event log.
 
-1. Filter: code closes every slot someone has a hard conflict with.
-2. Round 1: every personal agent scores the open slots, in parallel.
-3. Shortlist: code ranks slots by fairness (best worst-off person, then average).
-4. Rounds 2-3: the mediator asks specific low scorers to flex on shortlisted slots;
-   their agents accept, flex (raise their score) or hold. Re-rank after each round.
-5. Decide: converge on the fairest slot, or escalate to the humans with a question.
+The solver decides; agents only translate and concede; the mediator LLM only talks.
+See docs/research/negotiation-layer.md and app/scheduling/protocol.py.
 
-Every step is appended to the event log, which is what the live view renders.
+1. Filter: code closes every slot someone has a hard conflict with (unchanged).
+2. Utilities: code computes each person's utility for every open slot from their rules
+   and movable commitments, and normalizes it (Borda by default). No agent emits a score.
+3. Draft: the solver picks the Nash-product optimum (eps floor, leximin ties) and a
+   shortlist, and names the bottleneck person.
+4. Up to 3 rounds: the mediator asks the one concession that would raise the Nash product
+   most; that person's agent answers accept, flex(rule, new weight) or hold. Code enforces
+   monotonic concession inside the person's declared flexibility.
+5. Decide: the solver's argmax on the final reports. The mediator explains it, and a
+   faithfulness check confirms the explanation names the solver's real reason.
+
+Every step is appended to the event log, which is what the live view renders. Event names
+and every field the frontend reads are unchanged; new information is in additive fields.
 """
 
 import asyncio
 import logging
-from collections import defaultdict
+import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
@@ -21,20 +29,30 @@ from sqlalchemy.orm import Session
 from app import models
 from app.agents import Agents
 from app.agents.simulated import SimulatedAgents
-from app.agents.types import AgentError, AskView, DecisionView, PersonView, ShortlistView, SlotView
+from app.agents.types import AgentError, AskRenderView, DecisionView, MoveView
 from app.bus import bus
 from app.database import SessionLocal
 from app.scheduling.availability import HARD, Assessment, assess_slot
-from app.scheduling.fairness import COMFORT, RankedSlot, rank_slots
+from app.scheduling.fairness import COMFORT
+from app.scheduling.protocol import (
+    MAX_ROUNDS,
+    AgentState,
+    Draft,
+    Move,
+    Request,
+    Solver,
+    apply_move,
+    binding_reason,
+    display_shortlist,
+    faithful,
+    next_request,
+)
+from app.scheduling.utility import build_model
 from app.scheduling.ics import BusyInterval
 from app.scheduling.rules import PreferenceRule
 from app.scheduling.slots import Slot, generate_slots
 
 log = logging.getLogger(__name__)
-
-CLEAN_APPROACH = 75  # if the best slot already has everyone at or above this, skip asks
-ESCALATE_BELOW = 40  # a final choice leaving someone below this goes back to the humans
-ASK_THRESHOLD = 70
 
 _tasks: set[asyncio.Task] = set()
 _sim = SimulatedAgents()
@@ -123,6 +141,16 @@ async def run_negotiation(meeting_id: str, agents: Agents) -> None:
         db.close()
 
 
+SELECTOR = "nash"
+NORMALIZATION = os.environ.get("MEETMIND_NORMALIZATION", "borda")
+_floor = os.environ.get("MEETMIND_FAIRNESS_FLOOR")
+FAIRNESS_FLOOR = float(_floor) if _floor else None  # optional tau; off unless configured
+
+
+def _pct(x: float) -> int:
+    return int(round(100 * max(0.0, min(1.0, x))))
+
+
 class Negotiation:
     def __init__(self, db: Session, meeting_id: str, agents: Agents) -> None:
         self.db = db
@@ -133,8 +161,10 @@ class Negotiation:
         self.slots: dict[str, Slot] = {}
         self.assessments: dict[str, dict[str, Assessment]] = {}
         self.open_ids: list[str] = []
-        self.scores: dict[str, dict[str, int]] = {}
-        self.flexed: dict[str, set[str]] = defaultdict(set)  # slot_id -> user_ids who flexed
+        self.states: list[AgentState] = []
+        self.solver: Solver | None = None
+        self.draft: Draft | None = None
+        self.concessions: list[dict] = []
         self.replies: list[str] = []
 
     async def emit(self, type_: str, payload: dict, **kw) -> None:
@@ -164,6 +194,8 @@ class Negotiation:
             "slots": [s.to_dict() for s in slot_list],
             "timezone": self.meeting.timezone,
             "agent_backend": self.agents.name,
+            "selector": SELECTOR,
+            "normalization": NORMALIZATION,
         })
 
         self.filter_slots()
@@ -178,26 +210,28 @@ class Negotiation:
             "open": self.open_ids,
         })
         if not self.open_ids:
-            await self.decide(None, [])
+            await self.decide()
             return
 
         await self.emit("round_started", {"round": 1, "kind": "score"})
-        await self.score_round()
-        ranked = rank_slots(self.open_ids, self.scores)
-        await self.emit("shortlist", {"round": 1, "ranked": [r.to_dict() for r in ranked[:3]]})
+        for uid in self.people:
+            await self.emit("agent_thinking", {"user_id": uid, "round": 1})
+        self.build_reports()
+        self.draft = self.solver.solve(self.states)
+        for st in self.states:
+            await self.emit_scores(st.user_id)
+        await self.emit_shortlist(1)
 
-        if ranked[0].min_score < CLEAN_APPROACH:
-            for rnd, width in ((2, 3), (3, 2)):
-                asked = await self.ask_round(rnd, ranked[:width])
-                if not asked:
-                    break
-                ranked = rank_slots(self.open_ids, self.scores)
-                await self.emit("shortlist", {"round": rnd, "ranked": [r.to_dict() for r in ranked[:3]]})
-                if ranked[0].everyone_comfortable:
-                    break
+        for rnd in range(2, 2 + MAX_ROUNDS):
+            request = next_request(self.states, self.solver, self.draft)
+            if request is None:
+                break  # no concession inside anyone's range would improve the draft
+            conceded = await self.concession_round(rnd, request)
+            await self.emit_shortlist(rnd)
+            if not conceded:
+                break
 
-        best = ranked[0]
-        await self.decide(best if best.min_score >= ESCALATE_BELOW else None, ranked)
+        await self.decide()
 
     def filter_slots(self) -> None:
         tz = self.meeting.timezone
@@ -209,169 +243,218 @@ class Negotiation:
             sid for sid in self.slots if all(self.assessments[uid][sid].status != HARD for uid in self.people)
         ]
 
-    def person_view(self, uid: str) -> PersonView:
-        p = self.people[uid]
-        soft_rules = [r for r in p.rules if r.strength == "soft" or r.kind == "free_text"]
-        return PersonView(
-            user_id=uid, name=p.name, rules=soft_rules, notes=p.notes,
-            slots=[SlotView(sid, self.slots[sid].local_label, self.soft_conflicts(uid, sid)) for sid in self.open_ids],
+    def build_reports(self) -> None:
+        open_slots = {sid: self.slots[sid] for sid in self.open_ids}
+        tz = self.meeting.timezone
+        self.states = [
+            AgentState(uid, build_model(uid, open_slots, p.intervals, p.rules, tz))
+            for uid, p in self.people.items()
+        ]
+        self.solver = Solver(self.open_ids, scheme=NORMALIZATION, tau=FAIRNESS_FLOOR)
+
+    def state(self, uid: str) -> AgentState:
+        return next(st for st in self.states if st.user_id == uid)
+
+    def score(self, uid: str, sid: str) -> int:
+        return _pct(self.draft.utilities[uid][sid])
+
+    def summary(self, uid: str) -> str:
+        """What this person's agent is weighing, from their rules: code, not the LLM."""
+        model = self.state(uid).model
+        hurts = sorted(
+            ((sum(c.penalties.get(s, 0.0) for s in self.open_ids) * c.weight, c.label) for c in model.criteria),
+            reverse=True,
+        )
+        labels = [label.removeprefix("Rule: ") for w, label in hurts if w > 0][:2]
+        if not labels:
+            return "Wide open this week; most times work for me."
+        return "Weighing " + " and ".join(lbl.lower() if not lbl[:1].isupper() or " " in lbl else lbl
+                                          for lbl in labels) + "."
+
+    def reason(self, uid: str, sid: str) -> str:
+        worst = self.state(uid).model.worst_criterion(sid)
+        if worst is None:
+            return "Clear for me"
+        return f"Clashes with {worst.label}" if worst.kind == "event" else f"Bends: {worst.label}"
+
+    async def emit_scores(self, uid: str) -> None:
+        row = {sid: self.score(uid, sid) for sid in self.open_ids}
+        await self.emit(
+            "agent_scored",
+            {"user_id": uid, "round": 1, "scores": row, "summary": self.summary(uid), "fallback": False,
+             "source": "rules", "normalization": NORMALIZATION,
+             "utilities": {sid: round(self.draft.utilities[uid][sid], 4) for sid in self.open_ids}},
+            owner_id=uid, private={"reasons": {sid: self.reason(uid, sid) for sid in self.open_ids}},
         )
 
-    def soft_conflicts(self, uid: str, sid: str) -> list[str]:
-        return [c.reason for c in self.assessments[uid][sid].conflicts if c.severity == "soft"]
+    def ranked_info(self, sid: str, rank: int) -> dict:
+        scores = {uid: self.score(uid, sid) for uid in self.people}
+        g = {uid: self.draft.utilities[uid][sid] - self.draft.d[uid] for uid in self.people}
+        return {
+            "slot_id": sid,
+            "min_score": min(scores.values()),
+            "avg_score": round(sum(scores.values()) / len(scores), 1),
+            "scores": scores,
+            "unhappy": sorted((u for u, s in scores.items() if s < COMFORT), key=lambda u: scores[u]),
+            "rank": rank,
+            "nash": round(self.draft.selection.objective.get(sid, 0.0), 4),
+            "bottleneck": min(g, key=g.get),
+        }
 
-    async def score_round(self) -> None:
-        for uid in self.people:
-            await self.emit("agent_thinking", {"user_id": uid, "round": 1})
-
-        async def one(uid: str):
-            view = self.person_view(uid)
-            try:
-                return uid, await self.agents.score(view), None
-            except AgentError as exc:
-                return uid, await _sim.score(view), str(exc)
-
-        for coro in asyncio.as_completed([one(uid) for uid in self.people]):
-            uid, sheet, error = await coro
-            if error:
-                await self.emit("agent_failed", {"user_id": uid, "round": 1, "error": error, "fallback": "SIM"})
-            given = {s.slot_id: s for s in sheet.scores if s.slot_id in self.slots}
-            row, reasons = {}, {}
-            for sid in self.open_ids:
-                if sid in given:
-                    row[sid], reasons[sid] = given[sid].score, given[sid].reason
-                else:  # the model skipped a slot; treat it as neutral and say so
-                    row[sid], reasons[sid] = 50, "Not scored"
-            self.scores[uid] = row
-            await self.emit(
-                "agent_scored",
-                {"user_id": uid, "round": 1, "scores": row, "summary": sheet.summary, "fallback": bool(error)},
-                owner_id=uid, private={"reasons": reasons},
-            )
-
-    async def ask_round(self, rnd: int, targets: list[RankedSlot]) -> bool:
-        target_ids = [t.slot_id for t in targets]
-        await self.emit("round_started", {"round": rnd, "kind": "asks", "slot_ids": target_ids})
-        shortlist = [
-            ShortlistView(
-                slot_id=t.slot_id, label=self.slots[t.slot_id].local_label,
-                scores={self.name(u): s for u, s in t.scores.items()},
-                conflicts={self.name(u): self.soft_conflicts(u, t.slot_id) for u in self.people},
-            )
-            for t in targets
-        ]
-        people = {uid: p.name for uid, p in self.people.items()}
-        try:
-            plan = await self.agents.plan_asks(self.meeting.title, people, shortlist)
-        except AgentError:
-            plan = await _sim.plan_asks(self.meeting.title, people, shortlist)
-
-        per_slot: dict[str, int] = defaultdict(int)
-        asks: dict[str, list[AskView]] = defaultdict(list)
-        seen = set()
-        for i, ask in enumerate(plan.asks):
-            uid, sid = ask.user_id, ask.slot_id
-            if (sid not in target_ids or uid not in self.people or (uid, sid) in seen
-                    or self.scores[uid][sid] >= ASK_THRESHOLD or per_slot[sid] >= 2):
-                continue
-            seen.add((uid, sid))
-            per_slot[sid] += 1
-            view = AskView(f"r{rnd}-{i}", sid, self.slots[sid].local_label, self.scores[uid][sid],
-                           self.soft_conflicts(uid, sid), ask.text)
-            asks[uid].append(view)
-            await self.emit("mediator_ask", {
-                "round": rnd, "ask_id": view.ask_id, "slot_id": sid,
-                "to_user_id": uid, "to_name": self.name(uid), "text": ask.text,
-            })
-        if not asks:
-            return False
-
-        for uid in asks:
-            await self.emit("agent_thinking", {"user_id": uid, "round": rnd})
-
-        async def one(uid: str):
-            view = self.person_view(uid)
-            try:
-                return uid, await self.agents.reply(view, asks[uid])
-            except AgentError:
-                return uid, await _sim.reply(view, asks[uid])
-
-        for coro in asyncio.as_completed([one(uid) for uid in asks]):
-            uid, sheet = await coro
-            by_id = {a.ask_id: a for a in asks[uid]}
-            answered = set()
-            for reply in sheet.replies:
-                ask = by_id.get(reply.ask_id)
-                if ask is None or ask.ask_id in answered:
-                    continue
-                answered.add(ask.ask_id)
-                await self.apply_reply(rnd, uid, ask, reply.response, reply.new_score, reply.text)
-            for ask in asks[uid]:
-                if ask.ask_id not in answered:
-                    await self.apply_reply(rnd, uid, ask, "hold", ask.current_score, "No answer.")
-        return True
-
-    async def apply_reply(self, rnd: int, uid: str, ask: AskView, response: str, new: int, text: str) -> None:
-        old = ask.current_score
-        new = old if response == "hold" else max(old, min(100, new))
-        self.scores[uid][ask.slot_id] = new
-        if response == "flex" and new > old:
-            self.flexed[ask.slot_id].add(uid)
-        self.replies.append(f"{self.name(uid)} answered '{response}' on {ask.label}: {text}")
-        await self.emit("agent_reply", {
-            "round": rnd, "ask_id": ask.ask_id, "user_id": uid, "slot_id": ask.slot_id,
-            "response": response, "old_score": old, "new_score": new, "text": text,
+    async def emit_shortlist(self, rnd: int) -> None:
+        sel = self.draft.selection
+        await self.emit("shortlist", {
+            "round": rnd,
+            "ranked": [self.ranked_info(sid, i + 1) for i, sid in enumerate(self.draft.shortlist)],
+            "selector": SELECTOR,
+            "draft_slot_id": sel.slot_id,
+            "status": sel.status,
+            "bottleneck": sel.bottleneck,
         })
 
-    async def decide(self, best: RankedSlot | None, ranked: list[RankedSlot]) -> None:
+    async def concession_round(self, rnd: int, req: Request) -> bool:
+        uid = req.user_id
+        await self.emit("round_started", {"round": rnd, "kind": "asks", "slot_ids": [req.target]})
+        title = self.meeting.title
+        target_label = self.slots[req.target].local_label
+        draft_label = self.slots[req.draft].local_label if req.draft else None
+        kind = self.state(uid).model.criterion(req.rule_id)
+        render = AskRenderView(title, self.name(uid), req.rule_label, target_label, draft_label,
+                               rule_kind=kind.kind if kind else "rule")
+        try:
+            text = await self.agents.render_ask(render)
+        except AgentError:
+            text = await _sim.render_ask(render)
+        ask_id = f"r{rnd}-0"
+        await self.emit("mediator_ask", {
+            "round": rnd, "ask_id": ask_id, "slot_id": req.target,
+            "to_user_id": uid, "to_name": self.name(uid), "text": text,
+            "rule_id": req.rule_id, "rule_label": req.rule_label,
+            "current_weight": round(req.current_weight, 3), "floor": round(req.floor, 3),
+            "zeuthen_gain": round(req.gain, 4), "draft_slot_id": req.draft, "reason_code": req.reason_code,
+        })
+        await self.emit("agent_thinking", {"user_id": uid, "round": rnd})
+
+        st = self.state(uid)
+        crit = st.model.criterion(req.rule_id)
+        person = self.people[uid]
+        view = MoveView(
+            user_id=uid, name=person.name, ask_id=ask_id, ask_text=text, rule_id=req.rule_id,
+            rule_label=req.rule_label, current_weight=req.current_weight, floor=req.floor,
+            target_slot_id=req.target, target_label=target_label,
+            target_hurts=bool(crit and crit.penalties.get(req.target, 0.0) > 0),
+            shortlist=[{"slot_id": sid, "label": self.slots[sid].local_label, "solver_rank": rank}
+                       for rank, sid in display_shortlist(self.draft.shortlist, uid, rnd)],
+            rules=person.rules, notes=person.notes, rule_kind=crit.kind if crit else "rule",
+        )
+        try:
+            answer = await self.agents.move(view)
+        except AgentError:
+            answer = await _sim.move(view)
+        old = self.score(uid, req.target)
+        move = Move(answer.move, answer.rule_id, answer.new_weight, answer.text)  # text never reaches the solver
+        idx = self.states.index(st)
+        self.states[idx], applied = apply_move(st, move)
+        self.draft = self.solver.solve(self.states)
+        new = self.score(uid, req.target)
+        if applied.kind == "flex":
+            self.concessions.append({
+                "user_id": uid, "name": self.name(uid), "rule_id": applied.rule_id, "rule_label": req.rule_label,
+                "old_weight": round(applied.old_weight, 3), "new_weight": round(applied.new_weight, 3), "round": rnd,
+            })
+        self.replies.append(f"{self.name(uid)} answered '{applied.kind}' about {req.rule_label}: {answer.text}")
+        await self.emit("agent_reply", {
+            "round": rnd, "ask_id": ask_id, "user_id": uid, "slot_id": req.target,
+            "response": applied.kind, "old_score": old, "new_score": new, "text": answer.text,
+            "move": {"type": answer.move, "rule_id": answer.rule_id,
+                     "new_weight": answer.new_weight, "old_weight": applied.old_weight},
+            "valid": applied.valid, "rejected_reason": applied.reason,
+        })
+        return applied.kind == "flex"
+
+    async def decide(self) -> None:
+        draft = self.draft
+        sel = draft.selection if draft else None
+        best = sel.slot_id if sel else None
         status = "converged" if best else "escalated"
+        names = {uid: p.name for uid, p in self.people.items()}
+
         compromises = []
         if best:
+            conceded = {c["user_id"]: c["rule_label"] for c in self.concessions}
             for uid in self.people:
-                conflicts = self.soft_conflicts(uid, best.slot_id)
-                score = best.scores[uid]
-                if conflicts or score < COMFORT or uid in self.flexed[best.slot_id]:
-                    gave_up = ", ".join(c.removeprefix("Rule: ") for c in conflicts) or "a preferred time"
-                    compromises.append({"user_id": uid, "name": self.name(uid), "gave_up": gave_up, "score": score})
-        alternatives = [
-            {"slot_id": r.slot_id, "label": self.slots[r.slot_id].local_label,
-             "min_score": r.min_score, "avg_score": round(r.avg_score, 1)}
-            for r in ranked if not best or r.slot_id != best.slot_id
-        ][:3]
+                score = self.score(uid, best)
+                worst = self.state(uid).model.worst_criterion(best)
+                if uid in conceded or (worst and score < COMFORT):
+                    gave_up = (conceded.get(uid) or (worst.label if worst else "a preferred time"))
+                    compromises.append({"user_id": uid, "name": self.name(uid),
+                                        "gave_up": gave_up.removeprefix("Rule: "), "score": score})
+        ranking = sel.ranking if sel else []
+        alternatives = []
+        for sid in ranking:
+            if sid == best:
+                continue
+            info = self.ranked_info(sid, 0)
+            alternatives.append({"slot_id": sid, "label": self.slots[sid].local_label,
+                                 "min_score": info["min_score"], "avg_score": info["avg_score"]})
+            if len(alternatives) == 3:
+                break
 
+        binding = binding_reason(draft, {st.user_id: st.model for st in self.states}) if draft and best else None
+        best_scores = {uid: self.score(uid, best) for uid in self.people} if best else {}
         view = DecisionView(
             title=self.meeting.title, status=status,
-            chosen_label=self.slots[best.slot_id].local_label if best else None,
-            scores={self.name(u): s for u, s in (best.scores if best else {}).items()},
+            chosen_label=self.slots[best].local_label if best else None,
+            scores={names[u]: s for u, s in best_scores.items()},
             compromises=[f"{c['name']}: {c['gave_up']}" for c in compromises],
             alternatives=[f"{a['label']} (lowest {a['min_score']})" for a in alternatives],
             replies=self.replies,
+            runner_up_label=self.slots[binding.runner_up].local_label if binding and binding.runner_up else None,
+            decisive=names.get(binding.decisive) if binding and binding.decisive else None,
+            decisive_reason=binding.decisive_label if binding else None,
+            bottleneck=names.get(binding.bottleneck) if binding and binding.bottleneck else None,
+            tied_labels=[self.slots[s].local_label for s in binding.tied[:1]] if binding else [],
         )
         try:
             words = await self.agents.explain(view)
         except AgentError:
             words = await _sim.explain(view)
+        is_faithful = faithful(words.explanation, binding, names)
 
-        slot = self.slots[best.slot_id] if best else None
+        slot = self.slots[best] if best else None
         self.db.add(models.MeetingDecision(
             meeting_request_id=self.meeting.id, status=status,
             slot_id=slot.id if slot else None, start=slot.start if slot else None,
             end=slot.end if slot else None, label=slot.local_label if slot else None,
             explanation=words.explanation, question=words.question if not best else None,
-            scores=best.scores if best else {}, compromises=compromises, alternatives=alternatives,
+            scores=best_scores, compromises=compromises, alternatives=alternatives,
         ))
         self.meeting.status = "scheduled" if best else "escalated"
         self.session.status = status
         self.session.completed_at = datetime.now(timezone.utc)
         self.db.commit()
+        bottleneck = sel.bottleneck if sel else None
         await self.emit("decision", {
             "status": status,
             "slot": slot.to_dict() if slot else None,
-            "scores": best.scores if best else {},
-            "min_score": best.min_score if best else None,
-            "avg_score": round(best.avg_score, 1) if best else None,
+            "scores": best_scores,
+            "min_score": min(best_scores.values()) if best_scores else None,
+            "avg_score": round(sum(best_scores.values()) / len(best_scores), 1) if best_scores else None,
             "compromises": compromises,
             "alternatives": alternatives,
             "explanation": words.explanation,
             "question": words.question if not best else None,
+            # Additive fields: how the solver decided.
+            "selector": SELECTOR,
+            "normalization": NORMALIZATION,
+            "solver_status": sel.status if sel else "no_slots",
+            "individually_rational": bool(sel and sel.status == "ok"),
+            "near_miss": sel.near_miss if sel else None,
+            "nash_score": round(sel.objective.get(best, 0.0), 4) if sel and best else None,
+            "bottleneck": ({"user_id": bottleneck, "name": names[bottleneck],
+                            "gain": round(draft.utilities[bottleneck][best] - draft.d[bottleneck], 4)}
+                           if bottleneck and best else None),
+            "binding": binding.to_dict() if binding else None,
+            "faithful": is_faithful,
+            "concessions": self.concessions,
         })
