@@ -14,6 +14,8 @@ import { buildModel } from '../tower/model'
 import { useCab, useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
 
+const NO_EVENTS: never[] = []
+
 function Arrow() {
   return (
     <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6"
@@ -57,7 +59,7 @@ export default function CalendarStage() {
     return () => setHighlight(null)
   }, [setHighlight, viewerId])
 
-  const busyEvents = calendar?.events ?? []
+  const busyEvents = useMemo(() => calendar?.events ?? NO_EVENTS, [calendar])
   const titles = useMemo(() => {
     const map = new Map<string, { title: string; kind: 'hard' | 'soft'; count: number }>()
     for (const e of busyEvents) {

@@ -7,8 +7,8 @@ import AttractStage from './cab/AttractStage'
 import PlanStage from './cab/PlanStage'
 import InviteStage from './cab/InviteStage'
 import CalendarStage from './cab/CalendarStage'
+import PreferencesStage from './cab/PreferencesStage'
 import JoinEvent from './pages/JoinEvent'
-import AgentChat from './pages/AgentChat'
 import NegotiationLiveView from './pages/NegotiationLiveView'
 
 function Page({ children }: { children: React.ReactNode }) {
@@ -46,10 +46,10 @@ export default function App() {
           <Route path="/new" element={<PlanStage />} />
           <Route path="/event/:eventId/share" element={<InviteStage />} />
           <Route path="/event/:eventId/upload" element={<CalendarStage />} />
+          <Route path="/event/:eventId/agent" element={<PreferencesStage />} />
         </Route>
         <Route element={<OldPages />}>
         <Route path="/join/:inviteCode" element={<Page><JoinEvent /></Page>} />
-        <Route path="/event/:eventId/agent" element={<Page><AgentChat /></Page>} />
         <Route path="/event/:eventId/negotiate" element={<Page><NegotiationLiveView /></Page>} />
         </Route>
       </Routes>

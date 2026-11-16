@@ -2,7 +2,7 @@
  * The cab never reloads; a route only picks a stage. Each stage says how the console is
  * arranged around the scope, and the camera follows from that.
  */
-export type StageId = 'attract' | 'plan' | 'invite' | 'calendar'
+export type StageId = 'attract' | 'plan' | 'invite' | 'calendar' | 'preferences'
 
 export interface StageSpec {
   id: StageId
@@ -19,12 +19,14 @@ export const STAGES: Record<StageId, StageSpec> = {
   plan: { id: 'plan', name: 'New meeting', bay: 660, panel: 0 },
   invite: { id: 'invite', name: 'Invite people', bay: 360, panel: 420 },
   calendar: { id: 'calendar', name: 'Your calendar', bay: 440, panel: 420 },
+  preferences: { id: 'preferences', name: 'Your preferences', bay: 380, panel: 440 },
 }
 
 export function stageFor(pathname: string): StageSpec {
   if (pathname === '/new') return STAGES.plan
   if (/^\/event\/[^/]+\/share\/?$/.test(pathname)) return STAGES.invite
   if (/^\/event\/[^/]+\/upload\/?$/.test(pathname)) return STAGES.calendar
+  if (/^\/event\/[^/]+\/agent\/?$/.test(pathname)) return STAGES.preferences
   return STAGES.attract
 }
 
@@ -38,7 +40,7 @@ export interface Rect {
 const GUTTER = 28
 /** Room kept under the scope for its one-line legend. */
 const LEGEND = 30
-const LEGEND_PHONE = 46
+const LEGEND_PHONE = 64
 
 /**
  * Bay and panel widths for the actual viewport. On a narrow desktop they give way so the
