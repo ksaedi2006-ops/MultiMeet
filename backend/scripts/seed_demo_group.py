@@ -41,8 +41,8 @@ PERSONAS = [
      ["Studio runs late, I like 15 minutes of buffer between things"]),
     ("Tomas Rivera", [("Family dinner", "MO", "18:00", "20:00"), ("Run club", "TU,TH", "07:00", "08:00")],
      ["I try to keep Mondays free if at all possible"]),
-    ("Aisha Rahman", [("TA office hours", "TH", "14:00", "16:00")],
-     ["Longer meetings are easier for me later in the day", "Never anything after 7pm"]),
+    ("Aisha Rahman", [("TA office hours", "TH", "14:00", "16:00"), ("Coffee with advisor", "WE", "15:00", "16:00")],
+     ["I'd rather not meet before 2pm, mornings are my research block", "Never anything after 7pm"]),
 ]
 
 
@@ -148,6 +148,8 @@ def main() -> None:
             "end_date": (start + timedelta(days=9)).isoformat(), "timezone": TZ,
             "earliest_hour": 9, "latest_hour": 21,
         })
+        api("POST", f"/users/{organiser}/preferences?event_id={event['event_id']}",
+            {"raw_text": "I'd rather not meet after 6pm, I commute home"})
         api("POST", f"/events/{event['event_id']}/ready?user_id={organiser}")
         print(f"event {event['event_id']} organised by Ava ({organiser})")
     else:

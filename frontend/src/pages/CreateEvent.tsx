@@ -19,7 +19,20 @@ export default function CreateEvent() {
     try {
       const userId = await getOrCreateUserId()
       await setUserName(userId, name)
-      const event = await createEvent(title, userId)
+      // Sensible defaults until the setup form gains date and time controls.
+      const day = (offset: number) => {
+        const d = new Date()
+        d.setDate(d.getDate() + offset)
+        return d.toLocaleDateString('en-CA')
+      }
+      const event = await createEvent(
+        {
+          title, duration_minutes: 60, start_date: day(1), end_date: day(10),
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, earliest_hour: 9, latest_hour: 21,
+          weekdays: [0, 1, 2, 3, 4],
+        },
+        userId,
+      )
       navigate(`/event/${event.event_id}/share`)
     } catch {
       setError('Could not reach the backend. Check that it is running, then try again.')

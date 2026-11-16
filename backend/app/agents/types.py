@@ -100,7 +100,7 @@ class ReplySheet(BaseModel):
 
 
 class Explanation(BaseModel):
-    explanation: str = Field(description="Two or three plain sentences for the whole group on why this outcome.")
+    explanation: str = Field(description="Two plain sentences on why this time won, without restating the time, compromises or fallbacks.")
     question: Optional[str] = Field(
         default=None, description="Only when escalated: one specific question the humans need to answer."
     )

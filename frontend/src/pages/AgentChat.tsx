@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { addPreference, getOrCreateUserId, listPreferences, markReady } from '../api/client'
+import { addPreference, errorMessage, getOrCreateUserId, listPreferences, setReady } from '../api/client'
 import StepHeader from '../components/StepHeader'
 import Button from '../components/Button'
 
@@ -29,7 +29,7 @@ export default function AgentChat() {
       if (prefs.length) {
         const history = prefs.flatMap((p) => [
           { from: 'user' as const, text: p.raw_text },
-          { from: 'agent' as const, text: p.parsed_rules.ack ?? "Got it, I'll factor that in." },
+          { from: 'agent' as const, text: p.ack ?? 'Noted.' },
         ])
         setMessages((prev) => [prev[0], ...history])
       }
@@ -50,13 +50,13 @@ export default function AgentChat() {
     setSending(true)
     try {
       const userId = await getOrCreateUserId()
-      const pref = await addPreference(userId, text)
+      const pref = await addPreference(userId, text, eventId)
+      setMessages((prev) => [...prev, { from: 'agent', text: pref.ack ?? 'Noted.' }])
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { from: 'agent', text: pref.parsed_rules.ack ?? "Got it, I'll factor that in." },
+        { from: 'agent', text: errorMessage(err, "I couldn't save that. Check the backend is running and try again.") },
       ])
-    } catch {
-      setMessages((prev) => [...prev, { from: 'agent', text: 'Sorry, I had trouble parsing that.' }])
     } finally {
       setSending(false)
     }
@@ -66,7 +66,7 @@ export default function AgentChat() {
     setCheckingIn(true)
     try {
       const userId = await getOrCreateUserId()
-      await markReady(eventId, userId)
+      await setReady(eventId, userId)
       navigate(`/event/${eventId}/negotiate`)
     } catch {
       setCheckingIn(false)

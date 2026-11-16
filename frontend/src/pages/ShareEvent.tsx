@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
-import { getEvent, listEventMembers, type Event, type Member } from '../api/client'
-import { useNegotiationSocket } from '../api/useNegotiationSocket'
+import { currentUserId, getEvent, type EventInfo, type Member } from '../api/client'
+import { useEventLog } from '../api/useEventLog'
 import StepHeader from '../components/StepHeader'
 import Strip from '../components/Strip'
 import Button from '../components/Button'
@@ -16,26 +16,24 @@ function initials(name: string) {
 export default function ShareEvent() {
   const { eventId = '' } = useParams<{ eventId: string }>()
   const navigate = useNavigate()
-  const [event, setEvent] = useState<Event | null>(null)
-  const [members, setMembers] = useState<Member[]>([])
+  const [event, setEvent] = useState<EventInfo | null>(null)
   const [copied, setCopied] = useState(false)
-  const { events } = useNegotiationSocket(eventId || null)
+  const { events } = useEventLog(eventId || null, currentUserId())
 
   useEffect(() => {
     getEvent(eventId).then(setEvent)
-    listEventMembers(eventId).then(setMembers)
   }, [eventId])
 
-  useEffect(() => {
-    setMembers((prev) => {
-      let next = prev
-      for (const e of events) {
-        if (e.type !== 'member_joined') continue
-        if (next.some((m) => m.user_id === e.user_id)) continue
-        next = [...next, { user_id: e.user_id, name: e.user_name, role: 'member', ready: false }]
+  // The roster is the replayed log: every join and update, latest state wins.
+  const members = useMemo(() => {
+    const byId = new Map<string, Member>()
+    for (const e of events) {
+      if (e.type === 'member_joined' || e.type === 'member_updated') {
+        const { user_id, name, role, ready, calendar_events, rules } = e
+        byId.set(user_id, { user_id, name, role, ready, calendar_events, rules })
       }
-      return next
-    })
+    }
+    return [...byId.values()]
   }, [events])
 
   const shareLink = event ? `${window.location.origin}/join/${event.invite_code}` : ''

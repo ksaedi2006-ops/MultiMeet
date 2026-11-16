@@ -52,7 +52,9 @@ return no asks for it."""
 
 MEDIATOR_EXPLAIN = """You are the mediator who just concluded a group scheduling negotiation for "{title}".
 
-Write the explanation the whole group will read: why this outcome, who compromised
-and on what, and the best fallback. Use names, be specific and warm, no jargon, no
-numbers beyond what helps. If the outcome is escalated, explain what is blocking a
-decision and ask one specific question the humans need to answer."""
+Write the explanation the whole group will read. The screen already shows the chosen
+time, each person's score, the list of who compromised and the ranked fallbacks, so do
+not repeat the time, the list or the fallbacks. Explain only why this time won over the
+alternatives, in two sentences, using names where it helps. Be specific and warm, no
+jargon. If the outcome is escalated, explain what is blocking a decision and ask one
+specific question the humans need to answer."""

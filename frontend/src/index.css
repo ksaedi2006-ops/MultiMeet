@@ -1,24 +1,36 @@
 @import "tailwindcss";
 
 @theme {
-  --color-board: #16212c;
-  --color-board-raised: #1e2e3b;
-  --color-board-line: #2f4152;
+  --color-board: #22313f;
+  --color-board-raised: #2a3b4b;
+  --color-board-line: #3c5266;
+  --color-glass: #0c131d; /* the scope glass, for anything sitting on it */
   --color-strip: #ecdfc2;
   --color-strip-dim: #e0d0a8;
   --color-strip-ink: #2a2015;
   --color-clearance: #d4551c;
   --color-clearance-dim: #a13f13;
+  --color-signal: #f4844f; /* safety orange as text on the board; fills stay clearance */
   --color-amber: #e8a93a;
-  --color-mist: #7c93a8;
+  --color-mist: #93aabd;
 
   --font-display: "Big Shoulders Display", "IBM Plex Sans", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
   --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-quick: 180ms;
+  --duration-settle: 700ms;
 }
 
 :root {
   color-scheme: dark;
+  scrollbar-color: var(--color-board-line) transparent;
+}
+
+input,
+textarea {
+  caret-color: var(--color-amber);
 }
 
 @layer base {
@@ -32,10 +44,6 @@ body {
   background: var(--color-board);
   color: var(--color-strip);
   font-family: var(--font-sans);
-  background-image:
-    radial-gradient(ellipse 900px 500px at 15% -10%, rgba(212, 85, 28, 0.08), transparent),
-    radial-gradient(ellipse 700px 500px at 100% 10%, rgba(232, 169, 58, 0.06), transparent);
-  background-attachment: fixed;
 }
 
 ::selection {

@@ -1,0 +1,93 @@
+import type { ConnectionState } from '../api/useEventLog'
+import type { TowerModel } from './model'
+import type { Playback } from './usePlayback'
+
+const PHASE: Record<TowerModel['phase'], string> = {
+  holding: 'HOLDING',
+  filtering: 'CLOSING BLOCKED TIMES',
+  scoring: 'ROUND 1 · SCORING',
+  asking: 'ASKING FOR FLEX',
+  decided: 'CLEARED',
+  escalated: 'HOLDING FOR INSTRUCTIONS',
+  failed: 'NEGOTIATION FAILED',
+}
+
+function Icon({ d }: { d: string }) {
+  return (
+    <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d={d} />
+    </svg>
+  )
+}
+
+const ICONS = {
+  play: 'M5 3.5v9l7-4.5z',
+  pause: 'M5.5 3.5v9M10.5 3.5v9',
+  replay: 'M3 8a5 5 0 1 0 1.6-3.7M3 2.5v2.8h2.8',
+  skip: 'M3.5 3.5 8 8l-4.5 4.5M8.5 3.5 13 8l-4.5 4.5',
+}
+
+function mmss(sec: number) {
+  const s = Math.floor(sec)
+  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+}
+
+interface Props {
+  title: string
+  model: TowerModel
+  playback: Playback
+  connection: ConnectionState
+}
+
+export default function StatusBar({ title, model, playback, connection }: Props) {
+  const phase = model.phase === 'asking' ? `ROUND ${model.round} · ASKING FOR FLEX` : PHASE[model.phase]
+  const live = connection === 'live'
+  const btn =
+    'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-[2px] font-mono text-[11px] tracking-wider text-strip/80 border border-board-line hover:border-amber hover:text-amber transition-colors disabled:opacity-35 disabled:pointer-events-none'
+
+  return (
+    <div className="flex flex-wrap items-center gap-x-6 gap-y-3 py-4 border-b border-board-line">
+      <h1 className="font-display font-bold text-3xl sm:text-4xl leading-none tracking-tight text-strip min-w-0 truncate">
+        {title}
+      </h1>
+      <div className="flex items-center gap-4 font-mono text-xs tracking-wider">
+        <span className={model.phase === 'decided' || model.phase === 'failed' || model.phase === 'escalated' ? 'text-signal' : 'text-amber'}>
+          {phase}
+        </span>
+        {playback.started && <span className="text-mist tabular-nums">T+{mmss(playback.clock)}</span>}
+        {model.backend === 'simulated' && (
+          <span className="px-1.5 py-0.5 border border-mist/40 text-mist rounded-[2px] text-[10px]">SIMULATED AGENTS</span>
+        )}
+      </div>
+      <div className="flex items-center gap-2 ml-auto">
+        {playback.started && (
+          <>
+            <button type="button" className={btn} onClick={() => playback.setPlaying(!playback.playing)}
+              aria-label={playback.playing ? 'Pause playback' : 'Resume playback'}>
+              <Icon d={playback.playing ? ICONS.pause : ICONS.play} />
+              <span className="hidden sm:inline">{playback.playing ? 'PAUSE' : 'PLAY'}</span>
+            </button>
+            <button type="button" className={btn} onClick={() => playback.setSpeed(playback.speed === 1 ? 2 : 1)}
+              aria-label={`Playback speed ${playback.speed}x, switch to ${playback.speed === 1 ? 2 : 1}x`}>
+              {playback.speed}×
+            </button>
+            <button type="button" className={btn} onClick={playback.replay} aria-label="Replay from the start">
+              <Icon d={ICONS.replay} />
+              <span className="hidden sm:inline">REPLAY</span>
+            </button>
+            <button type="button" className={btn} onClick={playback.skipToEnd} disabled={playback.caughtUp}
+              aria-label="Skip to the latest state">
+              <Icon d={ICONS.skip} />
+              <span className="hidden sm:inline">SKIP</span>
+            </button>
+          </>
+        )}
+        <span className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-mist pl-2 whitespace-nowrap" role="status">
+          <span className={`w-1.5 h-1.5 rounded-full ${live ? 'bg-amber' : 'bg-mist/50'}`} />
+          {live ? 'ON FREQUENCY' : connection === 'closed' ? 'NO SUCH EVENT' : 'ACQUIRING'}
+        </span>
+      </div>
+    </div>
+  )
+}

@@ -9,3 +9,4 @@ __pycache__/
 .DS_Store
 backend/scripts/fixtures/*.ics
 .pytest_cache/
+.impeccable/review/

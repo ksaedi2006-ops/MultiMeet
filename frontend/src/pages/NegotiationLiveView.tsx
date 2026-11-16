@@ -1,232 +1,103 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  getMeetingState,
-  listEventMembers,
-  type AgentResponseSummary,
-  type Member,
-  type MeetingDecision,
-} from '../api/client'
-import { useNegotiationSocket } from '../api/useNegotiationSocket'
-import StepHeader from '../components/StepHeader'
+import { Link, useParams } from 'react-router-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import { currentUserId, errorMessage, getEvent, type EventInfo } from '../api/client'
+import { useEventLog } from '../api/useEventLog'
 import Stamp from '../components/Stamp'
-
-function initials(name: string) {
-  const parts = name.trim().split(/\s+/)
-  const chars = parts.length > 1 ? parts[0][0] + parts[1][0] : name.slice(0, 2)
-  return chars.toUpperCase()
-}
-
-function timeNow() {
-  return new Date().toTimeString().slice(0, 8)
-}
+import DecisionBrief from '../tower/DecisionBrief'
+import FairnessMeter from '../tower/FairnessMeter'
+import HoldingPanel from '../tower/HoldingPanel'
+import RadarScope from '../tower/RadarScope'
+import RadioTicker from '../tower/RadioTicker'
+import StatusBar from '../tower/StatusBar'
+import StripBoard from '../tower/StripBoard'
+import TowerLog from '../tower/TowerLog'
+import { usePlayback } from '../tower/usePlayback'
 
 export default function NegotiationLiveView() {
-  const { eventId = null } = useParams<{ eventId: string }>()
-  const { events, connected } = useNegotiationSocket(eventId)
-  const [members, setMembers] = useState<Member[]>([])
-  const [pastResponses, setPastResponses] = useState<AgentResponseSummary[]>([])
-  const [decision, setDecision] = useState<MeetingDecision | null>(null)
-  const [loaded, setLoaded] = useState(false)
-  const [stamps, setStamps] = useState<string[]>([])
+  const { eventId = '' } = useParams<{ eventId: string }>()
+  const viewerId = currentUserId()
+  const [event, setEvent] = useState<EventInfo | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const { events, state } = useEventLog(eventId, viewerId)
+  const playback = usePlayback(events)
+  const { model } = playback
+  const [highlight, setHighlight] = useState<string | null>(null)
+  const [landed, setLanded] = useState(false)
 
   useEffect(() => {
-    if (!eventId) return
-    Promise.all([listEventMembers(eventId), getMeetingState(eventId)]).then(([memberList, state]) => {
-      setMembers(memberList)
-      setPastResponses(state.responses)
-      if (state.decision) setDecision(state.decision)
-      setLoaded(true)
-    })
+    getEvent(eventId).then(setEvent, (err) => setLoadError(errorMessage(err, "Couldn't load this event.")))
   }, [eventId])
 
+  // Replaying or scrubbing back before the decision un-lands the result.
   useEffect(() => {
-    setMembers((prev) => {
-      let next = prev
-      for (const e of events) {
-        if (e.type !== 'member_ready') continue
-        const idx = next.findIndex((m) => m.user_id === e.user_id)
-        if (idx >= 0 && !next[idx].ready) {
-          next = next.map((m, i) => (i === idx ? { ...m, ready: true } : m))
-        }
-      }
-      return next
-    })
-    const decisionEvent = [...events].reverse().find((e) => e.type === 'mediator_decision')
-    if (decisionEvent && decisionEvent.type === 'mediator_decision') {
-      setDecision(decisionEvent.decision as unknown as MeetingDecision)
-    }
-  }, [events])
+    if (!model.decision) setLanded(false)
+  }, [model.decision])
 
-  useEffect(() => {
-    setStamps((prev) =>
-      prev.length < events.length ? [...prev, ...Array(events.length - prev.length).fill(timeNow())] : prev,
+  if (loadError || state === 'closed') {
+    return (
+      <div className="max-w-xl mx-auto px-5 py-16">
+        <p className="font-display text-3xl font-bold text-strip">This event doesn't exist</p>
+        <p className="mt-2 text-strip/75">{loadError ?? 'The link may be mistyped, or the event was removed.'}</p>
+        <Link to="/" className="inline-block mt-6 font-mono text-sm text-amber hover:underline underline-offset-4">
+          Schedule something new
+        </Link>
+      </div>
     )
-  }, [events.length])
-
-  function nameFor(userId: string) {
-    return members.find((m) => m.user_id === userId)?.name || userId.slice(0, 8)
   }
 
-  const liveAgentEvents = events.filter((e) => e.type === 'agent_response')
-  const negotiationStarted =
-    events.some((e) => e.type === 'negotiation_started') || pastResponses.length > 0 || decision !== null
-  const readyCount = members.filter((m) => m.ready).length
+  const decided = model.decision && landed
+  const stampLabel = model.decision?.status === 'converged' ? 'CLEARED' : 'HOLD'
+  const stampDetail = model.decision?.slot?.label.toUpperCase()
 
   return (
-    <div>
-      <StepHeader step={4} />
-      <div className="max-w-2xl mx-auto px-5 sm:px-8 py-10">
-        <p className="font-mono text-[11px] tracking-[0.25em] text-clearance mb-2">APPROACH</p>
-        <div className="flex items-baseline justify-between mb-8">
-          <h1 className="font-display font-bold text-3xl sm:text-4xl tracking-tight">Negotiation</h1>
-          <span className="flex items-center gap-2 font-mono text-xs text-mist">
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${connected ? 'bg-amber animate-pulse' : 'bg-mist'}`}
-            />
-            {connected ? 'ON FREQUENCY' : 'ACQUIRING…'}
-          </span>
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-8 pb-16">
+      <StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state} />
+
+      <div className="grid gap-6 lg:gap-8 pt-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(360px,1fr)]">
+        <div className="flex flex-col gap-3 min-w-0">
+          <div className="relative w-full aspect-square max-h-[calc(100svh-13rem)] mx-auto">
+            <RadarScope model={model} highlight={highlight} onHover={setHighlight} onLanded={() => setLanded(true)} />
+            <AnimatePresence>
+              {decided && (
+                <motion.div
+                  key="stamp"
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  {/* Plain darkening of the glass so the ink reads; ink itself doesn't glow. */}
+                  <div className="absolute inset-[8%] rounded-full bg-[radial-gradient(circle,rgba(6,12,18,0.72)_0%,rgba(6,12,18,0.5)_45%,transparent_70%)]" />
+                  <div className="relative">
+                    <Stamp label={stampLabel} detail={stampDetail} size="lg" />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <RadioTicker model={model} />
         </div>
 
-        {!loaded && <p className="font-mono text-sm text-mist">Loading strip board…</p>}
+        <div className="flex flex-col gap-4 min-w-0">
+          {model.phase === 'holding' && event ? (
+            <HoldingPanel event={event} model={model} viewerId={viewerId} />
+          ) : decided ? (
+            <DecisionBrief eventId={eventId} title={event?.title ?? 'Meeting'} model={model} viewerId={viewerId} />
+          ) : model.phase === 'failed' ? (
+            <section role="alert" className="border border-clearance/60 rounded-[2px] px-4 py-4">
+              <p className="font-display text-2xl font-bold text-strip">The negotiation stopped</p>
+              <p className="mt-1 text-sm text-strip/80">{model.error} Nothing was scheduled.</p>
+            </section>
+          ) : (
+            <FairnessMeter model={model} />
+          )}
+          <StripBoard model={model} viewerId={viewerId} highlight={highlight} onHover={setHighlight} />
+        </div>
+      </div>
 
-        {loaded && !negotiationStarted && (
-          <div className="border border-board-line rounded-sm p-6 mb-8">
-            <p className="font-mono text-xs tracking-widest text-mist mb-4">
-              HOLDING PATTERN · READY {readyCount}/{members.length}
-            </p>
-            <div className="flex flex-col gap-3">
-              {members.map((m) => (
-                <div key={m.user_id} className="flex items-center gap-3">
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${m.ready ? 'bg-amber' : 'bg-mist/30'}`}
-                  />
-                  <span className="font-mono text-sm">{m.name || m.user_id.slice(0, 8)}</span>
-                  <span className="font-mono text-[10px] text-mist ml-auto">
-                    {m.ready ? 'CHECKED IN' : 'IN BRIEFING'}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-strip/50 mt-5 leading-relaxed">
-              Negotiation begins the moment the last agent checks in — nobody's decision gets made
-              before everyone's had a say.
-            </p>
-          </div>
-        )}
-
-        {negotiationStarted && (
-          <>
-            <div className="flex flex-wrap gap-3 mb-6">
-              <AnimatePresence>
-                {(liveAgentEvents.length > 0
-                  ? liveAgentEvents.map((e) => (e.type === 'agent_response' ? e.user_name : ''))
-                  : pastResponses.map((r) => r.user_name)
-                ).map((name, i) => (
-                  <motion.div
-                    key={`${name}-${i}`}
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-                    className="flex items-center gap-2 pr-3 rounded-full border border-amber/40 bg-board-raised"
-                  >
-                    <span className="w-7 h-7 rounded-full bg-amber/20 border border-amber text-amber flex items-center justify-center font-mono text-[10px] font-semibold">
-                      {name ? initials(name) : ''}
-                    </span>
-                    <span className="font-mono text-xs">{name}</span>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            <div className="border border-board-line rounded-sm overflow-hidden mb-8">
-              <div className="bg-board-raised px-4 py-2 border-b border-board-line font-mono text-[10px] tracking-[0.2em] text-mist">
-                TOWER LOG
-              </div>
-              <div className="max-h-64 overflow-y-auto bg-strip text-strip-ink px-4 py-3 font-mono text-xs">
-                {events.length > 0
-                  ? events
-                      .filter((e) => e.type !== 'member_ready')
-                      .map((e, i) => (
-                        <div key={i} className={`py-1.5 flex gap-3 ${i > 0 ? 'border-t border-strip-ink/10' : ''}`}>
-                          <span className="text-strip-ink/40 shrink-0">{stamps[i] ?? ''}</span>
-                          <span>
-                            {e.type === 'negotiation_started' && (
-                              <>
-                                Negotiation opened · {e.participants} agent{e.participants === 1 ? '' : 's'} ·{' '}
-                                {e.slots} candidate slots
-                              </>
-                            )}
-                            {e.type === 'agent_response' && (
-                              <>
-                                <span className="font-semibold">{e.user_name}'s agent</span> — top slot{' '}
-                                {e.top_slot?.datetime ? new Date(e.top_slot.datetime).toLocaleString() : '—'}{' '}
-                                ({e.top_slot?.satisfaction ?? 0}% satisfaction) — {e.notes}
-                              </>
-                            )}
-                            {e.type === 'mediator_decision' && (
-                              <span className="text-clearance font-semibold">Mediator reached a decision.</span>
-                            )}
-                          </span>
-                        </div>
-                      ))
-                  : pastResponses.map((r, i) => (
-                      <div key={i} className={`py-1.5 flex gap-3 ${i > 0 ? 'border-t border-strip-ink/10' : ''}`}>
-                        <span className="text-strip-ink/40 shrink-0">—</span>
-                        <span>
-                          <span className="font-semibold">{r.user_name}'s agent</span> — top slot{' '}
-                          {r.top_slot?.datetime ? new Date(r.top_slot.datetime).toLocaleString() : '—'} (
-                          {r.top_slot?.satisfaction ?? 0}% satisfaction) — {r.notes}
-                        </span>
-                      </div>
-                    ))}
-              </div>
-            </div>
-          </>
-        )}
-
-        {decision && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="border-2 border-clearance rounded-sm p-6 sm:p-7 relative"
-          >
-            <div className="flex items-start gap-4">
-              <Stamp label={decision.chosen_datetime ? 'CLEARED' : 'HOLD'} />
-              <div className="min-w-0">
-                <p className="font-mono text-[11px] tracking-[0.25em] text-clearance mb-1">
-                  {decision.chosen_datetime ? 'CLEARANCE GRANTED' : 'HOLD FOR INSTRUCTIONS'}
-                </p>
-                <h2 className="font-display font-bold text-xl sm:text-2xl mb-2 truncate tracking-tight">
-                  {decision.chosen_datetime
-                    ? new Date(decision.chosen_datetime).toLocaleString(undefined, {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      })
-                    : 'No slot satisfied everyone — flagged for humans'}
-                </h2>
-                <p className="text-sm text-strip/70 mb-4 leading-relaxed">{decision.explanation}</p>
-                {Object.keys(decision.satisfaction_breakdown).length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(decision.satisfaction_breakdown).map(([uid, score]) => (
-                      <span
-                        key={uid}
-                        className="font-mono text-[10px] tracking-wide rounded-full border border-amber/40 bg-amber/10 text-amber px-3 py-1"
-                      >
-                        {nameFor(uid)} · {score}%
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
+      <div className="mt-8 h-[22rem] flex">
+        <TowerLog model={model} viewerId={viewerId} />
       </div>
     </div>
   )

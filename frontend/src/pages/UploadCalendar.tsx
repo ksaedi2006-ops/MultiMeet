@@ -20,9 +20,9 @@ export default function UploadCalendar() {
     try {
       const text = await file.text()
       const userId = await getOrCreateUserId()
-      const result = await uploadCalendar(userId, text)
+      const result = await uploadCalendar(userId, text, file.name, eventId)
       setFileName(file.name)
-      setParsedCount(result.events_parsed)
+      setParsedCount(result.events.length)
     } catch {
       setError('Could not read that file. Make sure it is a valid .ics export.')
     } finally {
