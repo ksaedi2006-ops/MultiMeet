@@ -562,6 +562,9 @@ def main() -> None:
         res["honest"] = {int(k): v for k, v in res["honest"].items()}
         res["instances"] = {int(k): v for k, v in res["instances"].items()}
         res["paired"] = {int(k): v for k, v in res["paired"].items()}
+        for v in res.get("amendment2", {}).get("variants", {}).values():
+            for key in ("ratio_by_n", "min_by_n", "pareto_by_n"):
+                v[key] = {int(k): x for k, x in v[key].items()}
         made = charts(res)
         write_results_md(res, res["thresholds"], made, res["elapsed_s"], res["llm"])
         print("charts and RESULTS.md redrawn")

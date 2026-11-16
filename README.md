@@ -90,6 +90,9 @@ What held up, and what didn't:
 - **Quality.** The new rule reaches 95–98% of the oracle's welfare and beats When2Meet-style approval at every group size. With honest agents it does **not** beat the old max-min rule: it is worse on the worst-off person at every size. A plain utilitarian sum scored higher still.
 - **Robustness.** This is the gain. Exaggerating preferences backfires under the new rule: liars lose 0.14 on average, and 5% gain anything. Under the old rule they gain 0.16, and 46% gain. A colluding pair also loses instead of gaining 0.23. Against a liar who computes the exact best lie, the old rule gives up 0.149 on average and the new rule 0.085.
 - **Not solved.** Declaring a soft dislike as a hard constraint pays about the same under every rule, roughly +0.1. The report's proposed fix, budgeted hard constraints, is not built yet. The mediator rounds add no measurable welfare in this agent model; their value here is a visible, explained process.
+- **Tried after the first results ([Amendment 2](docs/eval/preregistration.md), with its decision rule fixed before running).**
+  - Keeping intensity under an L2 budget lifts honest quality to 0.988 of the oracle, above the old rule. But lying starts to pay again, especially for colluding pairs, so the rank-based default stays.
+  - A 2-token budget on declared hard constraints did not reduce the fake-constraint attack, because two well-chosen rules already remove most of the week.
 - **Not tested.** LLM baselines and LLM attackers (persuasion, prompt injection) need an API key. The code is in `backend/eval/llm.py`.
 
 ### What we don't claim

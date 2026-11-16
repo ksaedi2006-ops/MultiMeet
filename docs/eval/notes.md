@@ -97,3 +97,19 @@ reported.
 14. **Instances.** Median feasible-set sizes were 24, 16 and 10 at n = 3, 5 and 8, after
     the preregistered Amendment 1 (calendars held at 40% hard). No instances were
     dropped.
+
+## Reading Amendment 2
+
+Written after the run. The decision rule was fixed beforehand and is applied as written.
+
+1. **The default stays Ours (Nash over Borda).** No variant met all three conditions of the preregistered rule.
+2. **Capping intensity instead of discarding it buys honest quality and costs robustness.**
+   - **Quality.** Nash over an L2 budget or over range normalization reached 0.988 of the oracle, pooled, against 0.961 for Ours. That is above the old max-min rule at every n. It also roughly matched max-min on the worst-off person (+0.612, +0.358 and +0.090, against B3's +0.616, +0.367 and +0.087).
+   - **Robustness.** Lying starts to pay again: +0.015 for a single inflater and +0.126 for a colluding pair, where Ours gives −0.138 and −0.095. This is the trade the research report describes. Ranks remove intensity claims entirely (Boutilier et al. 2015)<!-- verify: ○ in the research report -->. A budget only bounds them, and coordinated lying is exactly what an L2 budget "does not stop" in the report's normalization table.
+3. **A τ = 0.2 preference floor on Borda helps the worst-off a little at n = 8** (+0.071 vs +0.064). It costs welfare there (0.939 < 0.95), so it fails condition (c).
+4. **A 2-token budget does not bound the fake-hard-constraint attack, so it is not adopted.**
+   - Under Ours the budgeted attacker gained +0.116, against +0.099 for the original scripted attacker. The paired difference was +0.017 [+0.009, +0.024].
+   - The comparison is not like for like. The original attacker blindly strikes every slot it dislikes, while the budgeted one searches for its two most useful rules. Two well-chosen rules, such as "nothing before 2 PM" or "avoid Friday", already remove much of the week.
+   - The lesson is that counting declared rules is too coarse. A mitigation would have to price a rule by how much of the feasible set it removes, or require calendar evidence for hard blocks. Neither is tested here.
+5. **Q2 against B3 is unchanged for the default** (it is still Ours): 5 of 6 comparisons are missed.
+6. **What this suggests trying next.** This is not tested, and would need a new amendment. The L2 variants lose robustness mainly to collusion, which the single-liar results barely show. A rank-based floor (Borda) combined with L2 intensity *within* each person's top ranks might keep most of the honest gain, but that is a hypothesis, not a result.
