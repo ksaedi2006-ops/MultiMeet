@@ -11,6 +11,8 @@ export interface ScopeFeed {
   overlay?: ReactNode
   /** One plain line under the scope saying what the marks mean. */
   legend?: string
+  /** Replaces the step name in the top bar, e.g. "Booked" once the negotiation lands. */
+  stageName?: string
 }
 
 export interface Cab {
@@ -38,8 +40,8 @@ export function useFixture(which: 'bay' | 'panel'): HTMLElement | null {
 /** A stage hands the persistent scope what to show; the scope itself never remounts. */
 export function useScopeFeed(f: ScopeFeed) {
   const { feed } = useCab()
-  const { model, label, onLanded, overlay, legend } = f
+  const { model, label, onLanded, overlay, legend, stageName } = f
   useEffect(() => {
-    feed({ model, label, onLanded, overlay, legend })
-  }, [feed, model, label, onLanded, overlay, legend])
+    feed({ model, label, onLanded, overlay, legend, stageName })
+  }, [feed, model, label, onLanded, overlay, legend, stageName])
 }

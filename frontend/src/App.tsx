@@ -8,8 +8,8 @@ import PlanStage from './cab/PlanStage'
 import InviteStage from './cab/InviteStage'
 import CalendarStage from './cab/CalendarStage'
 import PreferencesStage from './cab/PreferencesStage'
+import NegotiateStage from './cab/NegotiateStage'
 import JoinEvent from './pages/JoinEvent'
-import NegotiationLiveView from './pages/NegotiationLiveView'
 
 function Page({ children }: { children: React.ReactNode }) {
   return (
@@ -47,10 +47,10 @@ export default function App() {
           <Route path="/event/:eventId/share" element={<InviteStage />} />
           <Route path="/event/:eventId/upload" element={<CalendarStage />} />
           <Route path="/event/:eventId/agent" element={<PreferencesStage />} />
+          <Route path="/event/:eventId/negotiate" element={<NegotiateStage />} />
         </Route>
         <Route element={<OldPages />}>
         <Route path="/join/:inviteCode" element={<Page><JoinEvent /></Page>} />
-        <Route path="/event/:eventId/negotiate" element={<Page><NegotiationLiveView /></Page>} />
         </Route>
       </Routes>
     </MotionConfig>

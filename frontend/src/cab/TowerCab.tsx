@@ -59,7 +59,7 @@ export default function TowerCab() {
   return (
     <CabContext.Provider value={cab}>
       <div className="cab-floor min-h-svh lg:h-svh lg:overflow-hidden flex flex-col">
-        <CabBar stage={stage} />
+        <CabBar stage={scope.stageName ? { ...stage, name: scope.stageName } : stage} />
         <div className="relative flex-1 min-h-0 flex flex-col lg:block">
           <div ref={layer} className="relative h-[max(52svh,min(100vw,88svh))] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
             <RadarScope model={scope.model} label={scope.label} frame={frame}
@@ -78,7 +78,7 @@ export default function TowerCab() {
             )}
           </div>
 
-          <aside ref={setBay} aria-label={stage.id === 'plan' ? 'New meeting form' : stage.id === 'invite' ? 'People' : stage.id === 'calendar' ? 'Your week' : stage.id === 'preferences' ? 'Your card' : 'Get started'}
+          <aside ref={setBay} aria-label={stage.id === 'plan' ? 'New meeting form' : stage.id === 'invite' ? 'People' : stage.id === 'calendar' ? 'Your week' : stage.id === 'preferences' ? 'Your card' : stage.id === 'negotiate' ? 'Everyone' : 'Get started'}
             style={{ ['--bay-w' as string]: `${widths.bay}px` }}
             className="console relative order-2 lg:order-none lg:absolute lg:left-0 lg:top-0 lg:bottom-0 lg:w-[var(--bay-w)] border-t lg:border-t-0 lg:border-r border-board-line transition-[width] duration-700 ease-out-expo lg:overflow-y-auto lg:overflow-x-hidden" />
 

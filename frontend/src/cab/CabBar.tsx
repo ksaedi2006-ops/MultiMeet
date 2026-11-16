@@ -27,7 +27,7 @@ export default function CabBar({ stage }: { stage: StageSpec }) {
       </Link>
       <div className="relative flex-1 min-w-0 flex items-center px-4 overflow-hidden">
         <AnimatePresence mode="popLayout" initial={false}>
-          <motion.span key={stage.id} className="font-sans text-[14px] tracking-normal text-strip whitespace-nowrap truncate"
+          <motion.span key={stage.name} className="font-sans text-[14px] tracking-normal text-strip whitespace-nowrap truncate"
             initial={{ y: 14, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: -14, opacity: 0 }}
             transition={{ duration: 0.45, ease: EASE }}>
             {stage.name}
