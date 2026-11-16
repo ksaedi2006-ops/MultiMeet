@@ -129,6 +129,22 @@ def evaluate(args: tuple[int, int]) -> dict:
                 gm_a = math.exp(met["nw"] / n)
                 row["attacks"][cond][mech] = {"gain": gain, "harm": harm, "psb": gm_h / gm_a,
                                               "pareto": met["pareto"], "rounds": res.rounds}
+    # Amendment 2: fake hard constraints limited to 2 declared rules (hard tokens).
+    from eval.mechanisms import BUDGETED, budget_attack
+    row["attacks"]["fakehard-2tok"] = {}
+    for mech in BUDGETED:
+        res, chosen = budget_attack(inst, mech)
+        met = outcome(inst, res.pick, nw_orc)
+        row["violations"] += int(met["violation"])
+        base = honest_u[mech]
+        a0 = inst.uids[0]
+        rest = [u for u in inst.uids if u != a0]
+        row["attacks"]["fakehard-2tok"][mech] = {
+            "gain": met["u"][a0] - base[a0],
+            "harm": sum(met["u"][u] - base[u] for u in rest) / len(rest),
+            "psb": math.exp(row["honest"][mech]["nw"] / n) / math.exp(met["nw"] / n),
+            "pareto": met["pareto"], "rounds": res.rounds, "tokens": len(chosen),
+        }
     row["oracle_nw"] = nw_orc
     row["translation"] = _translation(inst)
     # Would the old product have escalated (min score below 40) instead of scheduling?
@@ -170,7 +186,7 @@ def paired_ci(a: list[float], b: list[float]) -> tuple[float, float, float]:
 
 
 def summarise(rows: list[dict], small: list[dict]) -> dict:
-    from eval.mechanisms import ATTACKED, MECHANISMS
+    from eval.mechanisms import MECHANISMS
 
     kept = [r for r in rows if not r.get("dropped")]
     res: dict = {"instances": {}, "honest": {}, "paired": {}, "attacks": {}, "best_response": {}, "checks": {}}
@@ -198,9 +214,9 @@ def summarise(rows: list[dict], small: list[dict]) -> dict:
                 a = [r["honest"]["Ours"][k] for r in rs]
                 b = [r["honest"][other][k] for r in rs]
                 res["paired"][n][f"Ours-{other}:{k}"] = paired_ci(a, b)
-    for cond in ("inflater", "victim", "fakehard", "stubborn", "pair"):
+    for cond in ("inflater", "victim", "fakehard", "stubborn", "pair", "fakehard-2tok"):
         res["attacks"][cond] = {}
-        for mech in ATTACKED:
+        for mech in kept[0]["attacks"].get(cond, {}):
             g = [r["attacks"][cond][mech]["gain"] for r in kept]
             h = [r["attacks"][cond][mech]["harm"] for r in kept]
             p = [r["attacks"][cond][mech]["psb"] for r in kept]
@@ -231,7 +247,83 @@ def summarise(rows: list[dict], small: list[dict]) -> dict:
         "translation_by_kind": {k: {"n": len(v), "match": sum(t["match"] for t in v) / len(v)} for k, v in by_kind.items()},
         "b3_would_escalate": sum(r["b3_would_escalate"] for r in kept) / len(kept),
     }
+    res["amendment2"] = amendment2(kept)
     return res
+
+
+# ---------- amendment 2 (docs/eval/preregistration.md) ----------
+
+def amendment2(kept: list[dict]) -> dict:
+    from eval.mechanisms import VARIANTS
+
+    out: dict = {"variants": {}, "winner": None}
+    for v in VARIANTS:
+        ratios = {n: [r["honest"][v]["ratio"] for r in kept if r["n"] == n] for n in NS}
+        pooled = [x for xs in ratios.values() for x in xs]
+        gains = {c: boot_ci([r["attacks"][c][v]["gain"] for r in kept]) for c in ("inflater", "victim", "pair")}
+        pareto = {n: sum(r["honest"][v]["pareto"] for r in kept if r["n"] == n) / len(ratios[n]) for n in NS}
+        ok_a = all(g[0] <= 0 for g in gains.values())
+        ok_b = all(p >= 0.98 for p in pareto.values())
+        ok_c = all(sum(xs) / len(xs) >= 0.95 for xs in ratios.values())
+        out["variants"][v] = {
+            "ratio_pooled": boot_ci(pooled), "ratio_by_n": {n: sum(xs) / len(xs) for n, xs in ratios.items()},
+            "min_by_n": {n: sum(r["honest"][v]["min"] for r in kept if r["n"] == n) / len(ratios[n]) for n in NS},
+            "gains": gains, "pareto_by_n": pareto, "eligible": {"a": ok_a, "b": ok_b, "c": ok_c},
+        }
+    eligible = [v for v, d in out["variants"].items() if all(d["eligible"].values())]
+    out["winner"] = max(eligible, key=lambda v: out["variants"][v]["ratio_pooled"][0]) if eligible else "Ours"
+    out["winner_was_eligible"] = bool(eligible)
+    w = out["winner"]
+    # Hard tokens: budgeted vs unbudgeted fake-hard gain under the winner, paired.
+    a = [r["attacks"]["fakehard-2tok"][w]["gain"] for r in kept]
+    b = [r["attacks"]["fakehard"][w]["gain"] for r in kept]
+    out["tokens"] = {"budgeted": boot_ci(a), "unbudgeted": boot_ci(b), "diff": paired_ci(a, b)}
+    out["tokens"]["adopt"] = out["tokens"]["diff"][2] < 0
+    # Q2 for the winner against B3, as preregistered.
+    out["q2"] = {}
+    for n in NS:
+        rs = [r for r in kept if r["n"] == n]
+        for k in ("nw", "min"):
+            out["q2"][f"{n}:{k}"] = paired_ci([r["honest"][w][k] for r in rs], [r["honest"]["B3"][k] for r in rs])
+    return out
+
+
+def amendment2_md(a2: dict, res: dict) -> list[str]:
+    lines = ["", "## Amendment 2: capped intensity, a fairness floor and hard tokens", "",
+             "Variants and the decision rule were fixed in [Amendment 2](preregistration.md) before this run.", "",
+             "| variant | ratio to oracle (pooled) | by n (3/5/8) | min gain by n | lying gain: inflater / victim / pair | Pareto ≥98% | eligible |",
+             "|---|---|---|---|---|---|---|"]
+    for v, d in a2["variants"].items():
+        r = d["ratio_pooled"]
+        g = d["gains"]
+        e = d["eligible"]
+        lines.append(
+            f"| {v} | {r[0]:.3f} [{r[1]:.3f}, {r[2]:.3f}] | " + " / ".join(f"{d['ratio_by_n'][n]:.3f}" for n in NS)
+            + " | " + " / ".join(f"{d['min_by_n'][n]:+.3f}" for n in NS)
+            + f" | {g['inflater'][0]:+.3f} / {g['victim'][0]:+.3f} / {g['pair'][0]:+.3f} | "
+            + ("yes" if e["b"] else "no") + " | " + ("**yes**" if all(e.values()) else
+                                                     "no (" + ", ".join(k for k, ok in e.items() if not ok) + ")") + " |")
+    w = a2["winner"]
+    lines += ["", f"**Decision:** the new default is **{w}**" + ("" if a2["winner_was_eligible"] else
+              " (no variant met (a)–(c), so the default stays Ours)") + ".", ""]
+    t = a2["tokens"]
+    lines += [f"**Hard tokens (under {w}):** budgeted fake-hard gain {t['budgeted'][0]:+.3f} "
+              f"[{t['budgeted'][1]:+.3f}, {t['budgeted'][2]:+.3f}] vs unbudgeted {t['unbudgeted'][0]:+.3f}; "
+              f"paired difference {t['diff'][0]:+.3f} [{t['diff'][1]:+.3f}, {t['diff'][2]:+.3f}] → "
+              + ("**adopt**." if t["adopt"] else "**do not adopt** (the CI does not lie below 0)."), ""]
+    lines += [f"**Q2 for {w} against B3** (paired difference, 95% CI; pass = entirely above 0):", "",
+              "| n | Nash welfare | min utility |", "|---|---|---|"]
+    for n in NS:
+        cells = []
+        for k in ("nw", "min"):
+            m, lo, hi = a2["q2"][f"{n}:{k}"]
+            cells.append(f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}] {'pass' if lo > 0 else 'MISS'}")
+        lines.append(f"| {n} | {cells[0]} | {cells[1]} |")
+    fh = res["attacks"].get("fakehard-2tok", {})
+    if fh:
+        lines += ["", "Budgeted fake-hard gain by mechanism (mean, unbudgeted in brackets): " + ", ".join(
+            f"{m} {v['gain'][0]:+.3f} ({res['attacks']['fakehard'][m]['gain'][0]:+.3f})" for m, v in fh.items()) + "."]
+    return lines
 
 
 # ---------- thresholds ----------
@@ -334,7 +426,7 @@ def charts(res: dict) -> list[str]:
     mechs = ["Ours", "B1", "B3", "B4", "B5", "B0"]
 
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
-    x = _grouped(axes[0], NS, mechs, lambda n, m: res["honest"][n][m]["ratio"][0],
+    _grouped(axes[0], NS, mechs, lambda n, m: res["honest"][n][m]["ratio"][0],
                  lambda n, m: res["honest"][n][m]["ratio"][1:])
     axes[0].set_xticklabels([f"{n} people" for n in NS])
     axes[0].axhline(0.95, color=INK, linewidth=1, linestyle=(0, (3, 3)))
@@ -448,6 +540,8 @@ def write_results_md(res: dict, rows: list[dict], made: list[str], elapsed: floa
                   f"{k} {100 * v['match']:.0f}% (n={v['n']})" for k, v in sorted(c["translation_by_kind"].items())) + ".",
               "", "## Charts", ""]
     lines += [f"![{m}]({m})" for m in made]
+    if res.get("amendment2"):
+        lines += amendment2_md(res["amendment2"], res)
     notes = DOCS / "notes.md"
     if notes.exists():
         lines += ["", notes.read_text().strip()]

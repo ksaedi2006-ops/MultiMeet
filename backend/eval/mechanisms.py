@@ -23,7 +23,12 @@ from app.scheduling.utility import Criterion, UtilityModel
 from eval.instances import Instance
 
 CONDITIONS = ("honest", "inflater", "victim", "fakehard", "stubborn", "pair")
-MECHANISMS = ("B0", "B1", "B3", "B4", "B5", "Ours", "Ours-d", "Ours-oneshot", "Ours-nonorm", "Ours-maxmin")
+MECHANISMS = ("B0", "B1", "B3", "B4", "B5", "Ours", "Ours-d", "Ours-oneshot", "Ours-nonorm", "Ours-maxmin",
+              # Amendment 2 (docs/eval/preregistration.md)
+              "Ours-L2", "Ours-range", "Ours-floor", "Ours-L2-floor")
+VARIANTS = ("Ours", "Ours-L2", "Ours-range", "Ours-floor", "Ours-L2-floor")
+BUDGETED = ("B1", "B3", "B4", "B5") + VARIANTS
+FLOOR = 0.2
 ATTACKED = tuple(m for m in MECHANISMS if m != "B0")
 _TOL = 1e-9
 
@@ -188,8 +193,8 @@ def run_b3(reports: list[Report], slots: list[str], *, rounds: bool = True) -> R
 
 
 def run_ours(reports: list[Report], slots: list[str], *, scheme="borda", selector="nash",
-             d_mode="default", mediator=True) -> Result:
-    solver = Solver(slots, scheme=scheme, selector=selector, d_mode=d_mode)
+             d_mode="default", mediator=True, tau=None) -> Result:
+    solver = Solver(slots, scheme=scheme, selector=selector, d_mode=d_mode, tau=tau, floor_mode="prefer")
     states = [AgentState(r.uid, r.model, r.d_raw) for r in reports]
     if not mediator:
         return Result(solver.solve(states).pick, 0)
@@ -197,9 +202,20 @@ def run_ours(reports: list[Report], slots: list[str], *, scheme="borda", selecto
     return Result(out.final.pick, len(out.rounds), out)
 
 
-def run(mech: str, inst: Instance, reports: list[Report], slots: list[str]) -> Result:
+_OURS = {
+    "Ours": {}, "Ours-L2": {"scheme": "l2"}, "Ours-range": {"scheme": "range"},
+    "Ours-floor": {"tau": FLOOR}, "Ours-L2-floor": {"scheme": "l2", "tau": FLOOR},
+}
+
+
+def run(mech: str, inst: Instance, reports: list[Report], slots: list[str], *, oneshot: bool = False) -> Result:
+    """oneshot: the mechanism without its mediator rounds (a fast proxy, used by attackers' searches)."""
     if not slots:
         return Result(None)
+    if mech in _OURS:
+        return run_ours(reports, slots, mediator=not oneshot, **_OURS[mech])
+    if mech == "B3" and oneshot:
+        return run_b3(reports, slots, rounds=False)
     raw = {r.uid: r.model.raw(slots) for r in reports}
     if mech == "B0":
         return Result(random_select(slots, random.Random(f"b0:{inst.n}:{inst.idx}")).slot_id)
@@ -213,8 +229,6 @@ def run(mech: str, inst: Instance, reports: list[Report], slots: list[str]) -> R
         return Result(utilitarian_select({u: normalize(row, "range") for u, row in raw.items()}, slots).slot_id)
     if mech == "B5":
         return Result(borda_select(raw, slots).slot_id)
-    if mech == "Ours":
-        return run_ours(reports, slots)
     if mech == "Ours-d":
         return run_ours(reports, slots, d_mode="elicited")
     if mech == "Ours-oneshot":
@@ -224,6 +238,58 @@ def run(mech: str, inst: Instance, reports: list[Report], slots: list[str]) -> R
     if mech == "Ours-maxmin":
         return run_ours(reports, slots, selector="leximin")
     raise ValueError(mech)
+
+
+# ---------- Amendment 2: fake hard constraints under a 2-token budget ----------
+
+def _rule_blocks(inst: Instance) -> dict[str, set[str]]:
+    """Every hard rule a token can buy, in the attacker's time zone, and the slots it rules out."""
+    from zoneinfo import ZoneInfo
+
+    zone = ZoneInfo(inst.people[0].tz)
+    local = {s: (inst.slots[s].start.astimezone(zone), inst.slots[s].end.astimezone(zone)) for s in inst.feasible}
+    rules: dict[str, set[str]] = {}
+    for d in sorted({a.weekday() for a, _ in local.values()}):
+        rules[f"avoid:{d}"] = {s for s, (a, _) in local.items() if a.weekday() == d}
+    for h in range(9, 18):
+        rules[f"before:{h}"] = {s for s, (a, _) in local.items() if a.hour * 60 + a.minute < h * 60}
+    for h in range(10, 19):
+        rules[f"after:{h}"] = {s for s, (a, b) in local.items()
+                               if b.date() != a.date() or b.hour * 60 + b.minute > h * 60}
+    return {k: v for k, v in rules.items() if v}
+
+
+def budget_attack(inst: Instance, mech: str, tokens: int = 2) -> tuple[Result, list[str]]:
+    """The fake-hard attacker limited to `tokens` declared hard rules, chosen greedily to maximize
+    its true utility, scored with the mechanism's one-shot version, then played in full."""
+    reports = [honest_report(inst, i) for i in range(inst.n)]
+    a = inst.uids[0]
+    rules = _rule_blocks(inst)
+    chosen: list[str] = []
+    removed: set[str] = set()
+
+    def value(gone: set[str]) -> float:
+        slots = [s for s in inst.feasible if s not in gone]
+        if not slots:
+            return float("-inf")  # declaring every slot impossible: no meeting; never chosen
+        pick = run(mech, inst, reports, slots, oneshot=True).pick
+        return inst.u[a][pick] if pick else inst.d[a]
+
+    best = value(removed)
+    for _ in range(tokens):
+        cand = None
+        for name, block in rules.items():
+            if name in chosen:
+                continue
+            v = value(removed | block)
+            if v > best + 1e-12:
+                best, cand = v, name
+        if cand is None:
+            break
+        chosen.append(cand)
+        removed |= rules[cand]
+    slots = [s for s in inst.feasible if s not in removed]
+    return run(mech, inst, reports, slots), chosen
 
 
 def oracle(inst: Instance) -> str:

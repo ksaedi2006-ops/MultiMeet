@@ -83,6 +83,7 @@ class Solver:
         d_mode: DMode = "default",
         eps: float = EPS,
         tau: float | None = None,
+        floor_mode: Literal["strict", "prefer"] = "strict",
     ) -> None:
         self.slots = slots
         self.scheme = scheme
@@ -90,6 +91,9 @@ class Solver:
         self.d_mode = d_mode
         self.eps = eps
         self.tau = tau
+        # "strict": no slot above the floor means no meeting (an explicit outcome).
+        # "prefer": the floor picks among slots that meet it, else the plain Nash pick stands.
+        self.floor_mode = floor_mode
         self._cache: dict[tuple, tuple[dict[str, float], float]] = {}
 
     def _normalized(self, state: AgentState) -> tuple[dict[str, float], float]:
@@ -114,6 +118,8 @@ class Solver:
             sel = leximin_select(u, d, self.slots)
         else:
             sel = nash_select(u, d, self.slots, eps=self.eps, tau=self.tau, require_ir=self.d_mode == "elicited")
+            if sel.status == "floor_unmet" and self.floor_mode == "prefer":
+                sel = nash_select(u, d, self.slots, eps=self.eps, require_ir=self.d_mode == "elicited")
         return Draft(sel, u, d)
 
 
