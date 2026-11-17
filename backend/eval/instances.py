@@ -57,6 +57,7 @@ class Instance:
     u: dict[str, dict[str, float]]  # ground truth, range-normalized over `feasible`
     d: dict[str, float]
     redraws: int = 0
+    honest_rule_shares: list[float] = field(default_factory=list)  # Amendment 3
 
     @property
     def uids(self) -> list[str]:
@@ -130,6 +131,15 @@ def _draw(rng: random.Random, idx: int, n: int, density: float, multi_tz: bool,
     ]
     if len(feasible) < 2:
         return None
+    # Amendment 3: the share of the calendar-feasible week each honest declared hard rule
+    # removes on its own (calendar-backed blocks are free under pricing).
+    cal_ok = [s for s in slot_list if all(assess_slot(s, p.intervals, [], p.tz).status != HARD for p in people)]
+    shares = []
+    for p in people:
+        for rule in p.rules:
+            if rule.strength == "hard" and rule.kind in ("not_before", "not_after", "avoid_weekdays") and cal_ok:
+                gone = sum(1 for s in cal_ok if assess_slot(s, [], [rule], p.tz).status == HARD)
+                shares.append(gone / len(cal_ok))
     fslots = {sid: next(s for s in slot_list if s.id == sid) for sid in feasible}
     u: dict[str, dict[str, float]] = {}
     d: dict[str, float] = {}
@@ -142,7 +152,7 @@ def _draw(rng: random.Random, idx: int, n: int, density: float, multi_tz: bool,
                        if any(iv.kind == "soft" and iv.start < s.end and iv.end > s.start for iv in p.intervals)}
         u[p.uid] = normalize(true.raw(feasible), "range")
         d[p.uid] = p.d
-    return Instance(idx, n, density, multi_tz, fslots, feasible, people, u, d)
+    return Instance(idx, n, density, multi_tz, fslots, feasible, people, u, d, honest_rule_shares=shares)
 
 
 def make_instance(idx: int, n: int, *, seed: int = BASE_SEED) -> Instance | None:

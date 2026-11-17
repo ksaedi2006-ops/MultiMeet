@@ -22,8 +22,8 @@ import math
 from bisect import bisect_left, bisect_right
 from typing import Callable, Literal
 
-Scheme = Literal["borda", "range", "unit_sum", "l2", "none"]
-SCHEMES: tuple[Scheme, ...] = ("borda", "range", "unit_sum", "l2", "none")
+Scheme = Literal["borda", "range", "unit_sum", "l2", "none", "topk"]
+SCHEMES: tuple[Scheme, ...] = ("borda", "range", "unit_sum", "l2", "none", "topk")
 _ROUND = 9  # values closer than 1e-9 count as ties
 
 
@@ -59,6 +59,8 @@ def normalizer(raw: dict[str, float], scheme: Scheme = "borda") -> Callable[[flo
             return below / (m - 1)
 
         return borda
+    if scheme == "topk":
+        return _topk(values)
     rng = _range_map(values)
     scaled = [rng(v) for v in values]
     if scheme == "unit_sum":
@@ -74,6 +76,37 @@ def normalizer(raw: dict[str, float], scheme: Scheme = "borda") -> Callable[[flo
         k = math.sqrt((m / 3) / sq)  # budget = the L2 mass of a profile uniform on [0, 1]
         return lambda x: min(1.0, max(0.0, rng(x) * k))
     raise ValueError(f"unknown normalization {scheme!r}")
+
+
+def _topk(values: list[float]) -> Callable[[float], float]:
+    """Borda overall, but real intensity among the top K slots (docs/eval/preregistration.md,
+    Amendment 3). Rankings resist exaggeration; a person can still say how much more they
+    like their first choice than their third. A report of "everything else is equally
+    terrible" earns no intensity, because a huge tie never counts as a top set."""
+    m = len(values)
+    b = normalizer(dict(enumerate(values)), "borda")
+    k = max(3, math.ceil(m / 5))
+    if m <= k:
+        return b
+    by_rank = sorted(values, reverse=True)
+    kth = by_rank[k - 1]
+    top = [v for v in values if v >= kth]
+    if len(top) > 2 * k:
+        top = [v for v in values if v > kth]
+    rest = [v for v in values if v < min(top)] if top else values
+    if not top or not rest:
+        return b
+    lo, hi = min(top), max(top)
+    floor = max(b(v) for v in rest)
+
+    def f(x: float) -> float:
+        x = round(x, _ROUND)
+        if x >= lo:
+            r = 1.0 if hi - lo < 10 ** -_ROUND else min(1.0, (x - lo) / (hi - lo))
+            return floor + (1 - floor) * (0.1 + 0.9 * r)
+        return b(x)
+
+    return f
 
 
 def normalize(raw: dict[str, float], scheme: Scheme = "borda") -> dict[str, float]:

@@ -177,3 +177,13 @@ def test_lowering_a_weight_never_lowers_any_utility():
     after = model.with_weight("r0:avoid_weekdays", 0.3).raw(list(slots))
     assert all(after[s] >= before[s] for s in slots)
     assert any(after[s] > before[s] for s in slots)
+
+
+def test_topk_keeps_intensity_among_top_choices_but_not_for_shouting():
+    honest = {f"s{i}": v for i, v in enumerate([1.0, 0.98, 0.5, 0.45, 0.4, 0.3, 0.2, 0.1, 0.05, 0.0])}
+    out = normalize(honest, "topk")
+    borda = normalize(honest, "borda")
+    assert out["s0"] == 1.0 and out["s2"] < borda["s2"]  # the weak third choice is shown as weak
+    assert all(out[f"s{i}"] == borda[f"s{i}"] for i in range(3, 10))  # outside the top: plain ranks
+    shout = {f"s{i}": (1.0 if i == 0 else 0.0) for i in range(10)}
+    assert normalize(shout, "topk") == normalize(shout, "borda")  # a huge tie earns no intensity

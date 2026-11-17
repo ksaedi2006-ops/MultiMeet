@@ -25,8 +25,13 @@ from eval.instances import Instance
 CONDITIONS = ("honest", "inflater", "victim", "fakehard", "stubborn", "pair")
 MECHANISMS = ("B0", "B1", "B3", "B4", "B5", "Ours", "Ours-d", "Ours-oneshot", "Ours-nonorm", "Ours-maxmin",
               # Amendment 2 (docs/eval/preregistration.md)
-              "Ours-L2", "Ours-range", "Ours-floor", "Ours-L2-floor")
+              "Ours-L2", "Ours-range", "Ours-floor", "Ours-L2-floor",
+              # Amendment 3
+              "Ours-topk", "Ours-topk-median")
 VARIANTS = ("Ours", "Ours-L2", "Ours-range", "Ours-floor", "Ours-L2-floor")
+VARIANTS3 = ("Ours", "Ours-topk", "Ours-topk-median")  # Amendment 3
+PRICED = ("B3",) + VARIANTS3
+PRICE_SHARE = 0.25
 BUDGETED = ("B1", "B3", "B4", "B5") + VARIANTS
 FLOOR = 0.2
 ATTACKED = tuple(m for m in MECHANISMS if m != "B0")
@@ -205,7 +210,35 @@ def run_ours(reports: list[Report], slots: list[str], *, scheme="borda", selecto
 _OURS = {
     "Ours": {}, "Ours-L2": {"scheme": "l2"}, "Ours-range": {"scheme": "range"},
     "Ours-floor": {"tau": FLOOR}, "Ours-L2-floor": {"scheme": "l2", "tau": FLOOR},
+    "Ours-topk": {"scheme": "topk"},
 }
+
+
+def run_median(inst: Instance, reports: list[Report], slots: list[str], *, oneshot: bool) -> Result:
+    """Amendment 3: Ours-topk picks the day; within it, the slot nearest the median of each
+    agent's best reported start time (lower median, ties earliest). Strategy-proof only on
+    the time-of-day dimension, where preferences are single-peaked (Moulin 1980)."""
+    from zoneinfo import ZoneInfo
+
+    from eval.instances import MEETING_TZ
+
+    day_res = run_ours(reports, slots, mediator=not oneshot, scheme="topk")
+    if day_res.pick is None:
+        return day_res
+    zone = ZoneInfo(MEETING_TZ)
+    local = {s: inst.slots[s].start.astimezone(zone) for s in slots}
+    day = local[day_res.pick].date()
+    cands = [s for s in slots if local[s].date() == day]
+    minutes = {s: local[s].hour * 60 + local[s].minute for s in cands}
+    peaks = []
+    for r in reports:
+        raw = r.model.raw(cands)
+        best = max(cands, key=lambda s: (round(raw[s], 9), -minutes[s]))
+        peaks.append(minutes[best])
+    peaks.sort()
+    med = peaks[(len(peaks) - 1) // 2]
+    pick = min(cands, key=lambda s: (abs(minutes[s] - med), minutes[s]))
+    return Result(pick, day_res.rounds, day_res.outcome)
 
 
 def run(mech: str, inst: Instance, reports: list[Report], slots: list[str], *, oneshot: bool = False) -> Result:
@@ -214,6 +247,8 @@ def run(mech: str, inst: Instance, reports: list[Report], slots: list[str], *, o
         return Result(None)
     if mech in _OURS:
         return run_ours(reports, slots, mediator=not oneshot, **_OURS[mech])
+    if mech == "Ours-topk-median":
+        return run_median(inst, reports, slots, oneshot=oneshot)
     if mech == "B3" and oneshot:
         return run_b3(reports, slots, rounds=False)
     raw = {r.uid: r.model.raw(slots) for r in reports}
@@ -259,9 +294,11 @@ def _rule_blocks(inst: Instance) -> dict[str, set[str]]:
     return {k: v for k, v in rules.items() if v}
 
 
-def budget_attack(inst: Instance, mech: str, tokens: int = 2) -> tuple[Result, list[str]]:
-    """The fake-hard attacker limited to `tokens` declared hard rules, chosen greedily to maximize
-    its true utility, scored with the mechanism's one-shot version, then played in full."""
+def budget_attack(inst: Instance, mech: str, tokens: int = 2, max_share: float | None = None) -> tuple[Result, list[str]]:
+    """The fake-hard attacker limited to `tokens` declared hard rules (Amendment 2), or to rules
+    that together remove at most `max_share` of the feasible set (Amendment 3: priced claims),
+    chosen greedily to maximize its true utility, scored with the mechanism's one-shot version,
+    then played in full."""
     reports = [honest_report(inst, i) for i in range(inst.n)]
     a = inst.uids[0]
     rules = _rule_blocks(inst)
@@ -276,10 +313,13 @@ def budget_attack(inst: Instance, mech: str, tokens: int = 2) -> tuple[Result, l
         return inst.u[a][pick] if pick else inst.d[a]
 
     best = value(removed)
-    for _ in range(tokens):
+    limit = len(inst.feasible) * max_share if max_share is not None else None
+    for _ in range(tokens if max_share is None else len(rules)):
         cand = None
         for name, block in rules.items():
             if name in chosen:
+                continue
+            if limit is not None and len(removed | block) > limit:
                 continue
             v = value(removed | block)
             if v > best + 1e-12:

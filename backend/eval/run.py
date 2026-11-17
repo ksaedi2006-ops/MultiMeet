@@ -145,6 +145,22 @@ def evaluate(args: tuple[int, int]) -> dict:
             "psb": math.exp(row["honest"][mech]["nw"] / n) / math.exp(met["nw"] / n),
             "pareto": met["pareto"], "rounds": res.rounds, "tokens": len(chosen),
         }
+    # Amendment 3: priced hard claims (declared rules may remove at most 25% of the week).
+    from eval.mechanisms import PRICE_SHARE, PRICED
+    row["attacks"]["fakehard-priced"] = {}
+    for mech in PRICED:
+        res, chosen = budget_attack(inst, mech, max_share=PRICE_SHARE)
+        met = outcome(inst, res.pick, nw_orc)
+        row["violations"] += int(met["violation"])
+        a0 = inst.uids[0]
+        rest = [u for u in inst.uids if u != a0]
+        row["attacks"]["fakehard-priced"][mech] = {
+            "gain": met["u"][a0] - honest_u[mech][a0],
+            "harm": sum(met["u"][u] - honest_u[mech][u] for u in rest) / len(rest),
+            "psb": math.exp(row["honest"][mech]["nw"] / n) / math.exp(met["nw"] / n),
+            "pareto": met["pareto"], "rounds": res.rounds, "tokens": len(chosen),
+        }
+    row["honest_rule_shares"] = inst.honest_rule_shares
     row["oracle_nw"] = nw_orc
     row["translation"] = _translation(inst)
     # Would the old product have escalated (min score below 40) instead of scheduling?
@@ -214,7 +230,7 @@ def summarise(rows: list[dict], small: list[dict]) -> dict:
                 a = [r["honest"]["Ours"][k] for r in rs]
                 b = [r["honest"][other][k] for r in rs]
                 res["paired"][n][f"Ours-{other}:{k}"] = paired_ci(a, b)
-    for cond in ("inflater", "victim", "fakehard", "stubborn", "pair", "fakehard-2tok"):
+    for cond in ("inflater", "victim", "fakehard", "stubborn", "pair", "fakehard-2tok", "fakehard-priced"):
         res["attacks"][cond] = {}
         for mech in kept[0]["attacks"].get(cond, {}):
             g = [r["attacks"][cond][mech]["gain"] for r in kept]
@@ -248,6 +264,7 @@ def summarise(rows: list[dict], small: list[dict]) -> dict:
         "b3_would_escalate": sum(r["b3_would_escalate"] for r in kept) / len(kept),
     }
     res["amendment2"] = amendment2(kept)
+    res["amendment3"] = amendment3(kept)
     return res
 
 
@@ -286,6 +303,79 @@ def amendment2(kept: list[dict]) -> dict:
         for k in ("nw", "min"):
             out["q2"][f"{n}:{k}"] = paired_ci([r["honest"][w][k] for r in rs], [r["honest"]["B3"][k] for r in rs])
     return out
+
+
+def amendment3(kept: list[dict]) -> dict:
+    from eval.mechanisms import PRICE_SHARE, VARIANTS3
+
+    out: dict = {"variants": {}}
+    for v in VARIANTS3:
+        ratios = {n: [r["honest"][v]["ratio"] for r in kept if r["n"] == n] for n in NS}
+        pooled = [x for xs in ratios.values() for x in xs]
+        gains = {c: boot_ci([r["attacks"][c][v]["gain"] for r in kept]) for c in ("inflater", "victim", "pair", "fakehard-priced")}
+        pareto = {n: sum(r["honest"][v]["pareto"] for r in kept if r["n"] == n) / len(ratios[n]) for n in NS}
+        elig = {"a": all(gains[c][0] <= 0 for c in ("inflater", "victim", "pair")),
+                "b": all(p >= 0.98 for p in pareto.values()),
+                "c": all(sum(xs) / len(xs) >= 0.95 for xs in ratios.values())}
+        out["variants"][v] = {
+            "ratio_pooled": boot_ci(pooled), "ratio_by_n": {n: sum(xs) / len(xs) for n, xs in ratios.items()},
+            "min_by_n": {n: sum(r["honest"][v]["min"] for r in kept if r["n"] == n) / len(ratios[n]) for n in NS},
+            "gains": gains, "pareto_by_n": pareto, "eligible": elig,
+        }
+    eligible = [v for v in VARIANTS3 if all(out["variants"][v]["eligible"].values())]
+    w = max(eligible, key=lambda v: out["variants"][v]["ratio_pooled"][0]) if eligible else "Ours"
+    out["winner"], out["winner_was_eligible"] = w, bool(eligible)
+    a = [r["attacks"]["fakehard-priced"][w]["gain"] for r in kept]
+    b = [r["attacks"]["fakehard"][w]["gain"] for r in kept] if w in kept[0]["attacks"]["fakehard"] else None
+    shares = [s for r in kept for s in r.get("honest_rule_shares", [])]
+    over = sum(1 for s in shares if s > PRICE_SHARE) / len(shares) if shares else 0.0
+    out["pricing"] = {"priced": boot_ci(a), "unpriced": boot_ci(b) if b else None,
+                      "diff": paired_ci(a, b) if b else None, "honest_rules": len(shares), "honest_over_budget": over}
+    out["pricing"]["adopt"] = bool(b) and out["pricing"]["diff"][2] < 0 and over <= 0.05
+    out["q2"] = {}
+    for n in NS:
+        rs = [r for r in kept if r["n"] == n]
+        for k in ("nw", "min"):
+            out["q2"][f"{n}:{k}"] = paired_ci([r["honest"][w][k] for r in rs], [r["honest"]["B3"][k] for r in rs])
+    return out
+
+
+def amendment3_md(a3: dict, res: dict) -> list[str]:
+    lines = ["", "## Amendment 3: top-choice intensity, median time and priced hard claims", "",
+             "Variants and decision rules were fixed in [Amendment 3](preregistration.md) before this run.", "",
+             "| variant | ratio to oracle (pooled) | by n (3/5/8) | min gain by n | lying gain: inflater / victim / pair | priced fake-hard gain | Pareto ≥98% | eligible |",
+             "|---|---|---|---|---|---|---|---|"]
+    for v, d in a3["variants"].items():
+        r, g, e = d["ratio_pooled"], d["gains"], d["eligible"]
+        lines.append(
+            f"| {v} | {r[0]:.3f} [{r[1]:.3f}, {r[2]:.3f}] | " + " / ".join(f"{d['ratio_by_n'][n]:.3f}" for n in NS)
+            + " | " + " / ".join(f"{d['min_by_n'][n]:+.3f}" for n in NS)
+            + f" | {g['inflater'][0]:+.3f} / {g['victim'][0]:+.3f} / {g['pair'][0]:+.3f} | {g['fakehard-priced'][0]:+.3f} | "
+            + ("yes" if e["b"] else "no") + " | " + ("**yes**" if all(e.values()) else
+                                                     "no (" + ", ".join(k for k, ok in e.items() if not ok) + ")") + " |")
+    w = a3["winner"]
+    lines += ["", f"**Decision:** the default is **{w}**" + ("" if a3["winner_was_eligible"] else
+              " (no variant met (a)–(c), so the default stays Ours)") + ".", ""]
+    p = a3["pricing"]
+    if p["diff"]:
+        lines += [f"**Priced hard claims (under {w}):** fake-hard gain {p['priced'][0]:+.3f} with pricing vs "
+                  f"{p['unpriced'][0]:+.3f} without; paired difference {p['diff'][0]:+.3f} [{p['diff'][1]:+.3f}, {p['diff'][2]:+.3f}]. "
+                  f"{100 * p['honest_over_budget']:.1f}% of {p['honest_rules']} honest declared hard rules exceed the budget on their own → "
+                  + ("**adopt**." if p["adopt"] else "**do not adopt**."), ""]
+    lines += [f"**Q2 for {w} against B3** (paired difference, 95% CI; pass = entirely above 0):", "",
+              "| n | Nash welfare | min utility |", "|---|---|---|"]
+    for n in NS:
+        cells = []
+        for k in ("nw", "min"):
+            m, lo, hi = a3["q2"][f"{n}:{k}"]
+            cells.append(f"{m:+.3f} [{lo:+.3f}, {hi:+.3f}] {'pass' if lo > 0 else 'MISS'}")
+        lines.append(f"| {n} | {cells[0]} | {cells[1]} |")
+    fp = res["attacks"].get("fakehard-priced", {})
+    if fp:
+        lines += ["", "Priced fake-hard gain by mechanism (unpriced in brackets): " + ", ".join(
+            f"{m} {v['gain'][0]:+.3f} ({res['attacks']['fakehard'][m]['gain'][0]:+.3f})" for m, v in fp.items()
+            if m in res["attacks"]["fakehard"]) + "."]
+    return lines
 
 
 def amendment2_md(a2: dict, res: dict) -> list[str]:
@@ -542,6 +632,8 @@ def write_results_md(res: dict, rows: list[dict], made: list[str], elapsed: floa
     lines += [f"![{m}]({m})" for m in made]
     if res.get("amendment2"):
         lines += amendment2_md(res["amendment2"], res)
+    if res.get("amendment3"):
+        lines += amendment3_md(res["amendment3"], res)
     notes = DOCS / "notes.md"
     if notes.exists():
         lines += ["", notes.read_text().strip()]
@@ -562,7 +654,7 @@ def main() -> None:
         res["honest"] = {int(k): v for k, v in res["honest"].items()}
         res["instances"] = {int(k): v for k, v in res["instances"].items()}
         res["paired"] = {int(k): v for k, v in res["paired"].items()}
-        for v in res.get("amendment2", {}).get("variants", {}).values():
+        for v in [*res.get("amendment2", {}).get("variants", {}).values(), *res.get("amendment3", {}).get("variants", {}).values()]:
             for key in ("ratio_by_n", "min_by_n", "pareto_by_n"):
                 v[key] = {int(k): x for k, x in v[key].items()}
         made = charts(res)
