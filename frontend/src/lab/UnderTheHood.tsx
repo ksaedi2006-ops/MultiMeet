@@ -7,7 +7,7 @@ import { GLOSSARY, type TermId } from './glossary'
 import Term from './Term'
 import { FAMILIES, THEORIES, type RuleId } from './theories'
 
-const REPO = 'https://github.com/aperture71/MultiMeet/blob/main'
+const REPO = 'https://github.com/ksaedi2006-ops/MultiMeet/blob/main'
 const pct = (v: number) => `${(v * 100).toFixed(1)}%`
 
 /** The full tables, every formula and the published documents, for anyone checking the work. */

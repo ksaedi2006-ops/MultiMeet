@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { EASE } from '../lib/motion'
 
-const REPO = 'https://github.com/aperture71/MultiMeet/blob/main'
+const REPO = 'https://github.com/ksaedi2006-ops/MultiMeet/blob/main'
 
 const STEPS: [string, string][] = [
   ['Rule out', 'Code crosses out every time that clashes with someone’s fixed commitments. Those are never negotiated.'],
