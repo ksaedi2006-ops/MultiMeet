@@ -15,7 +15,7 @@ export interface StageSpec {
 }
 
 export const STAGES: Record<StageId, StageSpec> = {
-  attract: { id: 'attract', name: 'How it works', bay: 360, panel: 400 },
+  attract: { id: 'attract', name: '', bay: 360, panel: 400 },
   plan: { id: 'plan', name: 'New meeting', bay: 660, panel: 0 },
   invite: { id: 'invite', name: 'Invite people', bay: 360, panel: 420 },
   join: { id: 'join', name: 'You’re invited', bay: 340, panel: 440 },
