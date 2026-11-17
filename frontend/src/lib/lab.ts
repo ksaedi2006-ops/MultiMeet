@@ -17,6 +17,8 @@ export interface LabExtra {
 export interface LabResult {
   pick: string | null
   ratio: number // Nash welfare relative to the best possible time, on true preferences (1 = best)
+  util_ratio: number // mean utility relative to the best available time
+  min_ratio: number // worst-off gain relative to the best available time
   min: number // the least happy person's true gain
   util: number
   pareto: boolean
@@ -27,7 +29,7 @@ export interface LabResult {
   extra?: LabExtra
   attack_extra?: LabExtra
   payments?: Record<string, number>
-  rounds?: { user_id: string; rule: string; target: string; draft: string | null; move: 'accept' | 'flex' | 'hold'; pick_after: string | null }[]
+  rounds?: { user_id: string; rule: string; target: string; draft: string | null; move: 'accept' | 'flex' | 'hold'; pick_after: string | null; from_weight: number | null; to_weight: number | null; floor: number }[]
 }
 
 export interface LabRow {
@@ -43,7 +45,7 @@ export interface LabRow {
 export interface LabInstance extends LabRow {
   timezone: string
   slots: { id: string; start: string; end: string; label: string }[]
-  people: { user_id: string; name: string; liar: boolean; scores: Record<string, number> }[]
+  people: { user_id: string; name: string; liar: boolean; d: number; scores: Record<string, number> }[]
 }
 
 export interface LabMeeting extends LabInstance {

@@ -240,7 +240,7 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, on
         <span>pick</span>
         <span className="text-right"><Term id="min_utility">min</Term></span>
         <span className="text-right"><Term id="mean_utility">mean</Term></span>
-        <span className="text-right">{attack === 'none' ? <Term id="oracle_ratio">oracle</Term> : <Term id="manip_gain">gain</Term>}</span>
+        <span className="text-right">{attack === 'none' ? <Term id="oracle_ratio">NW</Term> : <Term id="manip_gain">gain</Term>}</span>
       </div>
       {FAMILIES.map((fam) => (
         <div key={fam}>
@@ -291,15 +291,18 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, on
       <p className="mt-3 font-display font-bold text-[2rem] leading-none text-amber">{label(selPick)}</p>
       {st && (
         <dl className="mt-3 grid grid-cols-3 gap-2">
-          {[['min_utility', `${st.min}`], ['mean_utility', `${Math.round(st.mean)}`], ['oracle_ratio', `${Math.round(selected.ratio * 100)}%`]].map(([k, v]) => (
+          {[['oracle_ratio', `${Math.round(selected.ratio * 100)}%`], ['util_ratio', `${Math.round(selected.util_ratio * 100)}%`], ['min_ratio', `${Math.round(selected.min_ratio * 100)}%`]].map(([k, v]) => (
             <div key={k}>
-              <dt className="text-[11.5px] text-mist"><Term id={k as 'min_utility'} /></dt>
+              <dt className="text-[11.5px] text-mist"><Term id={k as 'oracle_ratio'} /></dt>
               <dd className="text-[20px] font-semibold text-strip tabular-nums">{v}</dd>
             </div>
           ))}
         </dl>
       )}
-      <p className="mt-2 text-[13px] text-strip/85">
+      <p className="mt-2 text-[13px] text-strip/85 tabular-nums">
+        <Term id="min_utility" /> {st?.min} · <Term id="mean_utility" /> {st ? Math.round(st.mean) : '–'}
+      </p>
+      <p className="mt-1 text-[13px] text-strip/85">
         {selected.pareto ? <Term id="pareto" /> : <span className="text-signal">Not <Term id="pareto">Pareto optimal</Term></span>}
         {' · '}<Term id="oracle" />: {label(data.oracle)}
         {selected.extra?.condorcet !== undefined && <> · <Term id="condorcet_winner" />: {selected.extra.condorcet ? 'exists' : 'none (majorities cycle)'}</>}
@@ -312,7 +315,9 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, on
         </p>
       )}
 
-      <h3 className="mt-5 font-mono text-[10.5px] tracking-[0.14em] text-mist"><Term id="utility">UTILITY</Term> AT THE PICK</h3>
+      <h3 className="mt-5 font-mono text-[10.5px] tracking-[0.14em] text-mist">
+        <Term id="utility">UTILITY</Term> AT THE PICK · TICK = <Term id="disagreement">d</Term>
+      </h3>
       <ul className="mt-2 flex flex-col gap-2">
         {at(selPick).sort((a, b) => a.u - b.u).map(({ p, u }) => (
           <li key={p.user_id} className="flex items-center gap-2.5">
@@ -321,8 +326,9 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, on
             {selected.payments?.[p.user_id] !== undefined && (
               <span className="text-[11.5px] text-mist tabular-nums"><Term id="payment">pays</Term> {Math.round(selected.payments[p.user_id] * 100)}</span>
             )}
-            <span className="w-20 h-1.5 rounded-full bg-board-line overflow-hidden">
-              <span className="block h-full rounded-full" style={{ width: `${u}%`, background: u < 40 ? 'var(--color-clearance)' : 'var(--color-amber)' }} />
+            <span className="relative w-20 h-1.5 rounded-full bg-board-line" title={`d = ${p.d}`}>
+              <span className="block h-full rounded-full" style={{ width: `${u}%`, background: u < p.d ? 'var(--color-clearance)' : 'var(--color-amber)' }} />
+              <span aria-hidden className="absolute -top-1 -bottom-1 w-px bg-strip" style={{ left: `${p.d}%` }} />
             </span>
             <span className="w-8 text-right font-mono text-[12px] text-mist tabular-nums">{u}</span>
           </li>
@@ -338,7 +344,13 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, on
               return (
                 <li key={i} className="text-[13px] leading-snug">
                   <p className="text-strip/85"><span className="text-amber">Mediator → {first(who?.name ?? '')}:</span> flex “{rd.rule}” for {label(rd.target)}?</p>
-                  <p className="text-strip/85 pl-3"><span className="text-mist">{first(who?.name ?? '')}’s agent:</span> {rd.move}{rd.pick_after ? ` · draft now ${label(rd.pick_after)}` : ''}</p>
+                  <p className="text-strip/85 pl-3">
+                    <span className="text-mist">{first(who?.name ?? '')}’s agent:</span> {rd.move}
+                    {rd.move === 'flex' && rd.from_weight !== null && rd.to_weight !== null && (
+                      <span className="text-mist tabular-nums"> · weight {rd.from_weight.toFixed(2)} → {rd.to_weight.toFixed(2)} (floor {rd.floor.toFixed(2)})</span>
+                    )}
+                    {rd.pick_after ? ` · draft now ${label(rd.pick_after)}` : ''}
+                  </p>
                 </li>
               )
             })}

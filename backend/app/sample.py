@@ -145,9 +145,9 @@ def make_person(rng: random.Random, name: str) -> Person:
         day = rng.choice((0, 2, 4))
         weights = [1.0] * 7
         weights[day] = 0.3
-        name_day = ["Mon", "Tue", "Wed", "Thu", "Fri"][day]
+        name_day = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"][day]
         p.rules.append((PreferenceRule(kind="day_weights", strength="soft", day_weights=weights,
-                                       summary=f"{name_day}days are rough"), f"{name_day}days are rough for me"))
+                                       summary=f"{name_day}s are rough"), f"{name_day}s are rough for me"))
     if rng.random() < 0.18:
         p.rules.append((PreferenceRule(kind="buffer_minutes", strength="soft", minutes=15,
                                        summary="15 min buffer around other things"),

@@ -197,23 +197,43 @@ export default function ManyMeetings({ n, attack, setN, setAttack, rules, setRul
   }
   const leaders: [TermId, RuleId | null][] = [
     ['oracle_ratio', best((x) => x.ratio)],
-    ['min_utility', best((x) => x.min)],
-    ['mean_utility', best((x) => x.util)],
-    ...(attacked ? [['manip_gain', best((x) => -(x.gain ?? 0))] as [TermId, RuleId | null]] : []),
+    ['util_ratio', best((x) => x.util_ratio)],
+    ['min_ratio', best((x) => x.min_ratio)],
   ]
+  // A lie that backfires is no better than one that gains nothing: zero or below passes.
+  const resisted = attacked && rows.length ? params.rules.filter((r) => final((x) => x.gain ?? 0)(r).mean <= 1e-9) : []
+  const nashTrails = rows.length > 20 && params.rules.includes('nash') && leaders[0][1] !== 'nash'
   const right = (
     <div className="px-5 lg:px-6 py-5 flex flex-col gap-4">
       <p className="font-mono text-[10.5px] tracking-[0.14em] text-amber">LEADS ON EACH METRIC</p>
       <dl className="flex flex-col divide-y divide-board-line border-y border-board-line">
         {leaders.map(([m, r]) => (
           <div key={m} className="flex justify-between gap-3 py-2 text-[13.5px]">
-            <dt className="text-strip/80"><Term id={m} />{m === 'manip_gain' ? ' (lowest)' : ''}</dt>
+            <dt className="text-strip/80"><Term id={m} /></dt>
             <dd className="text-strip font-semibold">{r ? <Term id={r} /> : '–'}</dd>
           </div>
         ))}
       </dl>
       {rows.length > 20 && new Set(leaders.map(([, r]) => r)).size > 1 && (
-        <p className="text-[13px] text-strip/80">No rule leads on every metric in this run.</p>
+        <p className="text-[13px] text-strip/80">No rule leads on every welfare criterion in this run.</p>
+      )}
+      {attacked && rows.length > 0 && (
+        <div className="text-[13px] text-strip/85">
+          <p className="font-mono text-[10.5px] tracking-[0.14em] text-amber"><Term id="manip_gain">MANIPULATION GAIN</Term> ≤ 0</p>
+          <p className="mt-1">{resisted.length ? resisted.map((r, i) => <span key={r}>{i ? ', ' : ''}<Term id={r} /></span>) : 'None of the selected rules'}</p>
+          <p className="mt-1 text-[12px] text-mist">Scripted attacker <Term id={params.attack as TermId} />; not a best-response search.</p>
+        </div>
+      )}
+      {nashTrails && (
+        <div className="border-l-2 border-amber pl-3 text-[13px] leading-snug text-strip/85">
+          <p className="font-mono text-[10.5px] tracking-[0.14em] text-amber">WHY <Term id="nash">NASH</Term> TRAILS HERE</p>
+          <p className="mt-1">
+            MultiMeet runs Nash on top-k normalized reports, chosen for manipulation resistance (Amendment 3). Ranking
+            throws away some intensity, which costs Nash welfare: 0.962 of the oracle pooled. With range normalization
+            the same rule reached 0.988, but a colluding pair then gained +0.119 (Amendment 2); under top-k a pair
+            loses 0.117 (Amendment 3). The gap is that trade-off.
+          </p>
+        </div>
       )}
     </div>
   )

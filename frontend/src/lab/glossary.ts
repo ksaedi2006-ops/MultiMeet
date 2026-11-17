@@ -13,10 +13,10 @@ export interface Entry {
 export const GLOSSARY = {
   // ---- decision rules ----
   nash: {
-    term: 'Nash bargaining solution',
-    what: 'Picks the time with the highest product of everyone’s gains, so one person near zero drags a time down hard. MultiMeet’s rule: top-k normalization, then up to three mediator rounds of concessions.',
-    formula: 'argmaxₛ Σᵢ log(ε + uᵢ(s) − dᵢ), ε = 0.05, leximin ties',
-    source: 'Nash 1950 ○; Caragiannis et al. 2019',
+    term: 'Maximum Nash welfare',
+    what: 'The discrete analogue of the Nash bargaining solution: pick the time with the highest product of everyone’s gains over their disagreement point, so one person near zero drags a time down hard. Nash defined the solution on a convex set; here it is maximised over a finite list of times. MultiMeet’s rule adds top-k normalization and up to three mediator rounds. The ε floor stops one zero from vetoing a time, at the cost of exact scale invariance.',
+    formula: 'argmaxₛ Σᵢ log(ε + uᵢ(s) − dᵢ), ε = 0.05, d = 0 on the common scale, leximin ties',
+    source: 'Nash 1950 ○; Caragiannis et al. 2019 (maximum Nash welfare on discrete outcomes)',
   },
   old: {
     term: 'Max-min, raw scores',
@@ -37,10 +37,10 @@ export const GLOSSARY = {
     source: 'Baseline B4 in the evaluation',
   },
   ks: {
-    term: 'Kalai–Smorodinsky solution',
-    what: 'Gives everyone the same share of the gain they’d get at their own favourite time. Here on a discrete set, with leximin ties.',
+    term: 'Kalai–Smorodinsky (discrete)',
+    what: 'A discrete analogue of the Kalai–Smorodinsky solution: give everyone the same share of the gain they’d get at their own favourite time, maximised over the finite list of times, with leximin ties. The original is defined on a convex set.',
     formula: 'argmaxₛ minᵢ (uᵢ(s) − dᵢ) / (aᵢ − dᵢ), aᵢ = maxₜ uᵢ(t)',
-    source: 'Kalai & Smorodinsky 1975 ○; Roth 1979 (not Pareto optimal for n ≥ 3 in general)',
+    source: 'Kalai & Smorodinsky 1975 ○; Roth 1979 (the continuous solution is not Pareto optimal for n ≥ 3 in general; this tie-broken version is, by test)',
   },
   borda: {
     term: 'Borda count',
@@ -62,20 +62,20 @@ export const GLOSSARY = {
   },
   condorcet: {
     term: 'Copeland (Condorcet)',
-    what: 'Compare every pair of times by majority vote. A time that beats all others is the Condorcet winner; if majorities cycle, the time with the most pairwise wins (Copeland) is picked.',
+    what: 'Compare every pair of times by majority vote. A time that beats all others is the Condorcet winner; if majorities cycle, the time with the most pairwise wins minus losses (Copeland’s rule) is picked.',
     formula: 'argmaxₛ Σₜ sign(#{i: s ≻ᵢ t} − #{i: t ≻ᵢ s})',
-    source: 'Brandt et al. 2016 ○; Kemeny 1959 ○; Young & Levenglick 1978 ○',
+    source: 'Copeland 1951 ○; Brandt et al. 2016 ○',
   },
   median: {
-    term: 'Generalized median',
-    what: 'Each person’s peak is the start time of their favourite; the lower median of the peaks wins, at the nearest available time. Days don’t vote.',
-    formula: 'median(peak₁ … peakₙ) on time of day',
+    term: 'Generalized median (time of day)',
+    what: 'Each person’s peak is the start time of their favourite; the pick is the available time nearest the lower median of the peaks. That is Moulin’s generalized median with n − 1 phantom peaks, ⌈n/2⌉ − 1 placed at the end of the day and the rest at the start. Days don’t vote.',
+    formula: 'median(peak₁ … peakₙ, phantoms) on time of day',
     source: 'Moulin 1980 ○; Procaccia & Tennenholtz 2013 ○',
   },
   random_dictator: {
-    term: 'Random dictatorship',
-    what: 'Draw one person at random; their favourite time wins. Fair only on average, but no one can gain by lying about preferences.',
-    formula: 'i ~ Uniform(N), s* = topᵢ',
+    term: 'Random serial dictatorship',
+    what: 'Draw a random order of people. The first is the dictator and gets their favourite time; the next person breaks the dictator’s ties, and so on. Fair only on average, but no one gains by misreporting, and ties never produce a Pareto-dominated time.',
+    formula: 'π ~ Uniform(orders); filter by π₁’s best, then π₂’s best, …',
     source: 'Gibbard 1977, cited in the report as the escape from Gibbard–Satterthwaite ○',
   },
   budget: {
@@ -86,9 +86,9 @@ export const GLOSSARY = {
   },
   vcg: {
     term: 'Clarke tax (VCG)',
-    what: 'Picks the utilitarian time, then charges each person points equal to the harm their presence does to everyone else. With points valued like utility, telling the truth is a dominant strategy.',
+    what: 'Picks the utilitarian time, then charges each person points equal to the harm their presence does to everyone else (the Clarke pivot rule). With points valued like utility, truth is a dominant strategy. The points are burned: the mechanism isn’t budget-balanced, and here the points have no value outside the meeting.',
     formula: 'tᵢ = Σⱼ≠ᵢ uⱼ(s₋ᵢ*) − Σⱼ≠ᵢ uⱼ(s*)',
-    source: 'Ephrati & Rosenschein 1991; Ephrati, Zlotkin & Rosenschein 1994',
+    source: 'Vickrey 1961 ○; Clarke 1971 ○; Groves 1973 ○; applied to agents by Ephrati & Rosenschein 1991 and Ephrati, Zlotkin & Rosenschein 1994',
   },
   random: {
     term: 'Random feasible time',
@@ -99,12 +99,12 @@ export const GLOSSARY = {
   // ---- properties ----
   pareto: {
     term: 'Pareto optimal',
-    what: 'No other time is at least as good for everyone and better for someone. Checked on what people reported.',
+    what: 'As a property of a rule: on what people report, it never picks a time that another time beats for someone while being no worse for anyone. As a measured result (charts, tables): the same check on true preferences, which can fail when reports differ from the truth.',
     source: 'Topic 6 metrics in the report',
   },
   strategyproof: {
     term: 'Strategy-proof',
-    what: 'Reporting your true preferences is always a best response, whatever others report. By Gibbard–Satterthwaite, no deterministic non-dictatorial rule over three or more options has this on every preference domain.',
+    what: 'Reporting your true preferences is always a best response, whatever others report. By Gibbard–Satterthwaite, every deterministic rule that is onto at least three outcomes and strategy-proof on the unrestricted domain is dictatorial; randomization or a restricted domain is the way out.',
     source: 'Gibbard 1973 ○; Satterthwaite 1975 ○',
   },
   sp_singlepeaked: {
@@ -144,15 +144,15 @@ export const GLOSSARY = {
   },
   mediated: {
     term: 'Mediated concessions',
-    what: 'Up to three rounds where a mediator asks the one person whose concession would raise the Nash product most to flex a preference; their agent can accept, flex or hold, never backwards.',
-    source: 'Raiffa 1982 ○; Endriss 2006; Harsanyi 1956 ○ (Zeuthen’s rule)',
+    what: 'Up to three rounds where the mediator asks the one person whose concession would raise the Nash product most to flex a preference. Their agent can accept, flex or hold, only within the flexibility they declared, and never back up; the same rule can be asked twice, each time to go lower. Inspired by Zeuthen’s concession rule rather than a literal implementation: Zeuthen has the party with the lower risk limit concede.',
+    source: 'Raiffa 1982 ○; Endriss 2006; Harsanyi 1956 ○ (links Zeuthen’s rule to the Nash product)',
   },
 
   // ---- metrics ----
   utility: {
     term: 'Utility',
-    what: 'How much a person likes a time on their true preferences, scaled 0–100 between their worst and best available times.',
-    source: 'Topic 3 normalization in the report',
+    what: 'How much a person likes a time on their true preferences, scaled 0–100 between their worst and best available times. Rescaling everyone to the same range is an interpersonal-comparability assumption (relative utilitarianism): 0 means “my worst available time”, not “terrible”, and someone nearly indifferent is stretched to the same range as someone with strong views.',
+    source: 'Topic 3 normalization in the report; Dhillon & Mertens 1999 ○ (relative utilitarianism)',
   },
   min_utility: {
     term: 'Min utility',
@@ -165,10 +165,27 @@ export const GLOSSARY = {
     source: 'Topic 6 metrics in the report',
   },
   oracle_ratio: {
-    term: 'Ratio to oracle',
-    what: 'How close the pick comes to the time an oracle that knows everyone’s true preferences would choose, measured by Nash welfare per person. 100% is the oracle’s pick.',
-    formula: 'exp((NW(s) − NW(oracle)) / n)',
+    term: 'Nash-welfare ratio',
+    what: 'How close the pick comes to the Nash-optimal time on true preferences (the oracle), per person: 100% is the oracle’s pick. It grades every rule by Nash welfare, so it favours rules that aim at it; read it with the utilitarian and egalitarian ratios. The preregistered quality target (Q1) is this ratio ≥ 95%.',
+    formula: 'exp((NW(s) − NW(oracle)) / n), NW(s) = Σᵢ log(ε + max(0, uᵢ(s) − dᵢ))',
     source: 'Topic 6 metrics; preregistration Q1',
+  },
+  util_ratio: {
+    term: 'Utilitarian ratio',
+    what: 'Mean utility of the pick divided by the best mean utility any available time achieves, on true preferences.',
+    formula: 'Σᵢ uᵢ(s) / maxₜ Σᵢ uᵢ(t)',
+    source: 'Topic 6 metrics in the report',
+  },
+  min_ratio: {
+    term: 'Egalitarian ratio',
+    what: 'The worst-off person’s gain at the pick divided by the best worst-off gain any available time achieves, on true preferences.',
+    formula: 'minᵢ (uᵢ(s) − dᵢ) / maxₜ minᵢ (uᵢ(t) − dᵢ)',
+    source: 'Kalai 1977 ○',
+  },
+  disagreement: {
+    term: 'Disagreement point d',
+    what: 'What a person gets if there’s no meeting this week. Bargaining rules measure gains above it. The Lab’s rules use d = 0 on the common scale (the worst available time); scoring against the truth uses each person’s true d, so a time below someone’s d counts as worse than no meeting.',
+    source: 'Topic 1 in the report (“Choosing d”)',
   },
   oracle: {
     term: 'Oracle',
@@ -177,7 +194,7 @@ export const GLOSSARY = {
   },
   manip_gain: {
     term: 'Manipulation gain',
-    what: 'The change in the liar’s true utility from lying instead of reporting honestly, in points out of 100. Above zero, the lie paid. “Honest” here is what the agent reports after translating its person’s words, which is close to but not exactly the truth.',
+    what: 'The change in the liar’s true utility from lying instead of reporting honestly, in points out of 100. Zero or below means the lie didn’t pay. The attackers are fixed scripts, so a non-positive mean shows these lies fail, not that no lie works; the evaluation’s exact best-response search (R2) covers that for some rules. “Honest” is the agent’s translation of its person’s words, close to but not exactly the truth, which is why even strategy-proof rules can show small gains here.',
     formula: 'uᵢ(f(r′ᵢ, r₋ᵢ)) − uᵢ(f(rᵢ, r₋ᵢ))',
     source: 'Topic 6 metrics in the report',
   },
@@ -188,7 +205,7 @@ export const GLOSSARY = {
   },
   dictator: {
     term: 'Dictator',
-    what: 'The person drawn at random under random dictatorship. The draw doesn’t depend on anyone’s report.',
+    what: 'The first person in the random order under random serial dictatorship. The draw doesn’t depend on anyone’s report.',
     source: 'Gibbard 1977 ○',
   },
   condorcet_winner: {

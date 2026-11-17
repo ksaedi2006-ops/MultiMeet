@@ -21,6 +21,8 @@ export default function UnderTheHood({ run, onOpen }: { run: LabRun; onOpen: (id
 
   const cols: [TermId, (r: NonNullable<LabRow['results'][RuleId]>[]) => string][] = [
     ['oracle_ratio', (r) => pct(stat(r.map((x) => x.ratio)).mean)],
+    ['util_ratio', (r) => pct(stat(r.map((x) => x.util_ratio)).mean)],
+    ['min_ratio', (r) => pct(stat(r.map((x) => x.min_ratio)).mean)],
     ['min_utility', (r) => (stat(r.map((x) => x.min)).mean * 100).toFixed(1)],
     ['mean_utility', (r) => (stat(r.map((x) => x.util)).mean * 100).toFixed(1)],
     ['pareto', (r) => pct(r.filter((x) => x.pareto).length / (r.length || 1))],
@@ -111,6 +113,15 @@ export default function UnderTheHood({ run, onOpen }: { run: LabRun; onOpen: (id
 
   const right = (
     <div className="px-5 lg:px-6 py-5 flex flex-col gap-4 text-[13.5px] leading-relaxed text-strip/85">
+      <p className="font-mono text-[10.5px] tracking-[0.14em] text-amber">ASSUMPTIONS</p>
+      <ul className="flex flex-col gap-2 list-disc pl-5">
+        <li><Term id="utility" />: everyone is rescaled 0–100 between their worst and best available time, an interpersonal-comparability assumption.</li>
+        <li><Term id="disagreement" />: rules use d = 0 on that scale; scoring uses each person’s true d.</li>
+        <li>ε = 0.05 in the Nash objective trades exact scale invariance for no single-person veto.</li>
+        <li>Bargaining solutions are discrete analogues; Nash and Kalai–Smorodinsky are defined on convex sets.</li>
+        <li>Rules see reports, a translation of each person’s words; <Term id="pareto" /> and every ratio are measured on the truth.</li>
+        <li>Attackers are fixed scripts; the evaluation’s exact best-response search (R2) is not in the Lab.</li>
+      </ul>
       <p className="font-mono text-[10.5px] tracking-[0.14em] text-amber">METHOD</p>
       <p>
         Meetings come from the same seeded generator as the published evaluation: 510 per group size, calendars 30–70%

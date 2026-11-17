@@ -281,13 +281,27 @@ def median_select(raw: Profile, slots: list[str], minutes: dict[str, int]) -> Se
 
 
 def random_dictator_select(raw: Profile, slots: list[str], seed: str) -> tuple[Selection, str | None]:
-    """Random dictatorship: draw one agent uniformly (seeded, independent of the reports) and
-    take its favourite. Strategy-proof (Gibbard 1977): a report only matters when you are the
-    dictator, and then lying can only lose you your favourite. Returns (selection, drawn agent)."""
+    """Random (serial) dictatorship: draw an order of agents uniformly (seeded, independent of
+    the reports); the first is the dictator and takes their favourite, later agents only break
+    its ties. Strategy-proof (Gibbard 1977): a report only matters on your own turn, and then
+    lying can only lose you your favourite. Returns (selection, the dictator)."""
     if not slots or not raw:
         return Selection(None, "random_dictator", "no_slots"), None
-    who = random.Random(seed).choice(sorted(raw))
-    pick = _top(raw[who], slots, _order(slots))
+    # Random serial dictatorship: a seeded random order; the first person picks their favourite
+    # times, the next breaks ties among those, and so on. Each report matters only when it is
+    # that person's turn, so it stays strategy-proof, and ties never land on a time that is
+    # worse for someone and better for no one (on reports).
+    order_people = sorted(raw)
+    random.Random(seed).shuffle(order_people)
+    who = order_people[0]
+    pool = list(slots)
+    for a in order_people:
+        best = max(raw[a][s] for s in pool)
+        pool = [s for s in pool if raw[a][s] >= best - _TOL]
+        if len(pool) == 1:
+            break
+    order = _order(slots)
+    pick = min(pool, key=lambda s: order[s])
     return Selection(pick, "random_dictator", "ok", [pick]), who
 
 

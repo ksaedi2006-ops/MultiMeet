@@ -12,7 +12,7 @@ export interface RuleInfo {
 
 export const RULES: RuleInfo[] = [
   {
-    id: 'nash', name: 'Nash bargaining', short: 'NASH',
+    id: 'nash', name: 'Max Nash welfare', short: 'NASH',
     idea: 'Maximise the product of everyone’s happiness, so one unhappy person drags a time down hard.',
     catch: 'Not strategy-proof: a well-informed liar can still nudge it.',
     source: 'Nash 1950; Caragiannis et al. 2019',

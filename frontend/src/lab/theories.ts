@@ -24,7 +24,7 @@ export const THEORIES: Theory[] = [
   { id: 'plurality', family: 'Voting', badges: ['ordinal', 'manipulable'] },
   { id: 'when2meet', family: 'Voting', badges: ['sp_dichotomous'] },
   { id: 'median', family: 'Mechanism design', badges: ['ordinal', 'sp_singlepeaked'] },
-  { id: 'random_dictator', family: 'Mechanism design', badges: ['ordinal', 'strategyproof'] },
+  { id: 'random_dictator', family: 'Mechanism design', badges: ['pareto', 'ordinal', 'strategyproof'] },
   { id: 'vcg', family: 'Mechanism design', badges: ['pareto', 'cardinal', 'sp_payments'] },
   { id: 'budget', family: 'Mechanism design', badges: ['cardinal', 'manipulable'] },
   { id: 'old', family: 'Baselines', badges: ['cardinal', 'manipulable'] },

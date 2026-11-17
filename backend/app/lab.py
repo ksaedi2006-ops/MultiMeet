@@ -52,6 +52,8 @@ def _explain(res) -> dict:
 def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
     best = oracle(inst)
     nw_or = nash_welfare(inst, best)
+    best_util = max(sum(inst.u[u][s] for u in inst.uids) / inst.n for s in inst.feasible)
+    best_min = max(min(inst.u[u][s] - inst.d[u] for u in inst.uids) for s in inst.feasible)
     honest, slots, _ = condition(inst, "honest")
     results: dict[str, dict] = {}
     for name in mechs:
@@ -62,6 +64,9 @@ def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
         r = {
             "pick": pick,
             "ratio": round(o["ratio"], 4),
+            # Two more yardsticks, so no single welfare criterion grades everyone (truth, not reports).
+            "util_ratio": round(o["util"] / best_util, 4) if best_util > 0 else 1.0,
+            "min_ratio": round(o["min"] / best_min, 4) if best_min > 0 else (1.0 if o["min"] >= best_min else 0.0),
             "min": round(o["min"], 4),
             "util": round(o["util"], 4),
             "pareto": o["pareto"],
@@ -76,6 +81,10 @@ def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
             r["rounds"] = [{
                 "user_id": rd.request.user_id, "rule": rd.request.rule_label, "target": rd.request.target,
                 "draft": rd.request.draft, "move": rd.applied.kind, "pick_after": rd.draft.pick,
+                # A rule can be asked about twice: each flex lowers its weight, never back up (monotonic).
+                "from_weight": round(rd.applied.old_weight, 3) if rd.applied.old_weight is not None else None,
+                "to_weight": round(rd.applied.new_weight, 3) if rd.applied.new_weight is not None else None,
+                "floor": round(rd.request.floor, 3),
             } for rd in res.outcome.rounds]
         if attack != "none":
             lied, lslots, liars = condition(inst, attack)
@@ -187,6 +196,7 @@ def _full(inst: Instance, mechs: list[str], attack: str) -> dict:
         "slots": [inst.slots[s].to_dict() for s in inst.feasible],
         "people": [
             {"user_id": p.uid, "name": p.name, "liar": k in liars,
+             "d": round(100 * inst.d[p.uid], 1),  # true disagreement point: utility of no meeting
              "scores": {s: int(round(100 * inst.u[p.uid][s])) for s in inst.feasible}}
             for k, p in enumerate(inst.people)
         ],

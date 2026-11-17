@@ -8,7 +8,7 @@ const REPO = 'https://github.com/aperture71/MultiMeet/blob/main'
 const STEPS: [string, string][] = [
   ['Rule out', 'Code crosses out every time that clashes with someone’s fixed commitments. Those are never negotiated.'],
   ['Score', 'Each agent turns its person’s calendar and preferences into a score for every time that’s left. The scores come from those rules, not from numbers a language model made up, and they’re put on a common scale so nobody can win by shouting louder.'],
-  ['Pick the fairest', 'The solver chooses the time with the highest product of everyone’s scores (the Nash bargaining solution). A small floor stops one zero from vetoing a time outright, and ties go to whichever time leaves the least happy person better off.'],
+  ['Pick the fairest', 'The solver chooses the time with the highest product of everyone’s scores (maximum Nash welfare, the discrete analogue of the Nash bargaining solution). A small floor stops one zero from vetoing a time outright, and ties go to whichever time leaves the least happy person better off.'],
   ['Ask for give', 'For up to three rounds, the mediator asks the one person whose concession would help the group most. Their agent can agree, flex a preference, or hold firm. It can only move within the flexibility its person declared, and never backwards.'],
   ['Explain', 'The mediator explains the result, and the app checks that the explanation names the person the decision actually turned on.'],
 ]

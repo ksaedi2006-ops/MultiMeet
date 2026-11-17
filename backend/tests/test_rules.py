@@ -35,12 +35,31 @@ def liar_gain(mech: str, inst, cond: str) -> float:
     return sum(after[u] - before[u] - paid[u] for u in uids) / len(uids)
 
 
-@pytest.mark.parametrize("cond", ["inflater", "victim"])
-def test_random_dictatorship_never_rewards_a_lone_liar(cond):
-    """Random dictatorship (Gibbard 1977): a single agent misreporting never gains."""
-    for n in (3, 5):
-        for inst in instances(n):
-            assert liar_gain("RD", inst, cond) <= 1e-9
+def test_random_serial_dictatorship_is_strategy_proof_against_the_truth():
+    """Random serial dictatorship (Gibbard 1977): whatever the draw, no agent gains by
+    misreporting. Ties are common here (a coarse grid), so later agents' tie-breaking turns
+    are exercised too."""
+    import itertools
+    import random
+
+    rng = random.Random(5)
+    slots = ["a", "b", "c", "d"]
+    grid = [0.0, 0.5, 1.0]
+    for trial in range(60):
+        truth = {a: {s: rng.choice(grid) for s in slots} for a in ("x", "y", "z")}
+        seed = f"t{trial}"
+        honest_pick = random_dictator_select(truth, slots, seed)[0].slot_id
+        for liar in truth:
+            for vec in itertools.product(grid, repeat=len(slots)):
+                lied = dict(truth, **{liar: dict(zip(slots, vec))})
+                pick = random_dictator_select(lied, slots, seed)[0].slot_id
+                assert truth[liar][pick] <= truth[liar][honest_pick] + 1e-9
+
+
+def test_random_serial_dictatorship_breaks_ties_without_waste():
+    for inst in instances(5):
+        sel, _ = random_dictator_select(inst.u, inst.feasible, f"x{inst.idx}")
+        assert pareto_dominator(inst.u, sel.slot_id, inst.feasible) is None
 
 
 def test_clarke_tax_makes_truth_a_dominant_strategy():
