@@ -1,5 +1,5 @@
 import { pickAvatar } from '../lib/avatars'
-import type { LogEvent, MemberPayload, RankedInfo, SlotInfo } from '../api/events'
+import type { Binding, LogEvent, MemberPayload, RankedInfo, SlotInfo } from '../api/events'
 import { blockerPhrase, fullTime, plainTimes } from '../lib/timeLabels'
 
 export type Phase = 'holding' | 'filtering' | 'scoring' | 'asking' | 'decided' | 'escalated' | 'failed'
@@ -51,6 +51,15 @@ export interface LogLine {
   privateNote?: string
 }
 
+/** One line of the plain-language conversation: the mediator, an agent, or a short update. */
+export interface ChatItem {
+  seq: number
+  kind: 'update' | 'mediator' | 'agent'
+  who: string | null // the agent's person, or who the mediator is talking to
+  text: string
+  tag?: 'Can move' | 'Won’t move' | 'Agrees'
+}
+
 export interface DecisionModel {
   status: 'converged' | 'escalated'
   slot: SlotInfo | null
@@ -61,6 +70,7 @@ export interface DecisionModel {
   alternatives: { slot_id: string; label: string; min_score: number; avg_score: number }[]
   explanation: string
   question: string | null
+  binding: Binding | null
   seq: number
 }
 
@@ -77,6 +87,7 @@ export interface TowerModel {
   decision: DecisionModel | null
   error: string | null
   log: LogLine[]
+  chat: ChatItem[]
   lastSeq: number
   rsvps: Record<string, 'accepted' | 'declined'>
 }
@@ -94,6 +105,7 @@ export const emptyModel: TowerModel = {
   decision: null,
   error: null,
   log: [],
+  chat: [],
   lastSeq: 0,
   rsvps: {},
 }
@@ -150,6 +162,9 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
     m.log = [...m.log, { seq: e.seq, at: e.at, round: m.round, ...l, text: plainTimes(l.text) }]
   }
   const slotLabel = (id: string) => m.slots.find((s) => s.id === id)?.label ?? id
+  const say = (c: Omit<ChatItem, 'seq'>) => {
+    m.chat = [...m.chat, { seq: e.seq, ...c, text: plainTimes(c.text) }]
+  }
 
   switch (e.type) {
     case 'member_joined':
@@ -192,6 +207,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
         speaker: 'Mediator', tone: 'tower',
         text: `Starting. ${e.participants.length} people, ${e.slots.length} possible times.`,
       })
+      say({ kind: 'mediator', who: null, text: `${e.participants.length} people, ${e.slots.length} possible times. First I’ll cross out the times someone can’t make.` })
       return m
     }
     case 'slots_closed': {
@@ -207,6 +223,8 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
         speaker: 'Update', tone: 'close',
         text: `Crossed out ${e.closed.length} of ${m.slots.length} times someone can't make${top.length ? `, e.g. ${top.join('; ')}` : ''}. ${e.open.length} left.`,
       })
+      say({ kind: 'update', who: null, text: `Calendars ruled out ${e.closed.length} of ${m.slots.length} times. ${e.open.length} left.` })
+      if (e.open.length) say({ kind: 'mediator', who: null, text: `Each agent, please rate the ${e.open.length} times left for your person.` })
       return m
     }
     case 'round_started': {
@@ -244,6 +262,15 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       const ranks = new Map(e.ranked.map((r, i) => [r.slot_id, i + 1]))
       m.slots = m.slots.map((s) => ({ ...s, rank: ranks.get(s.id) ?? null }))
       const lead = e.ranked[0]
+      const before = model.shortlist[0]?.slot_id
+      if (lead && lead.slot_id !== before) {
+        say({
+          kind: 'mediator', who: null,
+          text: before
+            ? `New leader: ${fullTime(slotLabel(lead.slot_id))}.`
+            : `Everyone has rated. Leading: ${fullTime(slotLabel(lead.slot_id))}, where the least happy person is at ${lead.min_score}/100.`,
+        })
+      }
       if (lead) {
         line({
           speaker: 'Mediator', tone: 'tower',
@@ -259,6 +286,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       }]
       m.agents = setAgent(m.agents, e.to_user_id, { status: 'asked' })
       line({ speaker: 'Mediator', tone: 'tower', text: e.text })
+      say({ kind: 'mediator', who: e.to_user_id, text: e.text })
       return m
     }
     case 'agent_reply': {
@@ -271,6 +299,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       })
       const tag = e.response === 'flex' ? 'Can move' : e.response === 'hold' ? "Won't move" : 'Agrees'
       line({ speaker: sign(e.user_id), tone: 'agent', text: `${tag}. ${e.text}` })
+      say({ kind: 'agent', who: e.user_id, text: e.text, tag: e.response === 'flex' ? 'Can move' : e.response === 'hold' ? 'Won’t move' : 'Agrees' })
       return m
     }
     case 'decision': {
@@ -278,11 +307,14 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       m.decision = {
         status: e.status, slot: e.slot, scores: e.scores, minScore: e.min_score, avgScore: e.avg_score,
         compromises: e.compromises, alternatives: e.alternatives, explanation: e.explanation,
-        question: e.question, seq: e.seq,
+        question: e.question, binding: e.binding ?? null, seq: e.seq,
       }
       line(e.status === 'converged'
         ? { speaker: 'Mediator', tone: 'clear', text: `Booked: ${e.slot ? fullTime(e.slot.label) : ''}.` }
         : { speaker: 'Mediator', tone: 'warn', text: `No time works for everyone. ${e.question ?? e.explanation}` })
+      say(e.status === 'converged'
+        ? { kind: 'mediator', who: null, text: `Booked ${e.slot ? fullTime(e.slot.label) : ''}. ${e.explanation}` }
+        : { kind: 'mediator', who: null, text: `No time works for everyone. ${e.question ?? e.explanation}` })
       return m
     }
     case 'negotiation_failed':

@@ -5,12 +5,12 @@ import { currentUserId, errorMessage, getEvent, type EventInfo } from '../api/cl
 import { useEventLog } from '../api/useEventLog'
 import ChosenTime from '../tower/ChosenTime'
 import DecisionBrief from '../tower/DecisionBrief'
-import FairnessMeter from '../tower/FairnessMeter'
 import HoldingPanel from '../tower/HoldingPanel'
-import RadioTicker from '../tower/RadioTicker'
 import StatusBar from '../tower/StatusBar'
-import StripBoard from '../tower/StripBoard'
-import TowerLog from '../tower/TowerLog'
+import Conversation from '../story/Conversation'
+import MethodDrawer from '../story/MethodDrawer'
+import StoryPanel from '../story/StoryPanel'
+import WhyCard from '../story/WhyCard'
 import { usePlayback } from '../tower/usePlayback'
 import { play, useGrowth } from '../lib/sound'
 import { useCab, useFixture, useScopeFeed } from './context'
@@ -26,7 +26,7 @@ export default function NegotiateStage() {
   const bay = useFixture('bay')
   const panel = useFixture('panel')
   const banner = useFixture('banner')
-  const { highlight, setHighlight } = useCab()
+  const { highlight, setHighlight, desktop } = useCab()
   const viewerId = currentUserId()
   const [event, setEvent] = useState<EventInfo | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -42,6 +42,7 @@ export default function NegotiateStage() {
     }) }
   }, [playback.model, event])
   const [landed, setLanded] = useState(false)
+  const [method, setMethod] = useState(false)
 
   useEffect(() => {
     getEvent(eventId).then(setEvent, (err) => setLoadError(errorMessage(err, "Couldn't load this meeting.")))
@@ -58,6 +59,7 @@ export default function NegotiateStage() {
   useGrowth(playback.model.slots.filter((s) => s.closed).length, useCallback((n: number) => play('cross', n), []))
   useGrowth(playback.model.asks.length, useCallback(() => play('blip'), []))
   const decided = Boolean(model.decision && landed)
+  const closeMethod = useCallback(() => setMethod(false), [])
   const overlay = useMemo(
     () => (decided && model.decision ? <ChosenTime decision={model.decision} timezone={model.timezone} /> : null),
     [decided, model.decision, model.timezone],
@@ -79,35 +81,37 @@ export default function NegotiateStage() {
   }
 
   const rows = (
-    <div className="px-4 lg:px-5 py-5 flex flex-col gap-4">
-      <StripBoard model={model} viewerId={viewerId} highlight={highlight} onHover={setHighlight} />
+    <div>
+      <StoryPanel model={model} viewerId={viewerId} highlight={highlight} onHover={setHighlight} />
     </div>
   )
 
   const side = (
-    <div className="px-5 lg:px-6 py-5 flex flex-col gap-4 lg:h-full">
+    <div className="px-5 lg:px-6 py-5 flex flex-col gap-4">
+      <button type="button" onClick={() => setMethod(true)}
+        className="self-start inline-flex items-center gap-2 font-mono text-[12px] tracking-[0.12em] text-amber hover:underline underline-offset-4">
+        HOW DOES IT DECIDE? <span aria-hidden>→</span>
+      </button>
       {/* The one thing to do before it starts: first in the panel, so first on a phone too. */}
       {model.phase === 'holding' && event && <HoldingPanel event={event} model={model} viewerId={viewerId} />}
-      {decided ? (
-        <DecisionBrief eventId={eventId} title={event?.title ?? 'Meeting'} model={model} viewerId={viewerId} />
-      ) : model.phase === 'failed' ? (
+      {/* On a phone the story comes before the booking and the chat, not after them. */}
+      {!desktop && <div className="-mx-5 -mt-5">{rows}</div>}
+      {decided && <DecisionBrief eventId={eventId} title={event?.title ?? 'Meeting'} model={model} viewerId={viewerId} />}
+      {decided && <WhyCard model={model} />}
+      {model.phase === 'failed' && (
         <section role="alert" className="border border-clearance/60 rounded-[2px] px-4 py-4">
           <p className="font-display text-2xl font-bold text-strip">The negotiation stopped</p>
           <p className="mt-1 text-sm text-strip/80">{model.error} Nothing was scheduled.</p>
         </section>
-      ) : model.phase !== 'holding' ? (
-        <FairnessMeter model={model} />
-      ) : null}
-      <RadioTicker model={model} />
-      <div className={`flex flex-1 ${model.phase === 'holding' ? 'min-h-[10rem]' : 'min-h-[16rem]'}`}>
-        <TowerLog model={model} viewerId={viewerId} />
-      </div>
+      )}
+      <Conversation model={model} viewerId={viewerId} />
+      <MethodDrawer open={method} onClose={closeMethod} />
     </div>
   )
 
   return (
     <>
-      {bay && createPortal(rows, bay)}
+      {bay && desktop && createPortal(rows, bay)}
       {panel && createPortal(side, panel)}
       {banner && createPortal(<StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state} />, banner)}
     </>

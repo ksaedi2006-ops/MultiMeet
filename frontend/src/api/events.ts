@@ -20,6 +20,15 @@ export interface RankedInfo {
   unhappy: string[]
 }
 
+export interface Binding {
+  pick: string
+  runner_up: string | null
+  decisive: string | null
+  decisive_label: string | null
+  bottleneck: string | null
+  tied: string[]
+}
+
 export interface MemberPayload {
   user_id: string
   name: string
@@ -57,7 +66,7 @@ export type LogEvent = Base &
       }
     | { type: 'agent_failed'; user_id: string; round: number; error: string; fallback: string }
     | { type: 'shortlist'; round: number; ranked: RankedInfo[] }
-    | { type: 'mediator_ask'; round: number; ask_id: string; slot_id: string; to_user_id: string; to_name: string; text: string }
+    | { type: 'mediator_ask'; round: number; ask_id: string; slot_id: string; to_user_id: string; to_name: string; text: string; rule_label?: string }
     | {
         type: 'agent_reply'
         round: number
@@ -80,6 +89,10 @@ export type LogEvent = Base &
         alternatives: { slot_id: string; label: string; min_score: number; avg_score: number }[]
         explanation: string
         question: string | null
+        /** Additive (negotiation layer): the solver's real reason for its pick. */
+        binding?: Binding | null
+        normalization?: string
+        faithful?: boolean
       }
     | { type: 'negotiation_failed'; error: string }
     | { type: 'rsvp'; user_id: string; name: string; response: 'accepted' | 'declined' }

@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { errorMessage, icsUrl, sendRsvp } from '../api/client'
-import { plainTimes } from '../lib/timeLabels'
 import type { TowerModel } from './model'
 
 interface Props {
@@ -50,34 +49,7 @@ export default function DecisionBrief({ eventId, title, model, viewerId }: Props
       <h2 className="font-display font-bold text-3xl leading-[1.05] tracking-tight text-balance">
         {when ?? 'No time worked for everyone'}
       </h2>
-      {d.status === 'converged' && d.minScore !== null && (
-        <dl className="mt-3 flex gap-6 font-mono">
-          <div>
-            <dt className="text-[11px] tracking-[0.14em] text-strip-ink/65">LEAST HAPPY</dt>
-            <dd className="text-2xl font-semibold tabular-nums leading-tight">{d.minScore}<span className="text-[13px] font-normal opacity-60">/100</span></dd>
-          </div>
-          <div>
-            <dt className="text-[11px] tracking-[0.14em] text-strip-ink/65">AVERAGE</dt>
-            <dd className="text-2xl font-semibold tabular-nums leading-tight">{Math.round(d.avgScore ?? 0)}<span className="text-[13px] font-normal opacity-60">/100</span></dd>
-          </div>
-        </dl>
-      )}
-      <p className="mt-3 text-[15px] leading-relaxed text-strip-ink/85">{d.explanation}</p>
-      {d.question && <p className="mt-3 text-[15px] font-medium">{d.question}</p>}
-
-      {d.compromises.length > 0 && (
-        <div className="mt-4">
-          <h3 className="font-mono text-[11px] tracking-[0.16em] text-clearance-dim">WHO GAVE SOMETHING UP</h3>
-          <ul className="mt-1.5 space-y-1">
-            {d.compromises.map((c) => (
-              <li key={c.user_id} className="flex justify-between gap-3 text-sm">
-                <span><span className="font-medium">{c.name}</span>: {plainTimes(c.gave_up)}</span>
-                <span className="font-mono tabular-nums text-strip-ink/65 whitespace-nowrap">now {c.score}/100</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+      {d.status !== 'converged' && d.question && <p className="mt-3 text-[15px] font-medium">{d.question}</p>}
 
       {d.alternatives.length > 0 && (
         <div className="mt-4">
@@ -86,7 +58,7 @@ export default function DecisionBrief({ eventId, title, model, viewerId }: Props
             {d.alternatives.map((a) => (
               <li key={a.slot_id} className="flex justify-between gap-3">
                 <span>{a.label}</span>
-                <span className="font-mono tabular-nums text-strip-ink/65 whitespace-nowrap">worst-off {a.min_score}/100</span>
+                <span className="font-mono tabular-nums text-strip-ink/65 whitespace-nowrap">least happy {a.min_score}/100</span>
               </li>
             ))}
           </ol>
