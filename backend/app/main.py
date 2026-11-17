@@ -17,7 +17,7 @@ from app import models  # noqa: E402
 from app.agents import get_agents  # noqa: E402
 from app.bus import bus  # noqa: E402
 from app.database import SessionLocal  # noqa: E402
-from app.routers import events, users  # noqa: E402
+from app.routers import events, lab, users  # noqa: E402
 
 logging.basicConfig(level=os.environ.get("LOG_LEVEL", "INFO"), format="%(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("multimeet")
@@ -58,6 +58,7 @@ app.add_middleware(CORSMiddleware, allow_origins=origins, allow_methods=["*"], a
 
 app.include_router(users.router)
 app.include_router(events.router)
+app.include_router(lab.router)
 
 
 @app.get("/health")

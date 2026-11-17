@@ -9,6 +9,7 @@ import JoinStage from './cab/JoinStage'
 import CalendarStage from './cab/CalendarStage'
 import PreferencesStage from './cab/PreferencesStage'
 import NegotiateStage from './cab/NegotiateStage'
+import LabStage from './cab/LabStage'
 
 /** Every screen is a step of one persistent console (cab/TowerCab); routes only pick the step. */
 export default function App() {
@@ -22,6 +23,7 @@ export default function App() {
         <Route element={<TowerCab />}>
           <Route path="/" element={<AttractStage />} />
           <Route path="/new" element={<PlanStage />} />
+          <Route path="/lab" element={<LabStage />} />
           <Route path="/event/:eventId/share" element={<InviteStage />} />
           <Route path="/join/:inviteCode" element={<JoinStage />} />
           <Route path="/event/:eventId/upload" element={<CalendarStage />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { EASE } from '../lib/motion'
 import { useSoundSetting } from '../lib/sound'
@@ -38,6 +38,13 @@ export default function CabBar({ stage, toolsRef }: { stage: StageSpec; toolsRef
       </div>
       {/* A step can put its own controls here (the decision-rule picker, for one). */}
       <div ref={toolsRef} className="flex items-stretch empty:hidden" />
+      <NavLink to="/lab" title="Race the decision rules on simulated meetings"
+        className={({ isActive }) => `flex items-center gap-2 px-4 border-l border-board-line transition-colors ${isActive ? 'text-amber bg-board-raised/60' : 'text-strip hover:text-amber'}`}>
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M6 2h4M7 2v4.5L3 13a1 1 0 0 0 .9 1.5h8.2A1 1 0 0 0 13 13L9 6.5V2" /><path d="M4.8 10.5h6.4" />
+        </svg>
+        LAB
+      </NavLink>
       <button type="button" onClick={() => setSound(!sound)} aria-pressed={sound}
         aria-label={sound ? 'Sound is on; turn it off' : 'Sound is off; turn it on'}
         className={`flex items-center gap-2 px-4 border-l border-board-line transition-colors ${sound ? 'text-amber' : 'text-mist hover:text-strip'}`}>
