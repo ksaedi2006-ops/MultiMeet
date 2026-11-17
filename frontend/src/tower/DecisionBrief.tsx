@@ -63,7 +63,6 @@ export default function DecisionBrief({ eventId, title, model, viewerId }: Props
         </dl>
       )}
       {d.status === 'converged' && d.minScore !== null && (
-        <p className="mt-1 text-[13px] text-strip-ink/65">Scores are out of 100: how much each person likes the time.</p>
       )}
       <p className="mt-3 text-[15px] leading-relaxed text-strip-ink/85">{d.explanation}</p>
       {d.question && <p className="mt-3 text-[15px] font-medium">{d.question}</p>}

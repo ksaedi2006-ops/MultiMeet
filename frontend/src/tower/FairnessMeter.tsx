@@ -51,7 +51,6 @@ export default function FairnessMeter({ model }: { model: TowerModel }) {
           <dd className="text-2xl font-semibold text-strip tabular-nums leading-tight">{avg === null ? '–' : Math.round(avg)}{avg !== null && <span className="text-[13px] font-normal opacity-60">/100</span>}</dd>
         </div>
       </dl>
-      <p className="mt-2 text-[13px] text-mist">Scores are out of 100: how much each person likes the time.</p>
       {!decided && unhappy.length > 0 && (
         <p className="mt-2 text-xs text-strip/70">Unhappy with it: {unhappy.join(', ')}</p>
       )}
