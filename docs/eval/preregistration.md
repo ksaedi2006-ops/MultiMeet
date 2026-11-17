@@ -254,3 +254,50 @@ If no variant satisfies (a)–(c), the default stays Ours (Borda).
 **Hard tokens.** These are adopted in the product if, under the winning default, the budgeted fake-hard attacker's mean gain falls below the unbudgeted attacker's, and the paired-bootstrap 95% CI of the difference lies entirely below 0.
 
 **Q2 against B3.** Re-checked for the winner exactly as preregistered, and reported whether it passes or not.
+
+## Amendment 3 (2026-11-16, written before running anything below)
+
+**Status.** These ideas come from the research report and were chosen after seeing Amendments 1 and 2. The decision rules below are fixed before the run. Everything earlier stands unchanged.
+
+### 1. Intensity only among your top choices: Ours-topk
+
+The utilities are rank-normalized (Borda, ties averaged), as in Ours. Then the top K slots get their spacing re-drawn from the person's actual intensity, where K = max(3, ⌈m/5⌉):
+
+- Top-set values are spread over [floor + 0.1·(1 − floor), 1].
+- *floor* is the best Borda value outside the top set.
+- Everything outside the top set keeps its plain Borda value.
+
+If ties would make the "top set" larger than 2K, only slots strictly above the tie count as top. This stops "everything else is equally terrible" reports from earning intensity.
+
+Rationale: rankings resist exaggeration (Boutilier et al. 2015), and a bounded intensity budget keeps information (Lalley & Weyl 2018). The colluding pairs in Amendment 2 gained by shouting about the bottom of their lists, and this removes that lever.
+
+### 2. Median time within the chosen day: Ours-topk-median
+
+Ours-topk chooses the day. Within that day, each agent's peak is the start time of their best reported slot that day (ties go to the earliest). The slot closest to the median peak wins; the lower median is used for an even count, and ties go to the earliest slot.
+
+The generalized median is strategy-proof for single-peaked preferences on a line (Moulin 1980; Procaccia & Tennenholtz 2013). Here it holds only on the time-of-day dimension, and only where preferences are single-peaked. That limited formal claim is the only one we will make. Its empirical gains are reported regardless.
+
+### 3. Priced hard claims
+
+Calendar-backed busy blocks are free. Declared hard rules (the product's vocabulary: avoid a weekday, nothing before h, nothing after h) may together remove at most **25%** of the feasible set.
+
+- **Attacker.** Under pricing, the fake-hard attacker greedily adds declared rules while staying within the 25% budget. Candidates are scored by the mechanism's one-shot version, then the chosen rules are played through the full mechanism.
+- **Cost to honest people.** We report the share of honest people's own declared hard rules that would exceed the budget on their own. Those people would need calendar evidence, or would have to accept the rule as soft. Their rules are kept as-is in this run.
+- **Mechanisms evaluated under the priced attack:** Ours, Ours-topk, Ours-topk-median and B3 (for reference).
+
+### Decision rules, fixed now
+
+**Default.** Among Ours, Ours-topk and Ours-topk-median, the default is the one with the highest pooled mean ratio to the oracle that meets all of:
+
+- (a) the mean manipulation gain is ≤ 0 for each of inflater, victim and pair, pooled;
+- (b) Pareto-optimality is ≥ 98% at every n;
+- (c) the mean ratio is ≥ 0.95 at every n.
+
+If neither new variant passes, the default stays Ours.
+
+**Pricing** is adopted if both hold:
+
+- under the default, the priced fake-hard attacker's mean gain is below the unpriced fake-hard attacker's (from the original run), with the paired-bootstrap 95% CI of the difference entirely below 0;
+- at most 5% of honest people's declared hard rules exceed the budget.
+
+**Q2 against B3** is re-checked for the default and reported, whether it passes or misses.
