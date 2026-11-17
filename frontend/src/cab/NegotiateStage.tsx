@@ -130,7 +130,10 @@ export default function NegotiateStage() {
       {model.phase === 'holding' && event && <HoldingPanel event={event} model={model} viewerId={viewerId} />}
       {/* On a phone the story comes before the booking and the chat, not after them. */}
       {!desktop && <div className="-mx-5 -mt-5">{rows}</div>}
-      {decided && <DecisionBrief eventId={eventId} title={event?.title ?? 'Meeting'} model={model} viewerId={viewerId} />}
+      {/* Nobody attends a meeting that simulated agents booked, so the calendar buttons, RSVP and fall-backs are for live agents only. */}
+      {decided && !(model.backend === 'simulated' && model.decision?.status === 'converged') && (
+        <DecisionBrief eventId={eventId} title={event?.title ?? 'Meeting'} model={model} viewerId={viewerId} />
+      )}
       {decided && (rule === USED_RULE ? <WhyCard model={model} /> : <RuleCompare model={model} rule={rule} />)}
       {model.phase === 'failed' && (
         <section role="alert" className="border border-clearance/60 rounded-[2px] px-4 py-4">
