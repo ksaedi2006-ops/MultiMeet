@@ -24,6 +24,8 @@ interface Props {
   rules: RuleId[]
   setRules: (r: RuleId[]) => void
   run: LabRun
+  onBack: () => void
+  onNext: () => void
 }
 
 /** Colour follows the rule: a rule keeps its slot while it stays selected; a new one takes the first free slot. */
@@ -39,7 +41,7 @@ function useSlots(rules: RuleId[]) {
 }
 
 /** Is this one meeting typical? The same rules on hundreds of seeded meetings, live. */
-export default function ManyMeetings({ n, attack, setN, setAttack, rules, setRules, run }: Props) {
+export default function ManyMeetings({ n, attack, setN, setAttack, rules, setRules, run, onBack, onNext }: Props) {
   const bay = useFixture('bay')
   const panel = useFixture('panel')
   const { desktop } = useCab()
@@ -122,6 +124,13 @@ export default function ManyMeetings({ n, attack, setN, setAttack, rules, setRul
 
   const left = (
     <div className="px-4 lg:px-5 py-5 flex flex-col gap-6">
+      <div>
+        <button type="button" onClick={onBack} className="font-mono text-[11px] tracking-[0.12em] text-mist hover:text-amber">← ONE MEETING</button>
+        <h2 className="mt-2 font-display font-bold text-[1.8rem] leading-none text-strip">Is one meeting typical?</h2>
+        <p className="mt-1.5 text-[13.5px] text-strip/75">
+          The same rules on {params.count} seeded meetings, scored against the truth as they arrive.
+        </p>
+      </div>
       <section aria-label="Run settings" className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <span className="font-mono text-[10.5px] tracking-[0.14em] text-mist">RULES · UP TO {MAX}</span>
@@ -175,6 +184,10 @@ export default function ManyMeetings({ n, attack, setN, setAttack, rules, setRul
           bars={params.rules.map((r) => ({ id: r, label: GLOSSARY[r].term, color: color(r), stat: final((x) => x.gain ?? 0)(r) }))}
           domain={[-0.3, 0.3]} format={pts} />
       )}
+      <button type="button" onClick={onNext}
+        className="self-start font-mono text-[12px] tracking-[0.12em] text-amber hover:underline underline-offset-4">
+        FULL TABLE AND FORMULAS · UNDER THE HOOD →
+      </button>
     </div>
   )
 

@@ -8,7 +8,7 @@ import { ATTACK_IDS, decideLab, getLabMeeting, instanceEvents, type Attack, type
 import { dayAndClock } from '../lib/timeLabels'
 import Face from '../story/Face'
 import { buildModel, emptyModel } from '../tower/model'
-import type { RingMarker } from '../tower/scope/engine'
+import { revealDuration, type Reveal, type RingMarker } from '../tower/scope/engine'
 import { GLOSSARY } from './glossary'
 import Term from './Term'
 import { FAMILIES, THEORIES, type RuleId } from './theories'
@@ -20,9 +20,25 @@ interface Props {
   setN: (n: 3 | 5 | 8) => void
   setAttack: (a: Attack) => void
   setIdx: (i: number) => void
+  onNext: () => void
 }
 
 const first = (name: string) => name.trim().split(/\s+/)[0] || name
+
+/** How each rule's own score reads beside a time on the radar. */
+const FORMAT: Partial<Record<RuleId, (v: number) => string>> = {
+  nash: (v) => `Σlog ${v.toFixed(2)}`,
+  egalitarian: (v) => `min ${Math.round(v * 100)}`,
+  ks: (v) => `share ${v.toFixed(2)}`,
+  utilitarian: (v) => `Σ ${v.toFixed(2)}`,
+  budget: (v) => `Σ ${v.toFixed(2)}`,
+  vcg: (v) => `Σ ${v.toFixed(2)}`,
+  borda: (v) => `${v.toFixed(1)} pts`,
+  when2meet: (v) => `${Math.round(v)} free`,
+  plurality: (v) => `${Math.round(v)} vote${Math.round(v) === 1 ? '' : 's'}`,
+  condorcet: (v) => `Copeland ${Math.round(v) > 0 ? '+' : ''}${Math.round(v)}`,
+  median: (v) => (Math.round(v) === 0 ? 'median' : `${Math.round(-v)} min off`),
+}
 const fmtGain = (g: number) => `${g > 0 ? '+' : ''}${Math.round(g * 100)}`
 
 export function Segmented<T extends string | number>({ label, value, options, onChange }: {
@@ -46,7 +62,7 @@ export function Segmented<T extends string | number>({ label, value, options, on
 }
 
 /** One simulated meeting, every rule: the playground's first view. */
-export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: Props) {
+export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, onNext }: Props) {
   const bay = useFixture('bay')
   const panel = useFixture('panel')
   const { desktop, highlight, setHighlight } = useCab()
@@ -102,33 +118,58 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: 
 
   const selected = res(rule)
   const selPick = pickOf(selected)
+  // The selected rule's mechanism, played on the radar; its pick is marked once the animation lands.
+  const [replay, setReplay] = useState(0)
+  const reveal = useMemo<Reveal | undefined>(() => {
+    if (!data || !selected) return undefined
+    const ex = (attack !== 'none' ? selected.attack_extra : selected.extra) ?? {}
+    const fmt = FORMAT[rule]
+    // Times with no votes aren't part of a vote count's story.
+    const top = (ex.top ?? []).filter((x) => !(rule === 'plurality' && x.value <= 0))
+    const i = top.findIndex((x) => x.slot === selPick)
+    if (i > 0) top.unshift(...top.splice(i, 1)) // the pick leads, even when a tie went by time order
+    return {
+      key: `${data.idx}:${n}:${attack}:${rule}:${editKey}:${replay}`,
+      lines: ex.votes && !ex.dictator ? Object.entries(ex.votes).map(([from, slotId]) => ({ from, slotId })) : undefined,
+      labels: fmt ? top.map((x) => ({ slotId: x.slot, text: fmt(x.value), value: x.value, format: fmt })) : undefined,
+      dictator: ex.dictator && selPick ? { agentId: ex.dictator, slotId: selPick } : undefined,
+      asks: attack === 'none' && selected.rounds
+        ? selected.rounds.map((rd) => ({ agentId: rd.user_id, slotId: rd.target, verdict: rd.move.toUpperCase() }))
+        : undefined,
+    }
+  }, [data, selected, selPick, rule, attack, n, editKey, replay])
+  const [landedKey, setLandedKey] = useState('')
+  useEffect(() => {
+    if (!reveal) return
+    const t = window.setTimeout(() => setLandedKey(reveal.key), revealDuration(reveal))
+    return () => window.clearTimeout(t)
+  }, [reveal])
+  const landed = reveal ? landedKey === reveal.key : true
   const markers = useMemo<RingMarker[] | undefined>(() => {
     if (!data) return undefined
     const out: RingMarker[] = []
     if (data.oracle && data.oracle !== selPick) out.push({ slotId: data.oracle, text: 'ORACLE', active: false })
-    if (selPick) out.push({ slotId: selPick, text: GLOSSARY[rule].term.toUpperCase(), active: true })
+    if (selPick && landed) out.push({ slotId: selPick, text: GLOSSARY[rule].term.toUpperCase(), active: true })
     return out
-  }, [data, selPick, rule])
+  }, [data, selPick, rule, landed])
   const onSlotPick = useCallback((slot: string) => { if (editing) edit(editing, { peak: slot }) },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [editing, data])
   useScopeFeed({
-    model, markers, onSlotPick: editing ? onSlotPick : undefined,
+    model, markers, reveal, onSlotPick: editing ? onSlotPick : undefined,
     label: data ? `Meeting ${data.idx + 1}: ${data.n} people, ${data.feasible} feasible times.` : 'Loading a meeting.',
     legend: data ? `Meeting #${data.idx + 1} · ${data.feasible} feasible times. Dots: people, pulled toward the times they truly prefer.` : undefined,
   })
 
-  const controls = (
-    <section aria-label="Meeting settings" className="flex flex-wrap items-end gap-x-6 gap-y-3">
+  const meetingControls = (
+    <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
       <Segmented label={<Term id="n" />} value={n} onChange={setN}
         options={[3, 5, 8].map((v) => ({ id: v as 3 | 5 | 8, node: String(v) }))} />
-      <Segmented label="MANIPULATION" value={attack} onChange={setAttack}
-        options={ATTACK_IDS.map((a) => ({ id: a, node: <Term id={a} passive /> }))} />
       <button type="button" onClick={() => setIdx(idx + 1)}
         className="h-8 px-3 rounded-[2px] border border-board-line text-[12.5px] text-strip hover:border-amber hover:text-amber transition-colors">
-        Next meeting →
+        Another meeting →
       </button>
-    </section>
+    </div>
   )
 
   const DAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
@@ -193,54 +234,54 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: 
   )
 
   const shelf = data && (
-    <section aria-label="Decision rules" className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
+      <div className="grid grid-cols-[minmax(0,1fr)_5.5rem_2.5rem_2.5rem_3rem] gap-x-2 px-2.5 text-[11px] text-mist">
+        <span />
+        <span>pick</span>
+        <span className="text-right"><Term id="min_utility">min</Term></span>
+        <span className="text-right"><Term id="mean_utility">mean</Term></span>
+        <span className="text-right">{attack === 'none' ? <Term id="oracle_ratio">oracle</Term> : <Term id="manip_gain">gain</Term>}</span>
+      </div>
       {FAMILIES.map((fam) => (
         <div key={fam}>
-          <h2 className="font-mono text-[10.5px] tracking-[0.14em] text-mist">{fam.toUpperCase()}</h2>
-          <div className="mt-2 grid sm:grid-cols-2 gap-2">
+          <h3 className="px-2.5 font-mono text-[10px] tracking-[0.14em] text-mist/80">{fam.toUpperCase()}</h3>
+          <ul className="mt-1 flex flex-col">
             {THEORIES.filter((t) => t.family === fam).map((t) => {
               const r = res(t.id)
               const pick = pickOf(r)
               const st = stats(pick)
               const on = rule === t.id
+              const gain = r?.gain
               return (
-                <div key={t.id} role="button" tabIndex={0} aria-pressed={on}
-                  onClick={() => setRule(t.id)}
-                  onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setRule(t.id))}
-                  className={`text-left rounded-[2px] border px-3 py-2.5 cursor-pointer transition-colors ${on ? 'border-amber bg-amber/[0.07]' : 'border-board-line hover:border-strip/40'}`}>
-                  <p className="text-[14px] font-semibold text-strip leading-tight"><Term id={t.id} passive /></p>
-                  <p className="mt-1 text-[13px] text-strip tabular-nums">{label(pick)}</p>
-                  {st && r && (
-                    <p className="mt-0.5 text-[11.5px] text-mist tabular-nums">
-                      <Term id="min_utility" passive>min</Term> {st.min} · <Term id="mean_utility" passive>mean</Term> {Math.round(st.mean)} · <Term id="oracle_ratio" passive>{Math.round(r.ratio * 100)}%</Term>
-                    </p>
-                  )}
-                  {attack !== 'none' && r?.gain !== undefined && (
-                    <p className={`mt-0.5 text-[11.5px] tabular-nums ${r.gain > 1e-9 ? 'text-signal' : 'text-amber'}`}>
-                      <Term id="manip_gain" passive /> {fmtGain(r.gain)}
-                    </p>
-                  )}
-                  <p className="mt-1.5 flex flex-wrap gap-1">
-                    {t.badges.map((b) => (
-                      <span key={b} className={`px-1.5 py-0.5 rounded-[2px] text-[10.5px] border ${b === 'manipulable' ? 'border-board-line text-mist' : 'border-strip/30 text-strip/85'}`}>
-                        <Term id={b} passive />
-                      </span>
-                    ))}
-                  </p>
-                </div>
+                <li key={t.id}>
+                  <button type="button" aria-pressed={on} onClick={() => { setRule(t.id); setReplay((x) => x + 1) }}
+                    className={`w-full grid grid-cols-[minmax(0,1fr)_5.5rem_2.5rem_2.5rem_3rem] items-center gap-x-2 px-2.5 py-1.5 rounded-[2px] text-left text-[13px] tabular-nums transition-colors ${on ? 'bg-amber/[0.12] ring-1 ring-amber' : 'hover:bg-board-raised/60'}`}>
+                    <span className={`truncate ${on ? 'text-strip font-semibold' : 'text-strip/90'}`}><Term id={t.id} passive /></span>
+                    <span className="text-strip/85 truncate">{label(pick)}</span>
+                    <span className={`text-right ${st && st.min < 40 ? 'text-signal' : 'text-strip/85'}`}>{st?.min ?? '–'}</span>
+                    <span className="text-right text-strip/85">{st ? Math.round(st.mean) : '–'}</span>
+                    <span className={`text-right ${attack !== 'none' && gain !== undefined && gain > 1e-9 ? 'text-signal' : 'text-strip/85'}`}>
+                      {attack === 'none' ? (r ? `${Math.round(r.ratio * 100)}%` : '–') : (gain !== undefined ? fmtGain(gain) : '–')}
+                    </span>
+                  </button>
+                </li>
               )
             })}
-          </div>
+          </ul>
         </div>
       ))}
-    </section>
+    </div>
   )
 
   const st = stats(selPick)
   const detail = data && selected && (
     <motion.section key={`${rule}-${data.idx}-${attack}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: EASE }} aria-label="Selected rule">
-      <p className="font-mono text-[10.5px] tracking-[0.14em] text-amber">SELECTED RULE</p>
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-[10.5px] tracking-[0.14em] text-amber">SELECTED RULE</p>
+        <button type="button" onClick={() => setReplay((x) => x + 1)}
+          className="font-mono text-[10.5px] tracking-[0.12em] text-mist hover:text-amber">↻ REPLAY ON RADAR</button>
+      </div>
       <h2 className="mt-1 font-display font-bold text-[1.8rem] leading-none text-strip"><Term id={rule} /></h2>
       <p className="mt-2 flex flex-wrap gap-1">
         {THEORIES.find((t) => t.id === rule)?.badges.map((b) => (
@@ -271,7 +312,7 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: 
         </p>
       )}
 
-      <h3 className="mt-5 font-mono text-[10.5px] tracking-[0.14em] text-mist"><Term id="utility" /> AT THE PICK</h3>
+      <h3 className="mt-5 font-mono text-[10.5px] tracking-[0.14em] text-mist"><Term id="utility">UTILITY</Term> AT THE PICK</h3>
       <ul className="mt-2 flex flex-col gap-2">
         {at(selPick).sort((a, b) => a.u - b.u).map(({ p, u }) => (
           <li key={p.user_id} className="flex items-center gap-2.5">
@@ -307,12 +348,32 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: 
     </motion.section>
   )
 
+  const step = (num: number, title: React.ReactNode, body: React.ReactNode, aside?: React.ReactNode) => (
+    <section className="flex flex-col gap-3">
+      <div className="flex items-baseline gap-3">
+        <span className="font-mono text-[12px] text-amber tabular-nums">{num}</span>
+        <h2 className="font-display font-bold text-[1.45rem] leading-none text-strip">{title}</h2>
+        {aside && <div className="ml-auto">{aside}</div>}
+      </div>
+      {body}
+    </section>
+  )
   const left = (
-    <div className="px-4 lg:px-5 py-5 flex flex-col gap-6">
-      {controls}
+    <div className="px-4 lg:px-5 py-5 flex flex-col gap-7">
       {error && <p role="alert" className="text-sm text-signal">{error}</p>}
-      {people}
-      {shelf}
+      {step(1, `Meeting #${(data?.idx ?? idx) + 1}`, <>{meetingControls}{people}</>)}
+      {step(2, 'Choose a decision rule', shelf)}
+      {step(3, 'Stress-test it', (
+        <div className="flex flex-col gap-2">
+          <Segmented label={<Term id="manip_gain">MANIPULATION</Term>} value={attack} onChange={setAttack}
+            options={ATTACK_IDS.map((a) => ({ id: a, node: <Term id={a} passive /> }))} />
+          <p className="text-[12.5px] text-mist">Or EDIT a person in step 1 and watch every rule re-decide.</p>
+        </div>
+      ))}
+      <button type="button" onClick={onNext}
+        className="self-start inline-flex items-center gap-2 h-10 px-4 rounded-[2px] bg-clearance text-strip font-mono text-[12px] tracking-[0.14em] hover:bg-clearance-dim transition-colors">
+        IS THIS MEETING TYPICAL? RUN MANY →
+      </button>
     </div>
   )
   const right = <div className="px-5 lg:px-6 py-5 flex flex-col gap-5">{detail}</div>

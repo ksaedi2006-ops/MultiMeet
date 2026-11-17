@@ -177,6 +177,22 @@ export default function AttractStage() {
           {error && <p role="alert" className="mt-2 text-sm text-signal">{error}</p>}
         </motion.li>
 
+        <motion.li className={pull} variants={{ hidden: { opacity: 0, x: -24 }, show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE } } }}>
+          <button type="button" onClick={() => navigate('/lab')} className="block w-full text-left group">
+            <BayStrip holder="person">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-px h-full">
+                <Box>
+                  <span className="block font-display font-bold text-[26px] leading-none text-strip-ink">Explore the Lab</span>
+                  <span className="block mt-1.5 text-[14px] leading-snug text-strip-ink/80">
+                    The research behind it: 14 decision rules from economics, raced on simulated meetings.
+                  </span>
+                </Box>
+                <div className="bg-strip-ink text-strip flex items-center px-3.5 group-hover:bg-board transition-colors"><Arrow /></div>
+              </div>
+            </BayStrip>
+          </button>
+        </motion.li>
+
         {recents.map((r) => (
           <motion.li key={r.id} className={pull} variants={{ hidden: { opacity: 0, x: -24 }, show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: EASE } } }}>
             <button type="button" onClick={() => navigate(`/event/${r.id}/negotiate`)} className="block w-full text-left" aria-label={`Open ${r.title}`}>

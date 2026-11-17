@@ -80,6 +80,7 @@ export default function LabStage() {
       {TABS.map((t) => (
         <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
           className={`px-2 sm:px-3 lg:px-4 whitespace-nowrap transition-colors ${tab === t.id ? 'text-amber bg-board-raised/60' : 'text-strip/75 hover:text-strip'}`}>
+          <span className="text-mist mr-1.5 tabular-nums">{TABS.indexOf(t) + 1}</span>
           <span className="hidden md:inline">{t.name}</span>
           <span className="md:hidden">{t.name.split(' ')[0]}</span>
         </button>
@@ -90,8 +91,8 @@ export default function LabStage() {
   return (
     <>
       {tools && createPortal(tabs, tools)}
-      {tab === 'one' && <OneMeeting n={n} attack={attack} idx={idx} setN={setN} setAttack={setAttack} setIdx={setIdx} />}
-      {tab === 'many' && <ManyMeetings n={n} attack={attack} setN={setN} setAttack={setAttack} rules={rules} setRules={setRules} run={run} />}
+      {tab === 'one' && <OneMeeting n={n} attack={attack} idx={idx} setN={setN} setAttack={setAttack} setIdx={setIdx} onNext={() => setTab('many')} />}
+      {tab === 'many' && <ManyMeetings n={n} attack={attack} setN={setN} setAttack={setAttack} rules={rules} setRules={setRules} run={run} onBack={() => setTab('one')} onNext={() => setTab('hood')} />}
       {tab === 'hood' && <UnderTheHood run={run} onOpen={(i) => { setIdx(i); setN(run.params.n); setAttack(run.params.attack); setTab('one') }} />}
       {tab === 'one' && <Coach />}
     </>

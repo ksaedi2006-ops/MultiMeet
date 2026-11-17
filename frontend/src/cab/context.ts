@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { TowerModel } from '../tower/model'
-import type { RingMarker } from '../tower/scope/engine'
+import type { Reveal, RingMarker } from '../tower/scope/engine'
 
 export interface ScopeFeed {
   model: TowerModel
@@ -16,6 +16,8 @@ export interface ScopeFeed {
   stageName?: string
   /** Labels pinned to times on the ring, e.g. where each decision rule would book. */
   markers?: RingMarker[]
+  /** A decision rule's mechanism, animated on the ring. */
+  reveal?: Reveal
   /** Pressing a time on the ring. */
   onSlotPick?: (slotId: string) => void
 }
@@ -47,8 +49,8 @@ export function useFixture(which: 'bay' | 'panel' | 'banner' | 'tools'): HTMLEle
 /** A stage hands the persistent scope what to show; the scope itself never remounts. */
 export function useScopeFeed(f: ScopeFeed) {
   const { feed } = useCab()
-  const { model, label, onLanded, overlay, legend, stageName, markers, onSlotPick } = f
+  const { model, label, onLanded, overlay, legend, stageName, markers, reveal, onSlotPick } = f
   useEffect(() => {
-    feed({ model, label, onLanded, overlay, legend, stageName, markers, onSlotPick })
-  }, [feed, model, label, onLanded, overlay, legend, stageName, markers, onSlotPick])
+    feed({ model, label, onLanded, overlay, legend, stageName, markers, reveal, onSlotPick })
+  }, [feed, model, label, onLanded, overlay, legend, stageName, markers, reveal, onSlotPick])
 }

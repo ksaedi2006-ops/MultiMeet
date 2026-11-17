@@ -50,10 +50,35 @@ export interface RingMarker {
   active: boolean
 }
 
+/**
+ * How a decision rule reached its pick, played on the ring: votes as lines from people to
+ * times, the rule's scores counting up beside its best times, a dictator drawn by lot, and the
+ * mediator's asks one after another. `key` restarts the animation.
+ */
+export interface Reveal {
+  key: string
+  lines?: { from: string; slotId: string }[]
+  labels?: { slotId: string; text: string; value?: number; format?: (v: number) => string }[] // best first
+  dictator?: { agentId: string; slotId: string }
+  asks?: { agentId: string; slotId: string; verdict: string }[]
+}
+
+/** Milliseconds a reveal takes, so a caller can hold the final marker back until it lands. */
+export function revealDuration(r: Reveal | undefined): number {
+  if (!r) return 0
+  let t = 0
+  if (r.dictator) t = Math.max(t, 1900)
+  if (r.lines?.length) t = Math.max(t, 400 + r.lines.length * 90)
+  if (r.labels?.length) t = Math.max(t, 500 + r.labels.length * 280 + 500)
+  if (r.asks?.length) t = Math.max(t, r.asks.length * 1100 + 300)
+  return t
+}
+
 export interface EngineOptions {
   reducedMotion: boolean
   highlight: string | null
   markers?: RingMarker[]
+  reveal?: Reveal
   /** Pressing a time on the ring (the Lab's sandbox uses it to set a favourite). */
   onSlotPick?: (slotId: string) => void
   onLanded?: () => void
@@ -369,9 +394,138 @@ export class ScopeEngine {
     this.drawDeparting(g, now)
     this.drawLeaderLabels(g)
     this.drawPlanes(g, now, sweep)
+    this.drawReveal(g, now)
     this.drawMarkers(g)
     this.drawTimeReadout(g)
     this.phosphor?.render(this.offscreen!, dt * 1000, this.opts.reducedMotion ? 0 : 1)
+  }
+
+  private revealKey = ''
+  private revealAt = 0
+
+  private drawReveal({ cx, cy, Rf, scale }: ReturnType<ScopeEngine['geometry']>, now: number) {
+    const r = this.opts.reveal
+    const { ctx } = this
+    if (!r) return
+    if (r.key !== this.revealKey) {
+      this.revealKey = r.key
+      this.revealAt = now
+    }
+    const t = this.opts.reducedMotion ? 1e9 : now - this.revealAt
+    const agentXY = (id: string): [number, number] | null => {
+      const p = this.planes.get(id)
+      return p ? [cx + p.x * Rf, cy + p.y * Rf] : null
+    }
+    const slotXY = (id: string, inset = 0): [number, number] | null => {
+      const a = this.bearing(id)
+      return a === undefined ? null : [cx + Math.cos(a) * (Rf - inset), cy + Math.sin(a) * (Rf - inset)]
+    }
+    const line = (a: [number, number], b: [number, number], k: number, rgb: string, alpha: number, w = 1.4) => {
+      ctx.strokeStyle = `rgba(${rgb},${alpha})`
+      ctx.lineWidth = w * scale
+      ctx.beginPath()
+      ctx.moveTo(a[0], a[1])
+      ctx.lineTo(a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k)
+      ctx.stroke()
+    }
+    const ring = (p: [number, number], rgb: string, rad: number, w = 2) => {
+      ctx.strokeStyle = `rgba(${rgb},0.95)`
+      ctx.lineWidth = w * scale
+      ctx.beginPath()
+      ctx.arc(p[0], p[1], rad * scale, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+
+    // Votes: one line per person to the time they back, grown one after another.
+    r.lines?.forEach((l, i) => {
+      const a = agentXY(l.from)
+      const b = slotXY(l.slotId, 6 * scale)
+      if (!a || !b) return
+      const k = clamp01((t - i * 90) / 400)
+      if (k > 0) line(a, b, easeInOut(k), AMBER, 0.55)
+    })
+
+    // A dictator drawn by lot: the highlight hops between people, slows, and stops.
+    if (r.dictator) {
+      const ids = [...this.planes.keys()]
+      let who = r.dictator.agentId
+      if (t < 1400 && ids.length) {
+        // Hops get slower: position along a decelerating schedule.
+        const hop = Math.floor(Math.sqrt(t / 1400) * 14)
+        who = ids[(hop + ids.indexOf(r.dictator.agentId) + 1) % ids.length]
+      }
+      const p = agentXY(who)
+      if (p) ring(p, t < 1400 ? STRIP : AMBER, 15, 2.4)
+      if (t >= 1400) {
+        const b = slotXY(r.dictator.slotId, 6 * scale)
+        const a = agentXY(r.dictator.agentId)
+        if (a && b) line(a, b, easeInOut(clamp01((t - 1400) / 450)), AMBER, 0.9, 2)
+      }
+    }
+
+    // The mediator's asks: an arrow from the person asked toward the time, then their answer.
+    r.asks?.forEach((q, i) => {
+      const start = i * 1100
+      if (t < start) return
+      const a = agentXY(q.agentId)
+      const b = slotXY(q.slotId, 6 * scale)
+      if (!a || !b) return
+      const k = clamp01((t - start) / 500)
+      const done = t > start + 1100
+      line([cx, cy], a, 1, ORANGE, done ? 0.25 : 0.7, 1.2)
+      line(a, b, easeInOut(k), ORANGE, done ? 0.35 : 0.9, 1.8)
+      if (t > start + 550) {
+        ctx.font = `600 ${Math.round(11 * scale)}px ${SANS}`
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        const text = q.verdict
+        const w = ctx.measureText(text).width + 10
+        ctx.fillStyle = 'rgba(11,20,28,0.9)'
+        ctx.fillRect(a[0] + 12 * scale, a[1] + 10 * scale, w, 18 * scale)
+        ctx.fillStyle = `rgba(${ORANGE_TEXT},${done ? 0.6 : 1})`
+        ctx.fillText(text, a[0] + 17 * scale, a[1] + 19 * scale)
+      }
+    })
+
+    // The rule's own scores beside its best times, revealed from fifth to first, counting up.
+    const labels = r.labels ?? []
+    const base = r.lines?.length ? 300 + r.lines.length * 90 : 300
+    const fs = Math.round(11.5 * scale)
+    ctx.font = `600 ${fs}px ${MONO}`
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    const placed: { x: number; y: number; w: number; h: number }[] = []
+    labels.forEach((lb, i) => {
+      const order = labels.length - 1 - i // fifth first, the winner last
+      const k = clamp01((t - base - order * 280) / 380)
+      if (k <= 0) return
+      const a = this.bearing(lb.slotId)
+      if (a === undefined) return
+      const text = lb.value !== undefined && lb.format ? lb.format(lb.value * easeInOut(k)) : lb.text
+      const w = ctx.measureText(text).width + 12
+      const h = fs + 9
+      let rr = Rf + 16 * scale
+      let rect = { x: 0, y: 0, w, h }
+      for (let j = 0; j < 6; j++) {
+        rect = { x: cx + Math.cos(a) * rr - w / 2, y: cy + Math.sin(a) * rr - h / 2, w, h }
+        const hit = placed.some((p) => rect.x < p.x + p.w && p.x < rect.x + rect.w && rect.y < p.y + p.h && p.y < rect.y + rect.h)
+        if (!hit) break
+        rr += h + 2
+      }
+      placed.push(rect)
+      const win = i === 0
+      ctx.globalAlpha = k
+      ctx.fillStyle = win ? `rgba(${AMBER},0.95)` : 'rgba(11,20,28,0.88)'
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+      if (!win) {
+        ctx.strokeStyle = `rgba(${AMBER},0.5)`
+        ctx.lineWidth = 1
+        ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1)
+      }
+      ctx.fillStyle = win ? 'rgb(26,32,40)' : `rgba(${STRIP},0.95)`
+      ctx.fillText(text, rect.x + w / 2, rect.y + h / 2 + 1)
+      ctx.globalAlpha = 1
+    })
   }
 
   /** Rule picks: a tick on the ring and a label stepping inward until it clears the others. */

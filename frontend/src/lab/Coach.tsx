@@ -4,9 +4,9 @@ import { EASE } from '../lib/motion'
 
 const KEY = 'multimeet_lab_coach'
 const STEPS = [
-  { title: 'Five people, true preferences', text: 'Each person’s own words are on the left; the radar pulls them toward the times they truly prefer.' },
-  { title: 'Pick a decision rule', text: 'Every card is a rule from bargaining theory, welfare economics, voting or mechanism design. Hover any underlined term for its definition and source.' },
-  { title: 'Add a manipulator', text: 'Make one agent lie and see each rule’s manipulation gain. Then try Many meetings to see if this meeting was typical.' },
+  { title: '1 · A meeting', text: 'Five simulated people and their true preferences, in their own words. The radar pulls each toward the times they prefer.' },
+  { title: '2 · Choose a decision rule', text: 'Fourteen rules from bargaining theory, welfare economics, voting and mechanism design. Pick one and watch how it decides on the radar. Hover any underlined term for its definition and source.' },
+  { title: '3 · Stress-test it', text: 'Make an agent lie, or edit someone’s preferences, and see which rules move. Then check whether this meeting was typical under Many meetings.' },
 ]
 
 function seen(): boolean {

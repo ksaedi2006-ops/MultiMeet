@@ -38,6 +38,17 @@ ATTACKS = ("none", "inflater", "victim", "fakehard", "pair")
 SIZES = (3, 5, 8)
 
 
+def _explain(res) -> dict:
+    """How a rule reached its pick: its five best-scoring times, plus votes, the dictator or
+    whether a Condorcet winner exists. This is what the radar animates."""
+    extra = {k: v for k, v in (res.extra or {}).items() if k != "objective"}
+    obj = (res.extra or {}).get("objective") or {}
+    if obj:
+        top = sorted((s for s in obj if obj[s] > float("-inf")), key=lambda s: obj[s], reverse=True)[:5]
+        extra["top"] = [{"slot": s, "value": round(obj[s], 4)} for s in top]
+    return extra
+
+
 def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
     best = oracle(inst)
     nw_or = nash_welfare(inst, best)
@@ -56,8 +67,8 @@ def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
             "pareto": o["pareto"],
             "violation": o["violation"],
         }
-        if res.extra:
-            r["extra"] = res.extra
+        if extra := _explain(res):
+            r["extra"] = extra
         if res.payments:
             r["payments"] = {u: round(v, 4) for u, v in res.payments.items()}
         if res.outcome and res.outcome.rounds:
@@ -75,6 +86,8 @@ def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
             uids = [inst.uids[k] for k in liars]
             honest_ids = [u for u in inst.uids if u not in uids]
             r["attack_pick"] = lpick
+            if extra := _explain(lres):
+                r["attack_extra"] = extra
             # What lying won the liars, and what it cost everyone else, on their true utilities.
             # Under the Clarke tax, points paid count against the liar too (that is what makes it truthful).
             paid = {u: (lres.payments or {}).get(u, 0.0) - (res.payments or {}).get(u, 0.0) for u in uids}

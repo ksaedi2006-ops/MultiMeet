@@ -7,6 +7,13 @@ export type LabRule = RuleId
 export type Attack = 'none' | 'inflater' | 'victim' | 'fakehard' | 'pair'
 export const ATTACK_IDS: Attack[] = ['none', 'inflater', 'victim', 'fakehard', 'pair']
 
+export interface LabExtra {
+  condorcet?: boolean
+  dictator?: string
+  votes?: Record<string, string>
+  top?: { slot: string; value: number }[]
+}
+
 export interface LabResult {
   pick: string | null
   ratio: number // Nash welfare relative to the best possible time, on true preferences (1 = best)
@@ -17,7 +24,8 @@ export interface LabResult {
   attack_pick?: string | null
   gain?: number // what lying won the liar(s), on their true utility
   harm?: number // what it cost everyone else
-  extra?: { condorcet?: boolean; dictator?: string }
+  extra?: LabExtra
+  attack_extra?: LabExtra
   payments?: Record<string, number>
   rounds?: { user_id: string; rule: string; target: string; draft: string | null; move: 'accept' | 'flex' | 'hold'; pick_after: string | null }[]
 }

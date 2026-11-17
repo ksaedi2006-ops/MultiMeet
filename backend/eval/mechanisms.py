@@ -211,9 +211,10 @@ def run_ours(reports: list[Report], slots: list[str], *, scheme="borda", selecto
     solver = Solver(slots, scheme=scheme, selector=selector, d_mode=d_mode, tau=tau, floor_mode="prefer")
     states = [AgentState(r.uid, r.model, r.d_raw) for r in reports]
     if not mediator:
-        return Result(solver.solve(states).pick, 0)
+        draft = solver.solve(states)
+        return Result(draft.pick, 0, extra={"objective": draft.selection.objective})
     out = negotiate(states, solver, responder(reports))
-    return Result(out.final.pick, len(out.rounds), out)
+    return Result(out.final.pick, len(out.rounds), out, extra={"objective": out.final.selection.objective})
 
 
 _OURS = {
@@ -264,15 +265,18 @@ def run(mech: str, inst: Instance, reports: list[Report], slots: list[str], *, o
     if mech == "B0":
         return Result(random_select(slots, random.Random(f"b0:{inst.n}:{inst.idx}")).slot_id)
     if mech == "B1":
-        return Result(approval_select({r.uid: r.approvals & set(slots) for r in reports}, slots).slot_id)
+        sel = approval_select({r.uid: r.approvals & set(slots) for r in reports}, slots)
+        return Result(sel.slot_id, extra={"objective": sel.objective})
     if mech == "B3":
         return run_b3(reports, slots)
     if mech == "B3-oneshot":
         return run_b3(reports, slots, rounds=False)
     if mech == "B4":
-        return Result(utilitarian_select({u: normalize(row, "range") for u, row in raw.items()}, slots).slot_id)
+        sel = utilitarian_select({u: normalize(row, "range") for u, row in raw.items()}, slots)
+        return Result(sel.slot_id, extra={"objective": sel.objective})
     if mech == "B5":
-        return Result(borda_select(raw, slots).slot_id)
+        sel = borda_select(raw, slots)
+        return Result(sel.slot_id, extra={"objective": sel.objective})
     # More rules from the literature, for the Lab. Not part of the preregistered comparison.
     if mech in LAB_EXTRA:
         return run_extra(mech, inst, raw, slots)
@@ -307,23 +311,29 @@ def run_extra(mech: str, inst: Instance, raw: dict[str, dict[str, float]], slots
     """Plurality, Condorcet/Copeland, Kalai-Smorodinsky, generalized median, random dictator,
     budgeted (L2) votes and the Clarke tax, all on the same reports as everything else."""
     common = {u: normalize(row, "range") for u, row in raw.items()}  # the common scale B4 uses
+    order = {s: i for i, s in enumerate(slots)}
+    tops = {u: max(slots, key=lambda s, row=row: (round(row[s], 9), -order[s])) for u, row in raw.items()}
     if mech == "P1":
-        return Result(plurality_select(raw, slots).slot_id)
+        sel = plurality_select(raw, slots)
+        return Result(sel.slot_id, extra={"objective": sel.objective, "votes": tops})
     if mech == "CW":
         sel, condorcet = copeland_select(raw, slots)
-        return Result(sel.slot_id, extra={"condorcet": condorcet})
+        return Result(sel.slot_id, extra={"condorcet": condorcet, "objective": sel.objective})
     if mech == "KS":
-        return Result(ks_select(common, {u: 0.0 for u in common}, slots).slot_id)
+        sel = ks_select(common, {u: 0.0 for u in common}, slots)
+        return Result(sel.slot_id, extra={"objective": sel.objective})
     if mech == "MED":
-        return Result(median_select(raw, slots, _minutes(inst, slots)).slot_id)
+        sel = median_select(raw, slots, _minutes(inst, slots))
+        return Result(sel.slot_id, extra={"objective": sel.objective, "votes": tops})
     if mech == "RD":
         sel, who = random_dictator_select(raw, slots, f"rd:{inst.n}:{inst.idx}")
-        return Result(sel.slot_id, extra={"dictator": who})
+        return Result(sel.slot_id, extra={"dictator": who, "votes": {who: sel.slot_id} if who else {}})
     if mech == "QV":
-        return Result(budget_select(raw, slots).slot_id)
+        sel = budget_select(raw, slots)
+        return Result(sel.slot_id, extra={"objective": sel.objective})
     if mech == "VCG":
         sel, pay = vcg_select(common, slots)
-        return Result(sel.slot_id, payments=pay)
+        return Result(sel.slot_id, payments=pay, extra={"objective": sel.objective})
     raise ValueError(mech)
 
 

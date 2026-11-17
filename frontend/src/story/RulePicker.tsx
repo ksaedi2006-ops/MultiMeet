@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import type { RuleId, RuleOutcome } from '../api/events'
 import { EASE } from '../lib/motion'
 import { RULES, RULE, USED_RULE } from '../lib/rules'
@@ -79,6 +80,9 @@ export default function RulePicker({ rule, onChange, outcomes }: Props) {
                 )
               })}
             </ul>
+            <Link to="/lab" className="block px-4 py-3 text-[13px] text-amber hover:bg-board-raised/60">
+              Compare all 14 rules on simulated meetings in the Lab →
+            </Link>
           </motion.div>
         )}
       </AnimatePresence>
