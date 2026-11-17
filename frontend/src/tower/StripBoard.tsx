@@ -80,12 +80,6 @@ export default function StripBoard({ model, viewerId, highlight, onHover }: Prop
   return (
     <div className="flex flex-col gap-1.5">
       {hasSlots && (
-        <p className="text-[13px] leading-snug text-mist mb-1">
-          Each row is a person, each bar a possible time. Darker means they like it more. Thin lines are times
-          someone can’t make.
-        </p>
-      )}
-      {hasSlots && (
         <div className="flex flex-col gap-0.5 pl-[10.5rem] pr-3" aria-hidden>
           <div className="flex gap-[3px] h-4">
             {days.map((day) => (
