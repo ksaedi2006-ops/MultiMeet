@@ -68,6 +68,7 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, on
   const { desktop, highlight, setHighlight } = useCab()
   const [data, setData] = useState<LabMeeting | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [slow, setSlow] = useState(false)
   const [rule, setRule] = useState<RuleId>('nash')
   // The sandbox: people whose preferences the viewer has redrawn, and who is being edited now.
   const [edits, setEdits] = useState<Record<string, Edit>>({})
@@ -78,16 +79,18 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, on
   useEffect(() => {
     let live = true
     setError(null)
+    setSlow(false)
+    const wait = window.setTimeout(() => live && setSlow(true), 2500)
     const t = window.setTimeout(() => {
       const req = Object.keys(edits).length ? decideLab(idx, n, attack, edits) : getLabMeeting(idx, n, attack)
-      req.then((d) => live && setData(d), (e) => {
+      req.finally(() => window.clearTimeout(wait)).then((d) => live && setData(d), (e) => {
         if (!live) return
         // The generator drops a few seeds; step to the next one.
         if (String(e.message).includes('dropped')) setIdx(idx + 1)
         else setError(e.message)
       })
     }, Object.keys(edits).length ? 200 : 0)
-    return () => { live = false; window.clearTimeout(t) }
+    return () => { live = false; window.clearTimeout(t); window.clearTimeout(wait) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [idx, n, attack, setIdx, editKey])
 
@@ -373,6 +376,7 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx, on
   const left = (
     <div className="px-4 lg:px-5 py-5 flex flex-col gap-7">
       {error && <p role="alert" className="text-sm text-signal">{error}</p>}
+      {slow && !data && !error && <p role="status" className="text-sm text-mist">Loading the meeting. The server is slow to answer, one more moment.</p>}
       {step(1, `Meeting #${(data?.idx ?? idx) + 1}`, <>{meetingControls}{people}</>)}
       {step(2, 'Choose a decision rule', shelf)}
       {step(3, 'Stress-test it', (
