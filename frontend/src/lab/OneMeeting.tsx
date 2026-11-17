@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { motion } from 'framer-motion'
 import { useCab, useFixture, useScopeFeed } from '../cab/context'
 import { avatarsFor } from '../lib/avatars'
 import { EASE } from '../lib/motion'
-import { ATTACK_IDS, getLabMeeting, instanceEvents, type Attack, type LabMeeting, type LabResult } from '../lib/lab'
+import { ATTACK_IDS, decideLab, getLabMeeting, instanceEvents, type Attack, type Edit, type LabMeeting, type LabResult } from '../lib/lab'
 import { dayAndClock } from '../lib/timeLabels'
 import Face from '../story/Face'
 import { buildModel, emptyModel } from '../tower/model'
@@ -53,18 +53,34 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: 
   const [data, setData] = useState<LabMeeting | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [rule, setRule] = useState<RuleId>('nash')
+  // The sandbox: people whose preferences the viewer has redrawn, and who is being edited now.
+  const [edits, setEdits] = useState<Record<string, Edit>>({})
+  const [editing, setEditing] = useState<string | null>(null)
+  useEffect(() => { setEdits({}); setEditing(null) }, [idx, n])
+  const editKey = JSON.stringify(edits)
 
   useEffect(() => {
     let live = true
     setError(null)
-    getLabMeeting(idx, n, attack).then((d) => live && setData(d), (e) => {
-      if (!live) return
-      // The generator drops a few seeds; step to the next one.
-      if (String(e.message).includes('dropped')) setIdx(idx + 1)
-      else setError(e.message)
-    })
-    return () => { live = false }
-  }, [idx, n, attack, setIdx])
+    const t = window.setTimeout(() => {
+      const req = Object.keys(edits).length ? decideLab(idx, n, attack, edits) : getLabMeeting(idx, n, attack)
+      req.then((d) => live && setData(d), (e) => {
+        if (!live) return
+        // The generator drops a few seeds; step to the next one.
+        if (String(e.message).includes('dropped')) setIdx(idx + 1)
+        else setError(e.message)
+      })
+    }, Object.keys(edits).length ? 200 : 0)
+    return () => { live = false; window.clearTimeout(t) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx, n, attack, setIdx, editKey])
+
+  const edit = (uid: string, patch: Partial<Edit>) => setEdits((all) => {
+    const person = data?.people.find((p) => p.user_id === uid)
+    const fav = person ? Object.entries(person.scores).sort((a, b) => b[1] - a[1])[0]?.[0] : undefined
+    const cur = all[uid] ?? { peak: fav ?? '', avoid: [] }
+    return { ...all, [uid]: { ...cur, ...patch } }
+  })
 
   const faces = useMemo(() => avatarsFor(data?.people.map((p) => p.user_id) ?? []), [data])
   const model = useMemo(() => {
@@ -93,8 +109,11 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: 
     if (selPick) out.push({ slotId: selPick, text: GLOSSARY[rule].term.toUpperCase(), active: true })
     return out
   }, [data, selPick, rule])
+  const onSlotPick = useCallback((slot: string) => { if (editing) edit(editing, { peak: slot }) },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [editing, data])
   useScopeFeed({
-    model, markers,
+    model, markers, onSlotPick: editing ? onSlotPick : undefined,
     label: data ? `Meeting ${data.idx + 1}: ${data.n} people, ${data.feasible} feasible times.` : 'Loading a meeting.',
     legend: data ? `Meeting #${data.idx + 1} · ${data.feasible} feasible times. Dots: people, pulled toward the times they truly prefer.` : undefined,
   })
@@ -112,24 +131,63 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: 
     </section>
   )
 
+  const DAY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']
   const people = data && (
     <section aria-label="The people">
-      <h2 className="font-mono text-[10.5px] tracking-[0.14em] text-mist">PEOPLE · TRUE PREFERENCES</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="font-mono text-[10.5px] tracking-[0.14em] text-mist">PEOPLE · TRUE PREFERENCES</h2>
+        {Object.keys(edits).length > 0 && (
+          <button type="button" onClick={() => { setEdits({}); setEditing(null) }} className="text-[12px] text-amber hover:underline underline-offset-4">Reset edits</button>
+        )}
+      </div>
       <ul className="mt-2 grid sm:grid-cols-2 gap-x-4 gap-y-2.5">
-        {data.people.map((p) => (
-          <li key={p.user_id} className="flex items-start gap-2.5"
-            onPointerEnter={() => setHighlight(p.user_id)} onPointerLeave={() => setHighlight(null)}>
-            <Face avatar={faces.get(p.user_id) ?? 0} size={30}
-              score={selPick ? p.scores[selPick] : undefined} />
-            <div className="min-w-0">
-              <p className={`text-[14px] leading-tight ${highlight === p.user_id ? 'text-amber' : 'text-strip'}`}>
-                {p.name}
-                {p.liar && <span className="ml-1.5 font-mono text-[10px] tracking-[0.12em] text-signal"><Term id={attack}>{GLOSSARY[attack].term.toUpperCase()}</Term></span>}
-              </p>
-              <p className="text-[12.5px] text-strip/65 leading-snug">{p.said.map((s) => `“${s}”`).join(' ')}</p>
-            </div>
-          </li>
-        ))}
+        {data.people.map((p) => {
+          const e = edits[p.user_id]
+          const open = editing === p.user_id
+          return (
+            <li key={p.user_id} className={`flex flex-col gap-2 ${open ? 'sm:col-span-2 rounded-[2px] border border-amber/50 p-2.5' : ''}`}
+              onPointerEnter={() => setHighlight(p.user_id)} onPointerLeave={() => setHighlight(null)}>
+              <div className="flex items-start gap-2.5">
+                <Face avatar={faces.get(p.user_id) ?? 0} size={30} score={selPick ? p.scores[selPick] : undefined} />
+                <div className="min-w-0 flex-1">
+                  <p className={`text-[14px] leading-tight ${highlight === p.user_id ? 'text-amber' : 'text-strip'}`}>
+                    {p.name}
+                    {p.liar && <span className="ml-1.5 font-mono text-[10px] tracking-[0.12em] text-signal"><Term id={attack}>{GLOSSARY[attack].term.toUpperCase()}</Term></span>}
+                    {p.edited && <span className="ml-1.5 font-mono text-[10px] tracking-[0.12em] text-amber">EDITED</span>}
+                  </p>
+                  <p className="text-[12.5px] text-strip/65 leading-snug">{p.said.map((x) => `“${x}”`).join(' ')}</p>
+                </div>
+                <button type="button" onClick={() => setEditing(open ? null : p.user_id)} aria-expanded={open}
+                  className="shrink-0 font-mono text-[10.5px] tracking-[0.12em] text-mist hover:text-amber">{open ? 'DONE' : 'EDIT'}</button>
+              </div>
+              {open && (
+                <div className="flex flex-wrap items-end gap-x-5 gap-y-2 pl-10">
+                  <label className="flex flex-col gap-1 text-[11.5px] text-mist">
+                    Favourite time (or press one on the radar)
+                    <select value={e?.peak ?? ''} onChange={(ev) => edit(p.user_id, { peak: ev.target.value })}
+                      className="h-8 bg-console border border-board-line rounded-[2px] px-2 text-[13px] text-strip">
+                      {!e && <option value="">Keep their own</option>}
+                      {data.slots.map((s) => <option key={s.id} value={s.id}>{dayAndClock(s.label)}</option>)}
+                    </select>
+                  </label>
+                  <div className="flex flex-col gap-1 text-[11.5px] text-mist">
+                    Avoid
+                    <div className="flex gap-1">
+                      {DAY.map((d, i) => {
+                        const on = e?.avoid.includes(i) ?? false
+                        return (
+                          <button key={d} type="button" aria-pressed={on}
+                            onClick={() => edit(p.user_id, { avoid: on ? e!.avoid.filter((x) => x !== i) : [...(e?.avoid ?? []), i] })}
+                            className={`h-8 w-10 rounded-[2px] border text-[12px] ${on ? 'border-signal text-signal' : 'border-board-line text-strip/75 hover:border-strip/50'}`}>{d}</button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </li>
+          )
+        })}
       </ul>
     </section>
   )
@@ -184,6 +242,11 @@ export default function OneMeeting({ n, attack, idx, setN, setAttack, setIdx }: 
       transition={{ duration: 0.3, ease: EASE }} aria-label="Selected rule">
       <p className="font-mono text-[10.5px] tracking-[0.14em] text-amber">SELECTED RULE</p>
       <h2 className="mt-1 font-display font-bold text-[1.8rem] leading-none text-strip"><Term id={rule} /></h2>
+      <p className="mt-2 flex flex-wrap gap-1">
+        {THEORIES.find((t) => t.id === rule)?.badges.map((b) => (
+          <span key={b} className="px-1.5 py-0.5 rounded-[2px] text-[11px] border border-strip/30 text-strip/85"><Term id={b} /></span>
+        ))}
+      </p>
       <p className="mt-3 font-display font-bold text-[2rem] leading-none text-amber">{label(selPick)}</p>
       {st && (
         <dl className="mt-3 grid grid-cols-3 gap-2">

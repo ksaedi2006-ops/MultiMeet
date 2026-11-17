@@ -8,6 +8,10 @@ The instances are the same seeded ones docs/eval/RESULTS.md reports on.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
+from app.scheduling.normalize import normalize
+from app.scheduling.utility import Criterion, UtilityModel
 from eval.instances import Instance, make_instance
 from eval.mechanisms import condition, oracle, run
 from eval.metrics import nash_welfare, outcome, utilities_at
@@ -93,15 +97,64 @@ def lab_row(idx: int, n: int, mechs: list[str], attack: str) -> dict | None:
     return _row(inst, mechs, attack) if inst else None
 
 
-def lab_meeting(idx: int, n: int, attack: str) -> dict | None:
-    """One meeting for the playground: every rule, the people in their own words, the truth."""
-    data = lab_instance(idx, n, list(MECHANISMS), attack)
-    if data is None:
-        return None
+DAYS = ("Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays")
+PEAK_WIDTH = 240  # minutes from the favourite time at which the time-of-day penalty is full
+
+
+def _edited_model(inst: Instance, uid: str, peak: str, avoid: list[int]) -> UtilityModel:
+    """A person redrawn by hand in the sandbox: single-peaked on time of day around their
+    chosen favourite, minus a day penalty on the weekdays they avoid."""
+    from zoneinfo import ZoneInfo
+
+    from eval.instances import MEETING_TZ
+
+    zone = ZoneInfo(MEETING_TZ)
+    local = {s: inst.slots[s].start.astimezone(zone) for s in inst.feasible}
+    at = lambda s: local[s].hour * 60 + local[s].minute  # noqa: E731
+    target = at(peak)
+    tod = {s: min(1.0, abs(at(s) - target) / PEAK_WIDTH) for s in inst.feasible}
+    crits = [Criterion("sandbox:time", "Time of day", "sandbox", 1.0, 1.0, tod)]
+    if avoid:
+        day = {s: (1.0 if local[s].weekday() in avoid else 0.0) for s in inst.feasible}
+        crits.append(Criterion("sandbox:days", "Days", "sandbox", 0.8, 0.8, day))
+    return UtilityModel(uid, tuple(crits))
+
+
+def apply_edits(inst: Instance, edits: dict[str, dict]) -> dict[str, list[str]]:
+    """Replace edited people's true preferences (and so their honest reports). Returns what each now says."""
+    from zoneinfo import ZoneInfo
+
+    from eval.instances import MEETING_TZ
+
+    said: dict[str, list[str]] = {}
+    for uid, e in edits.items():
+        k = next((i for i, p in enumerate(inst.people) if p.uid == uid), None)
+        peak = e.get("peak")
+        if k is None or peak not in inst.feasible:
+            continue
+        avoid = sorted({int(d) for d in e.get("avoid", []) if 0 <= int(d) <= 4})
+        model = _edited_model(inst, uid, peak, avoid)
+        inst.people[k] = replace(inst.people[k], model_true=model)
+        inst.u[uid] = normalize(model.raw(inst.feasible), "range")
+        t = inst.slots[peak].start.astimezone(ZoneInfo(MEETING_TZ))
+        clock = t.strftime("%-I:%M %p").replace(":00", "")
+        said[uid] = [f"Ideally around {clock}"] + ([f"Avoid {', '.join(DAYS[d] for d in avoid)}"] if avoid else [])
+    return said
+
+
+def lab_meeting(idx: int, n: int, attack: str, edits: dict[str, dict] | None = None) -> dict | None:
+    """One meeting for the playground: every rule, the people in their own words, the truth.
+    With edits, the named people's preferences are redrawn first (the sandbox)."""
     inst = make_instance(idx, n)
+    if not inst:
+        return None
+    rewritten = apply_edits(inst, edits or {})
+    data = _full(inst, list(MECHANISMS), attack)
     said = {p.uid: [s for _, s in p.phrases] for p in inst.people}
+    said.update(rewritten)
     for person in data["people"]:
         person["said"] = said.get(person["user_id"], [])
+        person["edited"] = person["user_id"] in rewritten
     data["liars"] = [p["user_id"] for p in data["people"] if p["liar"]]
     return data
 
@@ -109,8 +162,10 @@ def lab_meeting(idx: int, n: int, attack: str) -> dict | None:
 def lab_instance(idx: int, n: int, mechs: list[str], attack: str) -> dict | None:
     """One meeting in full, to draw on the radar: its times, people, true scores and every pick."""
     inst = make_instance(idx, n)
-    if not inst:
-        return None
+    return _full(inst, mechs, attack) if inst else None
+
+
+def _full(inst: Instance, mechs: list[str], attack: str) -> dict:
     row = _row(inst, mechs, attack)
     liars = condition(inst, attack)[2] if attack != "none" else []
     return {

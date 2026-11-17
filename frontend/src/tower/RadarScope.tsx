@@ -12,6 +12,7 @@ interface Props {
   frame?: Frame | null
   label?: string
   markers?: RingMarker[]
+  onSlotPick?: (slotId: string) => void
 }
 
 function describe(m: TowerModel): string {
@@ -24,12 +25,12 @@ function describe(m: TowerModel): string {
   return parts.join(', ') + '. The table and activity list below give the same details.'
 }
 
-export default function RadarScope({ model, highlight, onHover, onLanded, frame, label, markers }: Props) {
+export default function RadarScope({ model, highlight, onHover, onLanded, frame, label, markers, onSlotPick }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<ScopeEngine | null>(null)
   const reduced = useReducedMotion() ?? false
-  const callbacks = useRef({ onHover, onLanded })
-  callbacks.current = { onHover, onLanded }
+  const callbacks = useRef({ onHover, onLanded, onSlotPick })
+  callbacks.current = { onHover, onLanded, onSlotPick }
 
   useEffect(() => {
     const e = new ScopeEngine(canvas.current!)
@@ -45,6 +46,7 @@ export default function RadarScope({ model, highlight, onHover, onLanded, frame,
       markers,
       onHover: (id) => callbacks.current.onHover(id),
       onLanded: () => callbacks.current.onLanded(),
+      onSlotPick: (id) => callbacks.current.onSlotPick?.(id),
     })
   }, [reduced, highlight, markers])
 

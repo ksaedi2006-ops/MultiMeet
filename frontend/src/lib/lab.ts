@@ -39,7 +39,7 @@ export interface LabInstance extends LabRow {
 }
 
 export interface LabMeeting extends LabInstance {
-  people: (LabInstance['people'][number] & { said: string[] })[]
+  people: (LabInstance['people'][number] & { said: string[]; edited?: boolean })[]
   liars: string[]
 }
 
@@ -47,6 +47,17 @@ export async function getLabMeeting(idx: number, n: number, attack: Attack): Pro
   const q = new URLSearchParams({ idx: String(idx), n: String(n), attack })
   const res = await fetch(`${API_BASE}/lab/meeting?${q}`)
   if (!res.ok) throw new Error(res.status === 404 ? 'That meeting was dropped by the generator.' : 'Couldn’t load that meeting.')
+  return res.json()
+}
+
+export interface Edit { peak: string; avoid: number[] }
+
+/** The sandbox: redraw some people's preferences and run every rule again. */
+export async function decideLab(idx: number, n: number, attack: Attack, edits: Record<string, Edit>): Promise<LabMeeting> {
+  const res = await fetch(`${API_BASE}/lab/decide`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idx, n, attack, edits }),
+  })
+  if (!res.ok) throw new Error('Couldn’t re-run the rules.')
   return res.json()
 }
 

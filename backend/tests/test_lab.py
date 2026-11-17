@@ -42,3 +42,14 @@ def test_lab_meeting_runs_every_rule_with_the_people_in_their_own_words(client):
     assert "condorcet" in data["results"]["condorcet"]["extra"]
     assert data["results"]["vcg"]["payments"]
     assert all("gain" in r for r in data["results"].values())
+
+
+def test_lab_decide_redraws_a_person_and_reruns_every_rule(client):
+    base = client.get("/lab/meeting", params={"idx": 2, "n": 3}).json()
+    who = base["people"][0]["user_id"]
+    peak = base["slots"][-1]["id"]
+    data = client.post("/lab/decide", json={"idx": 2, "n": 3, "edits": {who: {"peak": peak, "avoid": [0]}}}).json()
+    me = next(p for p in data["people"] if p["user_id"] == who)
+    assert me["edited"] and me["said"][0].startswith("Ideally around")
+    assert me["scores"][peak] == 100  # their new favourite is now their best time
+    assert len(data["results"]) == 14

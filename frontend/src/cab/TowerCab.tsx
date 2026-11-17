@@ -65,7 +65,7 @@ export default function TowerCab() {
         <div ref={setBanner} className="console relative z-10 shrink-0 px-4 lg:px-6 empty:hidden" />
         <div className="relative flex-1 min-h-0 flex flex-col lg:block">
           <div ref={layer} className="relative h-[max(52svh,min(100vw,88svh))] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
-            <RadarScope model={scope.model} label={scope.label} frame={frame} markers={scope.markers}
+            <RadarScope model={scope.model} label={scope.label} frame={frame} markers={scope.markers} onSlotPick={scope.onSlotPick}
               highlight={highlight} onHover={setHighlight} onLanded={onLanded} />
             {frame && scope.legend && (
               <p className="absolute text-center text-[13px] leading-snug text-mist px-2"

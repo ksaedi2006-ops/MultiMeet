@@ -54,6 +54,8 @@ export interface EngineOptions {
   reducedMotion: boolean
   highlight: string | null
   markers?: RingMarker[]
+  /** Pressing a time on the ring (the Lab's sandbox uses it to set a favourite). */
+  onSlotPick?: (slotId: string) => void
   onLanded?: () => void
   onHover?: (agentId: string | null) => void
 }
@@ -337,6 +339,7 @@ export class ScopeEngine {
       }
     }
     this.hoverSlot = bestSlot
+    if (bestSlot && e.type === 'pointerdown') this.opts.onSlotPick?.(bestSlot)
   }
 
   // ---------- frame ----------

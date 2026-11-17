@@ -4,6 +4,7 @@ import asyncio
 import json
 
 from fastapi import APIRouter, HTTPException, Query
+from pydantic import BaseModel, Field
 from fastapi.responses import StreamingResponse
 
 from app.lab import ATTACKS, MECHANISMS, SIZES, lab_instance, lab_meeting, lab_row
@@ -62,6 +63,29 @@ async def meeting(idx: int = 0, n: int = 5, attack: str = "none"):
     """One meeting under every rule, for the playground."""
     _parse("nash", n, attack)
     data = await asyncio.to_thread(lab_meeting, idx, n, attack)
+    if data is None:
+        raise HTTPException(404, "That instance was dropped by the generator.")
+    return data
+
+
+class Edit(BaseModel):
+    peak: str  # slot id of the person's new favourite time
+    avoid: list[int] = Field(default_factory=list)  # weekdays 0-4 they now avoid
+
+
+class DecideBody(BaseModel):
+    idx: int = 0
+    n: int = 5
+    attack: str = "none"
+    edits: dict[str, Edit] = Field(default_factory=dict)
+
+
+@router.post("/decide")
+async def decide(body: DecideBody):
+    """The sandbox: redraw some people's preferences, then run every rule again."""
+    _parse("nash", body.n, body.attack)
+    edits = {uid: e.model_dump() for uid, e in body.edits.items()}
+    data = await asyncio.to_thread(lab_meeting, body.idx, body.n, body.attack, edits)
     if data is None:
         raise HTTPException(404, "That instance was dropped by the generator.")
     return data

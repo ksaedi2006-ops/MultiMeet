@@ -16,6 +16,8 @@ export interface ScopeFeed {
   stageName?: string
   /** Labels pinned to times on the ring, e.g. where each decision rule would book. */
   markers?: RingMarker[]
+  /** Pressing a time on the ring. */
+  onSlotPick?: (slotId: string) => void
 }
 
 export interface Cab {
@@ -45,8 +47,8 @@ export function useFixture(which: 'bay' | 'panel' | 'banner' | 'tools'): HTMLEle
 /** A stage hands the persistent scope what to show; the scope itself never remounts. */
 export function useScopeFeed(f: ScopeFeed) {
   const { feed } = useCab()
-  const { model, label, onLanded, overlay, legend, stageName, markers } = f
+  const { model, label, onLanded, overlay, legend, stageName, markers, onSlotPick } = f
   useEffect(() => {
-    feed({ model, label, onLanded, overlay, legend, stageName, markers })
-  }, [feed, model, label, onLanded, overlay, legend, stageName, markers])
+    feed({ model, label, onLanded, overlay, legend, stageName, markers, onSlotPick })
+  }, [feed, model, label, onLanded, overlay, legend, stageName, markers, onSlotPick])
 }
