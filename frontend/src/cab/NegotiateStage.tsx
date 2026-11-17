@@ -15,7 +15,6 @@ import { usePlayback } from '../tower/usePlayback'
 import { play, useGrowth } from '../lib/sound'
 import { useCab, useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
-import { pointVerb } from '../lib/timeLabels'
 
 /**
  * Negotiating, then Booked. The camera centres on the scope; the left panel holds every
@@ -65,7 +64,6 @@ export default function NegotiateStage() {
   useScopeFeed({
     model, onLanded, overlay,
     stageName: decided ? (model.decision?.status === 'converged' ? 'Booked' : 'No time works') : undefined,
-    legend: `Each dot is someone’s agent, drifting toward the times they prefer. Crossed-out times are ones someone can’t make. ${pointVerb()} a time to read it.`,
   })
 
   if (loadError || state === 'closed') {

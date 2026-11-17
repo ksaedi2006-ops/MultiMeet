@@ -100,7 +100,6 @@ export default function AttractStage() {
   useScopeFeed({
     model, onLanded, overlay,
     label: `Replay of ${model.agents.length} people's agents negotiating a meeting time.`,
-    legend: 'Each dot is someone’s agent, drifting toward the times they prefer. Crossed-out times are ones someone can’t make.',
   })
 
   async function runSample() {
