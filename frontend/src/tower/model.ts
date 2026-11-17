@@ -1,3 +1,4 @@
+import { pickAvatar } from '../lib/avatars'
 import type { LogEvent, MemberPayload, RankedInfo, SlotInfo } from '../api/events'
 import { blockerPhrase, fullTime, plainTimes } from '../lib/timeLabels'
 
@@ -9,6 +10,7 @@ export interface Agent {
   id: string
   name: string
   callsign: string
+  avatar: number
   carrier: string
   role: 'admin' | 'member'
   ready: boolean
@@ -127,10 +129,11 @@ function upsertMember(agents: Agent[], m: MemberPayload): Agent[] {
     return next
   }
   const taken = new Set(agents.map((a) => a.callsign))
+  const avatar = pickAvatar(m.user_id, new Set(agents.map((a) => a.avatar)))
   return [
     ...agents,
     {
-      id: m.user_id, name: m.name, callsign: callsignFor(m.name, taken), carrier: '', role: m.role,
+      id: m.user_id, name: m.name, callsign: callsignFor(m.name, taken), avatar, carrier: '', role: m.role,
       ready: m.ready, status: m.ready ? 'ready' : 'holding', fallback: false, summary: null, reasons: null, reply: null,
     },
   ]
@@ -169,12 +172,15 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       m.backend = e.agent_backend
       m.timezone = tz
       const taken = new Set<string>()
+      const takenAvatars = new Set(model.agents.map((a) => a.avatar))
       m.agents = e.participants.map((p) => {
         const prev = model.agents.find((a) => a.id === p.user_id)
         const callsign = prev?.callsign ?? callsignFor(p.name, taken)
         taken.add(callsign)
+        const avatar = prev?.avatar ?? pickAvatar(p.user_id, takenAvatars)
+        takenAvatars.add(avatar)
         return {
-          id: p.user_id, name: p.name, callsign, carrier: p.carrier, role: prev?.role ?? 'member', ready: true,
+          id: p.user_id, name: p.name, callsign, avatar, carrier: p.carrier, role: prev?.role ?? 'member', ready: true,
           status: 'ready', fallback: false, summary: null, reasons: null, reply: null,
         }
       })

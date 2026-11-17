@@ -7,6 +7,8 @@ import {
   type EventInfo, type Member,
 } from '../api/client'
 import { useEventLog } from '../api/useEventLog'
+import Avatar from '../components/Avatar'
+import { avatarsFor } from '../lib/avatars'
 import { EASE } from '../lib/motion'
 import { rememberEvent } from '../lib/recents'
 import { buildModel } from '../tower/model'
@@ -56,6 +58,8 @@ export default function JoinStage() {
     }
     return [...byId.values()]
   }, [events])
+
+  const faces = useMemo(() => avatarsFor(members.map((m) => m.user_id)), [members])
 
   const model = useMemo(() => {
     const live = buildModel(events)
@@ -111,11 +115,14 @@ export default function JoinStage() {
             <motion.li key={m.user_id} initial={{ opacity: 0, x: -24 }} animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, ease: EASE }}>
               <BayStrip holder="person">
-                <Box>
-                  <span className="block truncate text-[16px] font-semibold text-strip-ink leading-tight">{m.name}</span>
-                  <span className="mt-1 block text-[13px] text-strip-ink/70">
-                    {m.role === 'admin' ? 'Organiser' : m.ready ? 'Ready' : 'Setting up'}
-                  </span>
+                <Box className="flex items-center gap-3">
+                  <Avatar id={faces.get(m.user_id) ?? 0} size={40} />
+                  <div className="min-w-0">
+                    <span className="block truncate text-[16px] font-semibold text-strip-ink leading-tight">{m.name}</span>
+                    <span className="mt-1 block text-[13px] text-strip-ink/70">
+                      {m.role === 'admin' ? 'Organiser' : m.ready ? 'Ready' : 'Setting up'}
+                    </span>
+                  </div>
                 </Box>
               </BayStrip>
             </motion.li>

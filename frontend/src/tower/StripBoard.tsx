@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion'
+import Avatar from '../components/Avatar'
 import { blockerPhrase } from '../lib/timeLabels'
 import type { Agent, SlotModel, TowerModel } from './model'
 
@@ -80,7 +81,7 @@ export default function StripBoard({ model, viewerId, highlight, onHover }: Prop
   return (
     <div className="flex flex-col gap-1.5">
       {hasSlots && (
-        <div className="flex flex-col gap-0.5 pl-[10.5rem] pr-3" aria-hidden>
+        <div className="flex flex-col gap-0.5 pl-[12.5rem] pr-3" aria-hidden>
           <div className="flex gap-[3px] h-4">
             {days.map((day) => (
               <div key={day.key} className={`@container min-w-0 ${ease}`} style={{ flex: dayFlex(day) }}>
@@ -112,7 +113,9 @@ export default function StripBoard({ model, viewerId, highlight, onHover }: Prop
               lit ? 'outline-amber' : agent.status === 'asked' ? 'outline-clearance' : 'outline-transparent'
             }`}
           >
-            <div className="w-[10.5rem] shrink-0 flex flex-col justify-center px-2.5 border-r border-strip-ink/15">
+            <div className="w-[12.5rem] shrink-0 flex items-center gap-2 px-2 border-r border-strip-ink/15">
+              <Avatar id={agent.avatar} size={32} />
+              <div className="min-w-0 flex-1 flex flex-col justify-center">
               <span className="text-[14px] font-semibold leading-none truncate">
                 {agent.name}
                 {mine && <span className="font-normal text-strip-ink/65"> (you)</span>}
@@ -123,6 +126,7 @@ export default function StripBoard({ model, viewerId, highlight, onHover }: Prop
                     : agent.status === 'asked' ? 'text-strip-ink font-semibold' : 'text-strip-ink/65'}`}>
                   {statusLabel(agent, model)}
                 </span>
+              </div>
               </div>
             </div>
             {hasSlots ? (

@@ -6,6 +6,8 @@ import { addSamplePeople, currentUserId, errorMessage, type Member } from '../ap
 import { useEventInfo } from '../api/useEventInfo'
 import { useEventLog } from '../api/useEventLog'
 import Stamp from '../components/Stamp'
+import Avatar from '../components/Avatar'
+import { avatarsFor } from '../lib/avatars'
 import { EASE } from '../lib/motion'
 import { buildModel } from '../tower/model'
 import BayStrip, { Box } from './BayStrip'
@@ -54,6 +56,8 @@ export default function InviteStage() {
   }, [events])
 
   // The people come from the live log; the ring keeps the times the meeting will search.
+  const faces = useMemo(() => avatarsFor(members.map((m) => m.user_id)), [members])
+
   const model = useMemo(() => {
     const live = buildModel(events)
     if (!event || live.slots.length) return live
@@ -123,7 +127,9 @@ export default function InviteStage() {
               transition={{ duration: 0.55, ease: EASE }}>
               <BayStrip holder="person">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-px">
-                  <Box>
+                  <Box className="flex items-center gap-3">
+                    <Avatar id={faces.get(m.user_id) ?? 0} size={40} />
+                    <div className="min-w-0">
                     <span className="block truncate text-[16px] font-semibold text-strip-ink leading-tight">
                       {m.name}
                       {m.user_id === viewerId && <span className="font-normal text-strip-ink/60"> (you)</span>}
@@ -134,6 +140,7 @@ export default function InviteStage() {
                         m.rules > 0 ? `${m.rules} ${m.rules === 1 ? 'preference' : 'preferences'}` : null,
                       ].filter(Boolean).join(' · ')}
                     </span>
+                    </div>
                   </Box>
                   <Box className="flex items-center">
                     <span className={`text-[13px] font-semibold ${m.ready ? 'text-clearance-dim' : 'text-strip-ink/55'}`}>

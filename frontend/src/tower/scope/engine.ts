@@ -1,3 +1,4 @@
+import { avatarImage } from '../../lib/avatars'
 import type { Agent, TowerModel } from '../model'
 import { layoutRim, scoreTarget, separate, type Layout } from './geometry'
 import { Phosphor } from './phosphor'
@@ -913,8 +914,26 @@ export class ScopeEngine {
       })
 
       const pulse = agent.status === 'thinking' && !this.opts.reducedMotion ? 0.5 + 0.5 * Math.sin(now / 140) : 1
-      ctx.fillStyle = `rgba(${rgb},${painted * pulse})`
-      ctx.fillRect(x - s, y - s, s * 2, s * 2)
+      const face = model.agents.length <= 24 ? avatarImage(agent.avatar) : null
+      if (face?.complete && face.naturalWidth) {
+        // A small portrait on a ring in the status colour; the ring keeps the amber / orange meaning.
+        const r = (crowded ? 10.5 : 13) * scale
+        ctx.save()
+        ctx.globalAlpha = Math.min(1, 0.55 + painted * 0.45) * (0.7 + 0.3 * pulse)
+        ctx.beginPath()
+        ctx.arc(x, y, r, 0, Math.PI * 2)
+        ctx.clip()
+        ctx.drawImage(face, x - r, y - r, r * 2, r * 2)
+        ctx.restore()
+        ctx.strokeStyle = `rgba(${rgb},${0.55 + painted * 0.45})`
+        ctx.lineWidth = 1.8 * scale
+        ctx.beginPath()
+        ctx.arc(x, y, r + 0.9 * scale, 0, Math.PI * 2)
+        ctx.stroke()
+      } else {
+        ctx.fillStyle = `rgba(${rgb},${painted * pulse})`
+        ctx.fillRect(x - s, y - s, s * 2, s * 2)
+      }
       if (this.opts.highlight === agent.id) {
         ctx.strokeStyle = `rgba(${STRIP},0.9)`
         ctx.lineWidth = 1.2
