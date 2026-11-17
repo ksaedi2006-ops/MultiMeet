@@ -25,6 +25,7 @@ export default function NegotiateStage() {
   const { eventId = '' } = useParams<{ eventId: string }>()
   const bay = useFixture('bay')
   const panel = useFixture('panel')
+  const banner = useFixture('banner')
   const { highlight, setHighlight } = useCab()
   const viewerId = currentUserId()
   const [event, setEvent] = useState<EventInfo | null>(null)
@@ -84,8 +85,7 @@ export default function NegotiateStage() {
   )
 
   const side = (
-    <div className="px-5 lg:px-6 pb-6 flex flex-col gap-4 lg:h-full">
-      <StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state} />
+    <div className="px-5 lg:px-6 py-5 flex flex-col gap-4 lg:h-full">
       {/* The one thing to do before it starts: first in the panel, so first on a phone too. */}
       {model.phase === 'holding' && event && <HoldingPanel event={event} model={model} viewerId={viewerId} />}
       {decided ? (
@@ -109,6 +109,7 @@ export default function NegotiateStage() {
     <>
       {bay && createPortal(rows, bay)}
       {panel && createPortal(side, panel)}
+      {banner && createPortal(<StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state} />, banner)}
     </>
   )
 }

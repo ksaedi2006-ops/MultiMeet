@@ -18,6 +18,7 @@ export interface ScopeFeed {
 export interface Cab {
   bay: HTMLElement | null
   panel: HTMLElement | null
+  banner: HTMLElement | null // a full-width row under the top bar; empty unless a step fills it
   feed: (f: ScopeFeed) => void
   highlight: string | null
   setHighlight: (id: string | null) => void
@@ -33,7 +34,7 @@ export function useCab(): Cab {
 }
 
 /** The DOM node of one of the cab's permanent fixtures, for a stage to portal into. */
-export function useFixture(which: 'bay' | 'panel'): HTMLElement | null {
+export function useFixture(which: 'bay' | 'panel' | 'banner'): HTMLElement | null {
   return useCab()[which]
 }
 
