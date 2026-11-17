@@ -15,6 +15,7 @@ import { play, useGrowth } from '../lib/sound'
 import { useCab, useFixture, useScopeFeed } from './context'
 import { previewSlots } from './previewSlots'
 import { pointVerb } from '../lib/timeLabels'
+import { fetchGoogleCalendar, googleConfigured } from '../lib/googleCalendar'
 
 const NO_EVENTS: never[] = []
 
@@ -45,7 +46,7 @@ export default function CalendarStage() {
   const [calendar, setCalendar] = useState<CalendarInfo | null>(null)
   const [week, setWeek] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
-  const [busy, setBusy] = useState<'file' | 'sample' | null>(null)
+  const [busy, setBusy] = useState<'file' | 'sample' | 'google' | null>(null)
   const [error, setError] = useState<string | null>(null)
   const tz = event?.timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone
   const finePointer = pointVerb() === 'Point at'
@@ -106,6 +107,23 @@ export default function CalendarStage() {
       setCalendar(await uploadCalendar(await getOrCreateUserId(), await file.text(), file.name, eventId))
     } catch (err) {
       setError(errorMessage(err, "Couldn't read that file. Export an .ics calendar and try again."))
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  async function google() {
+    setError(null)
+    if (!googleConfigured) {
+      setError('Google sign-in isn’t set up on this copy of MultiMeet yet. Add a calendar file or use a sample week.')
+      return
+    }
+    setBusy('google')
+    try {
+      const { ics } = await fetchGoogleCalendar()
+      setCalendar(await uploadCalendar(await getOrCreateUserId(), ics, 'google-calendar.ics', eventId))
+    } catch (err) {
+      setError(errorMessage(err, 'Couldn’t read your Google Calendar.'))
     } finally {
       setBusy(null)
     }
@@ -188,6 +206,23 @@ export default function CalendarStage() {
         </p>
       </div>
 
+      <button type="button" onClick={google} disabled={busy !== null}
+        className="inline-flex items-center justify-center gap-3 h-12 px-5 rounded-[2px] bg-clearance text-strip font-mono text-[13px] tracking-[0.14em] hover:bg-clearance-dim disabled:opacity-60 transition-colors">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden>
+          <path fill="#fff" d="M21.6 12.2c0-.7-.1-1.4-.2-2H12v3.8h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.7 3-4.300 3-7.300Z" />
+          <path fill="#fff" opacity=".85" d="M12 22c2.700 0 5-.9 6.600-2.500l-3.200-2.500c-.9.600-2 1-3.400 1-2.600 0-4.800-1.800-5.600-4.100H3.100v2.600A10 10 0 0 0 12 22Z" />
+          <path fill="#fff" opacity=".7" d="M6.400 14c-.2-.6-.3-1.300-.3-2s.1-1.400.3-2V7.400H3.100a10 10 0 0 0 0 9.200L6.400 14Z" />
+          <path fill="#fff" opacity=".55" d="M12 5.900c1.500 0 2.800.5 3.800 1.500l2.900-2.900A10 10 0 0 0 3.100 7.400L6.400 10C7.200 7.700 9.400 5.900 12 5.900Z" />
+        </svg>
+        {busy === 'google' ? 'WAITING FOR GOOGLE…' : 'CONNECT GOOGLE CALENDAR'}
+      </button>
+      <p className="-mt-3 text-[13px] text-mist">
+        Read-only. We only look at when you’re busy, and nothing is saved to your Google account.
+      </p>
+      <div className="flex items-center gap-3 text-[13px] text-mist" aria-hidden>
+        <span className="h-px flex-1 bg-board-line" />or<span className="h-px flex-1 bg-board-line" />
+      </div>
+
       <div role="button" tabIndex={0} aria-label="Choose an .ics calendar file"
         onClick={() => fileInput.current?.click()}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), fileInput.current?.click())}
@@ -203,7 +238,7 @@ export default function CalendarStage() {
         </p>
         <p className="mt-1.5 text-[13px] text-mist">
           {finePointer ? 'Drop it here or click to choose. ' : 'Tap to choose. '}
-          Export it from Google Calendar or Outlook (.ics).
+          Export it from Outlook, Apple Calendar or any other app (.ics).
         </p>
       </div>
       <div className="-mt-1 flex items-center gap-3">
