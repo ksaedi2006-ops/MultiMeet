@@ -121,9 +121,6 @@ export default function PlanStage() {
         <span className="hidden lg:inline text-mist">ESC TO CANCEL</span>
       </div>
       <h1 className="mt-5 font-display font-bold text-[2.6rem] leading-[0.95] tracking-tight text-strip">New meeting</h1>
-      <p className="mt-2 text-[15px] text-strip/80 max-w-[34rem]">
-        Say what it’s for and when it could happen. The circle shows every time the agents will consider.
-      </p>
 
       <form onSubmit={file} className="relative mt-5">
         <BayStrip holder="plan" layoutId="strip-fpl">
