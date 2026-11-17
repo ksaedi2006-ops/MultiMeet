@@ -142,7 +142,9 @@ async def run_negotiation(meeting_id: str, agents: Agents) -> None:
 
 
 SELECTOR = "nash"
-NORMALIZATION = os.environ.get("MEETMIND_NORMALIZATION", "borda")
+# Ranks overall, real intensity among each person's top choices: the default chosen by the
+# preregistered rule in docs/eval/preregistration.md, Amendment 3.
+NORMALIZATION = os.environ.get("MULTIMEET_NORMALIZATION") or os.environ.get("MEETMIND_NORMALIZATION") or "topk"
 _floor = os.environ.get("MEETMIND_FAIRNESS_FLOOR")
 FAIRNESS_FLOOR = float(_floor) if _floor else None  # optional tau; off unless configured
 

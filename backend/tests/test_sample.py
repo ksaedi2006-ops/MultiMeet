@@ -110,7 +110,7 @@ def test_negotiation_events_carry_solver_fields_without_dropping_old_ones(client
     for key in ("status", "slot", "scores", "min_score", "avg_score", "compromises", "alternatives", "explanation"):
         assert key in final
     # Additive: how the solver decided.
-    assert final["selector"] == "nash" and final["normalization"] == "borda"
+    assert final["selector"] == "nash" and final["normalization"] == "topk"
     assert final["faithful"] is True and final["bottleneck"]["user_id"] in final["scores"]
     assert final["binding"]["pick"] == final["slot"]["id"]
     for e in log:

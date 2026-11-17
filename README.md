@@ -93,6 +93,9 @@ What held up, and what didn't:
 - **Tried after the first results ([Amendment 2](docs/eval/preregistration.md), with its decision rule fixed before running).**
   - Keeping intensity under an L2 budget lifts honest quality to 0.988 of the oracle, above the old rule. But lying starts to pay again, especially for colluding pairs, so the rank-based default stays.
   - A 2-token budget on declared hard constraints did not reduce the fake-constraint attack, because two well-chosen rules already remove most of the week.
+- **Then ([Amendment 3](docs/eval/preregistration.md)).**
+  - Keeping intensity only among each person's top choices became the default. Quality is equal and it is a little harder to exploit.
+  - Pricing declared hard claims (at most 25% of the week) cut the fake-constraint attack by two-thirds. It wasn't adopted, because a third of honest people's real constraints exceed that budget on their own. Letting calendar evidence pay the cost is the next step.
 - **Not tested.** LLM baselines and LLM attackers (persuasion, prompt injection) need an API key. The code is in `backend/eval/llm.py`.
 
 ### What we don't claim

@@ -113,3 +113,22 @@ Written after the run. The decision rule was fixed beforehand and is applied as 
    - The lesson is that counting declared rules is too coarse. A mitigation would have to price a rule by how much of the feasible set it removes, or require calendar evidence for hard blocks. Neither is tested here.
 5. **Q2 against B3 is unchanged for the default** (it is still Ours): 5 of 6 comparisons are missed.
 6. **What this suggests trying next.** This is not tested, and would need a new amendment. The L2 variants lose robustness mainly to collusion, which the single-liar results barely show. A rank-based floor (Borda) combined with L2 intensity *within* each person's top ranks might keep most of the honest gain, but that is a hypothesis, not a result.
+
+## Reading Amendment 3
+
+Written after the run. The decision rules were fixed beforehand and are applied as written.
+
+1. **The new default is Ours-topk: ranks overall, with real intensity among each person's top choices.**
+   - It met every condition. It is practically equal to Ours on quality: 0.962 against 0.961 pooled, with overlapping CIs.
+   - It is slightly harder to exploit: a colluding pair loses −0.117, against −0.095 under Ours.
+   - It does **not** recover the honest-quality gap to the old rule. Q2 against B3 still misses 5 of 6 comparisons.
+   - It improves robustness without giving any back, unlike the L2 variants in Amendment 2.
+2. **The median time of day does not work as a whole-schedule rule.**
+   - It reached only 0.80 of the oracle and fell below 98% Pareto-optimality.
+   - Colluding pairs gain under it (+0.073).
+   - Its formal strategy-proofness holds only on the single-peaked time-of-day dimension (Moulin 1980)<!-- verify: ○ in the research report -->. That dimension is not where most of the value lies in these instances.
+3. **Pricing hard claims works against liars but is too strict for honest people, so it is not adopted.**
+   - Capping declared rules at 25% of the week cut the fake-hard attacker's gain under Ours-topk from +0.094 to +0.029; the paired difference was −0.065 [−0.076, −0.055].
+   - It cut gains for every mechanism tested, the old rule included.
+   - But 36.1% of honest people's own declared hard rules remove more than 25% of the week by themselves. For example, "nothing before 11 AM" removes most mornings. Those people would need calendar evidence or would see their real limits treated as soft.
+   - The preregistered cap was 5%, so pricing is not adopted. The direction is right, but the budget has to be set against what genuine constraints cost. Accepting calendar evidence, such as a shift or a class listed in the calendar, as the way past the budget is the obvious next step. It was not tested here.
