@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useParams } from 'react-router-dom'
-import { currentUserId, errorMessage, getEvent, type EventInfo } from '../api/client'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { createSampleEvent, currentUserId, errorMessage, getEvent, getOrCreateUserId, type EventInfo } from '../api/client'
+import { rememberEvent } from '../lib/recents'
 import { useEventLog } from '../api/useEventLog'
 import ChosenTime from '../tower/ChosenTime'
 import DecisionBrief from '../tower/DecisionBrief'
@@ -50,6 +51,21 @@ export default function NegotiateStage() {
   }, [playback.model, event])
   const [landed, setLanded] = useState(false)
   const [method, setMethod] = useState(false)
+  const navigate = useNavigate()
+  const [starting, setStarting] = useState(false)
+  // Replay only re-plays the recorded log. This draws a fresh group of the same size, so the
+  // people, calendars and every rule's comparison can come out differently.
+  const newGroup = useCallback(async () => {
+    setStarting(true)
+    try {
+      const uid = await getOrCreateUserId()
+      const next = await createSampleEvent(uid, Math.max(3, playback.model.agents.length - 1))
+      rememberEvent(next.event_id, next.title)
+      navigate(`/event/${next.event_id}/negotiate`)
+    } catch {
+      setStarting(false)
+    }
+  }, [navigate, playback.model.agents.length])
   const [rule, setRule] = useState<RuleId>(USED_RULE)
 
   useEffect(() => {
@@ -152,7 +168,8 @@ export default function NegotiateStage() {
       {panel && createPortal(side, panel)}
       {tools && model.slots.length > 0 && createPortal(
         <RulePicker rule={rule} onChange={setRule} outcomes={decided ? model.decision?.rules ?? [] : []} />, tools)}
-      {banner && createPortal(<StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state} />, banner)}
+      {banner && createPortal(<StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state}
+        onNewGroup={model.backend === 'simulated' ? newGroup : undefined} starting={starting} />, banner)}
     </>
   )
 }

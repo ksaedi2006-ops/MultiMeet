@@ -38,9 +38,12 @@ interface Props {
   model: TowerModel
   playback: Playback
   connection: ConnectionState
+  /** Run the same size of group again with freshly drawn simulated people. */
+  onNewGroup?: () => void
+  starting?: boolean
 }
 
-export default function StatusBar({ title, model, playback, connection }: Props) {
+export default function StatusBar({ title, model, playback, connection, onNewGroup, starting }: Props) {
   const phase = model.phase === 'asking' ? `ROUND ${model.round} · ASKING PEOPLE TO MOVE` : PHASE[model.phase]
   const live = connection === 'live'
   const btn =
@@ -76,6 +79,13 @@ export default function StatusBar({ title, model, playback, connection }: Props)
               <Icon d={ICONS.replay} />
               <span className="hidden sm:inline">REPLAY</span>
             </button>
+            {onNewGroup && model.decision && (
+              <button type="button" className={btn} onClick={onNewGroup} disabled={starting}
+                title="Draw a fresh group of simulated people and negotiate again">
+                <Icon d={ICONS.skip} />
+                <span>{starting ? 'STARTING…' : 'NEW AGENTS'}</span>
+              </button>
+            )}
             {!model.decision && (
               <button type="button" className={btn} onClick={playback.skipToEnd} disabled={playback.caughtUp}
                 aria-label="Skip to the latest state">
