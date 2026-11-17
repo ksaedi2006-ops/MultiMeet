@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { streamLab, type Attack, type LabParams, type LabRow } from '../lib/lab'
 import ManyMeetings from '../lab/ManyMeetings'
 import OneMeeting from '../lab/OneMeeting'
@@ -32,6 +32,10 @@ export interface LabRun {
  */
 export default function LabStage() {
   const tools = useFixture('tools')
+  const navigate = useNavigate()
+  const location = useLocation()
+  // Back to wherever the Lab was opened from; straight to the start when it was opened directly.
+  const back = () => (location.key !== 'default' ? navigate(-1) : navigate('/'))
   const [search, setSearch] = useSearchParams()
   const tab = (TABS.some((t) => t.id === search.get('tab')) ? search.get('tab') : 'one') as Tab
   const setTab = (t: Tab) => setSearch((s) => { s.set('tab', t); return s }, { replace: true })
@@ -76,15 +80,24 @@ export default function LabStage() {
   const run: LabRun = { rows, running, error, params, start: (p) => void start(p), stop }
 
   const tabs = (
+    <div className="flex items-stretch">
+    <button type="button" onClick={back} aria-label="Leave the Lab"
+      className="flex items-center gap-1.5 px-2.5 sm:px-3 lg:px-4 border-l border-board-line text-strip hover:text-amber hover:bg-board-raised/60 transition-colors">
+      <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M13 8H3M7 4 3 8l4 4" />
+      </svg>
+      <span className="hidden sm:inline">BACK</span>
+    </button>
     <div role="tablist" aria-label="Lab views" className="flex items-stretch border-l border-board-line">
       {TABS.map((t) => (
         <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} onClick={() => setTab(t.id)}
-          className={`px-2 sm:px-3 lg:px-4 whitespace-nowrap transition-colors ${tab === t.id ? 'text-amber bg-board-raised/60' : 'text-strip/75 hover:text-strip'}`}>
-          <span className="text-mist mr-1.5 tabular-nums">{TABS.indexOf(t) + 1}</span>
+          className={`px-1.5 sm:px-3 lg:px-4 whitespace-nowrap transition-colors ${tab === t.id ? 'text-amber bg-board-raised/60' : 'text-strip/75 hover:text-strip'}`}>
+          <span className="hidden sm:inline text-mist mr-1.5 tabular-nums">{TABS.indexOf(t) + 1}</span>
           <span className="hidden md:inline">{t.name}</span>
           <span className="md:hidden">{t.name.split(' ')[0]}</span>
         </button>
       ))}
+    </div>
     </div>
   )
 

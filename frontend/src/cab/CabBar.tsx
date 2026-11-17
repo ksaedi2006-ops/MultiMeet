@@ -39,7 +39,7 @@ export default function CabBar({ stage, toolsRef }: { stage: StageSpec; toolsRef
       {/* A step can put its own controls here (the decision-rule picker, for one). */}
       <div ref={toolsRef} className="flex items-stretch empty:hidden" />
       <NavLink to="/lab" title="Race the decision rules on simulated meetings"
-        className={({ isActive }) => `flex items-center gap-2 px-3 sm:px-4 border-l border-board-line transition-colors ${isActive ? 'text-amber bg-board-raised/60' : 'text-strip hover:text-amber'}`}>
+        className={({ isActive }) => `items-center gap-2 px-3 sm:px-4 border-l border-board-line transition-colors ${isActive ? 'hidden sm:flex text-amber bg-board-raised/60' : 'flex text-strip hover:text-amber'}`}>
         <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
           <path d="M6 2h4M7 2v4.5L3 13a1 1 0 0 0 .9 1.5h8.2A1 1 0 0 0 13 13L9 6.5V2" /><path d="M4.8 10.5h6.4" />
         </svg>
