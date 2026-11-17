@@ -31,6 +31,7 @@ export default function TowerCab() {
   const [bay, setBay] = useState<HTMLElement | null>(null)
   const [panel, setPanel] = useState<HTMLElement | null>(null)
   const [banner, setBanner] = useState<HTMLElement | null>(null)
+  const [tools, setTools] = useState<HTMLElement | null>(null)
   const [scope, setScope] = useState<ScopeFeed>({ model: emptyModel })
   const [highlight, setHighlight] = useState<string | null>(null)
   const layer = useRef<HTMLDivElement>(null)
@@ -52,7 +53,7 @@ export default function TowerCab() {
 
   const widths = fixtureWidths(stage, size.w || window.innerWidth)
   const feed = useCallback((f: ScopeFeed) => setScope(f), [])
-  const cab: Cab = useMemo(() => ({ bay, panel, banner, feed, highlight, setHighlight, desktop }), [bay, panel, banner, feed, highlight, desktop])
+  const cab: Cab = useMemo(() => ({ bay, panel, banner, tools, feed, highlight, setHighlight, desktop }), [bay, panel, banner, tools, feed, highlight, desktop])
   const landed = useRef(scope.onLanded)
   landed.current = scope.onLanded
   const onLanded = useCallback(() => landed.current?.(), [])
@@ -60,11 +61,11 @@ export default function TowerCab() {
   return (
     <CabContext.Provider value={cab}>
       <div className="cab-floor min-h-svh lg:h-svh lg:overflow-hidden flex flex-col">
-        <CabBar stage={scope.stageName ? { ...stage, name: scope.stageName } : stage} />
+        <CabBar stage={scope.stageName ? { ...stage, name: scope.stageName } : stage} toolsRef={setTools} />
         <div ref={setBanner} className="console relative z-10 shrink-0 px-4 lg:px-6 empty:hidden" />
         <div className="relative flex-1 min-h-0 flex flex-col lg:block">
           <div ref={layer} className="relative h-[max(52svh,min(100vw,88svh))] shrink-0 lg:absolute lg:inset-0 lg:h-auto">
-            <RadarScope model={scope.model} label={scope.label} frame={frame}
+            <RadarScope model={scope.model} label={scope.label} frame={frame} markers={scope.markers}
               highlight={highlight} onHover={setHighlight} onLanded={onLanded} />
             {frame && scope.legend && (
               <p className="absolute text-center text-[13px] leading-snug text-mist px-2"

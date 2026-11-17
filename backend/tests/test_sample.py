@@ -113,6 +113,14 @@ def test_negotiation_events_carry_solver_fields_without_dropping_old_ones(client
     assert final["selector"] == "nash" and final["normalization"] == "topk"
     assert final["faithful"] is True and final["bottleneck"]["user_id"] in final["scores"]
     assert final["binding"]["pick"] == final["slot"]["id"]
+    # Every alternative rule, run on the same final reports.
+    rules = {r["rule"]: r for r in final["rules"]}
+    assert set(rules) == {"nash", "leximin", "utilitarian", "borda", "approval"}
+    assert rules["nash"]["slot_id"] == final["slot"]["id"]
+    assert rules["nash"]["pareto_dominated_by"] is None  # Nash on the reports is Pareto-optimal
+    best_nw = max(r["nash_welfare"] for r in rules.values())
+    assert rules["nash"]["nash_welfare"] == best_nw
+    assert rules["leximin"]["min_score"] >= rules["nash"]["min_score"]
     for e in log:
         if e["type"] == "shortlist":
             assert all({"slot_id", "min_score", "avg_score", "scores", "unhappy", "nash"} <= set(r) for r in e["ranked"])

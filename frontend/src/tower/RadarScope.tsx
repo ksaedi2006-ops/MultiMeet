@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useReducedMotion } from 'framer-motion'
 import type { TowerModel } from './model'
-import { ScopeEngine, type Frame } from './scope/engine'
+import { ScopeEngine, type Frame, type RingMarker } from './scope/engine'
 
 interface Props {
   model: TowerModel
@@ -11,6 +11,7 @@ interface Props {
   /** Where the scope sits inside the canvas; omitted, it fills the canvas. */
   frame?: Frame | null
   label?: string
+  markers?: RingMarker[]
 }
 
 function describe(m: TowerModel): string {
@@ -23,7 +24,7 @@ function describe(m: TowerModel): string {
   return parts.join(', ') + '. The table and activity list below give the same details.'
 }
 
-export default function RadarScope({ model, highlight, onHover, onLanded, frame, label }: Props) {
+export default function RadarScope({ model, highlight, onHover, onLanded, frame, label, markers }: Props) {
   const canvas = useRef<HTMLCanvasElement>(null)
   const engine = useRef<ScopeEngine | null>(null)
   const reduced = useReducedMotion() ?? false
@@ -41,10 +42,11 @@ export default function RadarScope({ model, highlight, onHover, onLanded, frame,
     engine.current?.setOptions({
       reducedMotion: reduced,
       highlight,
+      markers,
       onHover: (id) => callbacks.current.onHover(id),
       onLanded: () => callbacks.current.onLanded(),
     })
-  }, [reduced, highlight])
+  }, [reduced, highlight, markers])
 
   useEffect(() => {
     engine.current?.setModel(model)

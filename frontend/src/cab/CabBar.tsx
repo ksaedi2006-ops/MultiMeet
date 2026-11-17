@@ -8,7 +8,7 @@ import type { StageSpec } from './stages'
 const local = (d: Date) => d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
 
 /** The slim bar along the top: the product, the current step in plain words, the local time. */
-export default function CabBar({ stage }: { stage: StageSpec }) {
+export default function CabBar({ stage, toolsRef }: { stage: StageSpec; toolsRef?: (el: HTMLElement | null) => void }) {
   const [sound, setSound] = useSoundSetting()
   const [now, setNow] = useState(() => local(new Date()))
   useEffect(() => {
@@ -17,7 +17,7 @@ export default function CabBar({ stage }: { stage: StageSpec }) {
   }, [])
 
   return (
-    <header className="console relative z-10 h-11 shrink-0 flex items-stretch border-b border-board-line font-mono text-[11px] tracking-[0.14em]">
+    <header className="console relative z-20 h-11 shrink-0 flex items-stretch border-b border-board-line font-mono text-[11px] tracking-[0.14em]">
       <Link to="/" className="flex items-center gap-2.5 px-4 lg:px-5 border-r border-board-line hover:bg-board-raised/60 transition-colors">
         <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden className="text-amber">
           <path d="M8 1.5 13.6 4.75v6.5L8 14.5 2.4 11.25v-6.5z" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -36,6 +36,8 @@ export default function CabBar({ stage }: { stage: StageSpec }) {
           </motion.span>
         </AnimatePresence>
       </div>
+      {/* A step can put its own controls here (the decision-rule picker, for one). */}
+      <div ref={toolsRef} className="flex items-stretch empty:hidden" />
       <button type="button" onClick={() => setSound(!sound)} aria-pressed={sound}
         aria-label={sound ? 'Sound is on; turn it off' : 'Sound is off; turn it on'}
         className={`flex items-center gap-2 px-4 border-l border-board-line transition-colors ${sound ? 'text-amber' : 'text-mist hover:text-strip'}`}>

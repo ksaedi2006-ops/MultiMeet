@@ -43,9 +43,17 @@ interface Departing {
   at: number
 }
 
+/** A label pinned to one time on the ring, e.g. which decision rules would pick it. */
+export interface RingMarker {
+  slotId: string
+  text: string
+  active: boolean
+}
+
 export interface EngineOptions {
   reducedMotion: boolean
   highlight: string | null
+  markers?: RingMarker[]
   onLanded?: () => void
   onHover?: (agentId: string | null) => void
 }
@@ -358,8 +366,55 @@ export class ScopeEngine {
     this.drawDeparting(g, now)
     this.drawLeaderLabels(g)
     this.drawPlanes(g, now, sweep)
+    this.drawMarkers(g)
     this.drawTimeReadout(g)
     this.phosphor?.render(this.offscreen!, dt * 1000, this.opts.reducedMotion ? 0 : 1)
+  }
+
+  /** Rule picks: a tick on the ring and a label stepping inward until it clears the others. */
+  private drawMarkers({ cx, cy, Rf, scale }: ReturnType<ScopeEngine['geometry']>) {
+    const { ctx } = this
+    const markers = this.opts.markers
+    if (!markers?.length) return
+    const fs = Math.round(11.5 * scale)
+    const placed: { x: number; y: number; w: number; h: number }[] = []
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    // Active last, so it sits on top.
+    for (const m of [...markers].sort((a, b) => Number(a.active) - Number(b.active))) {
+      const a = this.bearing(m.slotId)
+      if (a === undefined) continue
+      const ux = Math.cos(a)
+      const uy = Math.sin(a)
+      const rgb = m.active ? AMBER : STRIP
+      ctx.strokeStyle = `rgba(${rgb},${m.active ? 0.95 : 0.6})`
+      ctx.lineWidth = m.active ? 2.2 : 1.4
+      ctx.beginPath()
+      ctx.moveTo(cx + ux * (Rf - 10 * scale), cy + uy * (Rf - 10 * scale))
+      ctx.lineTo(cx + ux * (Rf + 10 * scale), cy + uy * (Rf + 10 * scale))
+      ctx.stroke()
+      ctx.font = `${m.active ? 600 : 500} ${fs}px ${MONO}`
+      const w = ctx.measureText(m.text).width + 12
+      const h = fs + 9
+      let r = Rf - 30 * scale
+      let rect = { x: 0, y: 0, w, h }
+      for (let k = 0; k < 8; k++) {
+        rect = { x: cx + ux * r - w / 2, y: cy + uy * r - h / 2, w, h }
+        const hit = placed.some((p) => rect.x < p.x + p.w && p.x < rect.x + rect.w && rect.y < p.y + p.h && p.y < rect.y + rect.h)
+        if (!hit) break
+        r -= h + 3
+      }
+      placed.push(rect)
+      ctx.fillStyle = m.active ? `rgb(${AMBER})` : 'rgba(11,20,28,0.9)'
+      ctx.fillRect(rect.x, rect.y, rect.w, rect.h)
+      if (!m.active) {
+        ctx.strokeStyle = `rgba(${STRIP},0.45)`
+        ctx.lineWidth = 1
+        ctx.strokeRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1)
+      }
+      ctx.fillStyle = m.active ? 'rgb(26,32,40)' : `rgba(${STRIP},0.92)`
+      ctx.fillText(m.text, rect.x + w / 2, rect.y + h / 2 + 1)
+    }
   }
 
   /** The leading times get their clock time written beside them, just inside the ring. */

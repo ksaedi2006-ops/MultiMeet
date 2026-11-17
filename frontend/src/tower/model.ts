@@ -1,5 +1,5 @@
 import { pickAvatar } from '../lib/avatars'
-import type { Binding, LogEvent, MemberPayload, RankedInfo, SlotInfo } from '../api/events'
+import type { Binding, LogEvent, RuleOutcome, MemberPayload, RankedInfo, SlotInfo } from '../api/events'
 import { blockerPhrase, fullTime, plainTimes } from '../lib/timeLabels'
 
 export type Phase = 'holding' | 'filtering' | 'scoring' | 'asking' | 'decided' | 'escalated' | 'failed'
@@ -71,6 +71,7 @@ export interface DecisionModel {
   explanation: string
   question: string | null
   binding: Binding | null
+  rules: RuleOutcome[]
   seq: number
 }
 
@@ -307,7 +308,7 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
       m.decision = {
         status: e.status, slot: e.slot, scores: e.scores, minScore: e.min_score, avgScore: e.avg_score,
         compromises: e.compromises, alternatives: e.alternatives, explanation: e.explanation,
-        question: e.question, binding: e.binding ?? null, seq: e.seq,
+        question: e.question, binding: e.binding ?? null, rules: e.rules ?? [], seq: e.seq,
       }
       line(e.status === 'converged'
         ? { speaker: 'Mediator', tone: 'clear', text: `Booked: ${e.slot ? fullTime(e.slot.label) : ''}.` }

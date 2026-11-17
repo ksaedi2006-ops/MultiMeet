@@ -47,6 +47,15 @@ from app.scheduling.protocol import (
     faithful,
     next_request,
 )
+from app.scheduling.normalize import normalize
+from app.scheduling.selector import (
+    approval_select,
+    borda_select,
+    leximin_select,
+    nash_welfare,
+    pareto_dominator,
+    utilitarian_select,
+)
 from app.scheduling.utility import build_model
 from app.scheduling.ics import BusyInterval
 from app.scheduling.rules import PreferenceRule
@@ -374,6 +383,48 @@ class Negotiation:
         })
         return applied.kind == "flex"
 
+    def compare_rules(self) -> list[dict]:
+        """Every decision rule in docs/research/negotiation-layer.md that the app can run, on the
+        same final reports, scored on the same common scale. Additive: what the solver chose is
+        unchanged; this is what each alternative rule would have chosen instead."""
+        draft = self.draft
+        if not draft or not self.open_ids:
+            return []
+        slots = self.open_ids
+        u, d = draft.utilities, draft.d
+        raw = {st.user_id: st.model.raw(slots) for st in self.states}
+        approvals = {
+            uid: {sid for sid in slots
+                  if not any(c.severity == "soft" for c in self.assessments[uid][sid].conflicts)}
+            for uid in self.people
+        }
+        picks = [
+            ("nash", draft.selection),
+            ("leximin", leximin_select(u, d, slots)),
+            ("utilitarian", utilitarian_select({a: normalize(r, "range") for a, r in raw.items()}, slots)),
+            ("borda", borda_select(raw, slots)),
+            ("approval", approval_select(approvals, slots)),
+        ]
+        out = []
+        for rule, sel in picks:
+            sid = sel.slot_id
+            if sid is None:
+                out.append({"rule": rule, "slot_id": None})
+                continue
+            scores = {uid: self.score(uid, sid) for uid in self.people}
+            out.append({
+                "rule": rule,
+                "slot_id": sid,
+                "label": self.slots[sid].local_label,
+                "scores": scores,
+                "min_score": min(scores.values()),
+                "avg_score": round(sum(scores.values()) / len(scores), 1),
+                "nash_welfare": round(nash_welfare(u, d, sid), 4),
+                "pareto_dominated_by": pareto_dominator(u, sid, slots),
+                "available": sum(1 for a in approvals.values() if sid in a),
+            })
+        return out
+
     async def decide(self) -> None:
         draft = self.draft
         sel = draft.selection if draft else None
@@ -459,4 +510,5 @@ class Negotiation:
             "binding": binding.to_dict() if binding else None,
             "faithful": is_faithful,
             "concessions": self.concessions,
+            "rules": self.compare_rules() if best else [],
         })

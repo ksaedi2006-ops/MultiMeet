@@ -11,6 +11,12 @@ import Conversation from '../story/Conversation'
 import MethodDrawer from '../story/MethodDrawer'
 import StoryPanel from '../story/StoryPanel'
 import WhyCard from '../story/WhyCard'
+import RuleCompare from '../story/RuleCompare'
+import RulePicker from '../story/RulePicker'
+import type { RuleId } from '../api/events'
+import { RULE, USED_RULE } from '../lib/rules'
+import type { TowerModel } from '../tower/model'
+import type { RingMarker } from '../tower/scope/engine'
 import { usePlayback } from '../tower/usePlayback'
 import { play, useGrowth } from '../lib/sound'
 import { useCab, useFixture, useScopeFeed } from './context'
@@ -26,6 +32,7 @@ export default function NegotiateStage() {
   const bay = useFixture('bay')
   const panel = useFixture('panel')
   const banner = useFixture('banner')
+  const tools = useFixture('tools')
   const { highlight, setHighlight, desktop } = useCab()
   const viewerId = currentUserId()
   const [event, setEvent] = useState<EventInfo | null>(null)
@@ -43,6 +50,7 @@ export default function NegotiateStage() {
   }, [playback.model, event])
   const [landed, setLanded] = useState(false)
   const [method, setMethod] = useState(false)
+  const [rule, setRule] = useState<RuleId>(USED_RULE)
 
   useEffect(() => {
     getEvent(eventId).then(setEvent, (err) => setLoadError(errorMessage(err, "Couldn't load this meeting.")))
@@ -64,8 +72,33 @@ export default function NegotiateStage() {
     () => (decided && model.decision ? <ChosenTime decision={model.decision} timezone={model.timezone} /> : null),
     [decided, model.decision, model.timezone],
   )
+  // A rule other than the one that booked: the left panel shows what it would have booked.
+  const lens = useMemo<TowerModel>(() => {
+    const d = model.decision
+    const o = d?.rules.find((r) => r.rule === rule)
+    if (!d || rule === USED_RULE || !o?.slot_id) return model
+    const slot = model.slots.find((s) => s.id === o.slot_id)
+    if (!slot) return model
+    return {
+      ...model,
+      decision: {
+        ...d, slot: { id: slot.id, start: slot.start, end: slot.end, label: slot.label },
+        scores: o.scores ?? {}, minScore: o.min_score ?? null, avgScore: o.avg_score ?? null, compromises: [],
+      },
+    }
+  }, [model, rule])
+  // Where every rule would book, as labels on the ring; times several rules agree on share one.
+  const markers = useMemo<RingMarker[] | undefined>(() => {
+    const outcomes = decided ? model.decision?.rules ?? [] : []
+    if (!outcomes.length) return undefined
+    const bySlot = new Map<string, RuleId[]>()
+    for (const o of outcomes) if (o.slot_id) bySlot.set(o.slot_id, [...(bySlot.get(o.slot_id) ?? []), o.rule])
+    return [...bySlot.entries()].map(([slotId, ids]) => ({
+      slotId, text: ids.map((id) => RULE[id].short).join(' · '), active: ids.includes(rule),
+    }))
+  }, [decided, model.decision, rule])
   useScopeFeed({
-    model, onLanded, overlay,
+    model, onLanded, overlay, markers,
     stageName: decided ? (model.decision?.status === 'converged' ? 'Booked' : 'No time works') : undefined,
   })
 
@@ -82,7 +115,8 @@ export default function NegotiateStage() {
 
   const rows = (
     <div>
-      <StoryPanel model={model} viewerId={viewerId} highlight={highlight} onHover={setHighlight} />
+      <StoryPanel model={decided ? lens : model} viewerId={viewerId} highlight={highlight} onHover={setHighlight}
+        whatIf={decided && rule !== USED_RULE ? RULE[rule].name : null} />
     </div>
   )
 
@@ -97,7 +131,7 @@ export default function NegotiateStage() {
       {/* On a phone the story comes before the booking and the chat, not after them. */}
       {!desktop && <div className="-mx-5 -mt-5">{rows}</div>}
       {decided && <DecisionBrief eventId={eventId} title={event?.title ?? 'Meeting'} model={model} viewerId={viewerId} />}
-      {decided && <WhyCard model={model} />}
+      {decided && (rule === USED_RULE ? <WhyCard model={model} /> : <RuleCompare model={model} rule={rule} />)}
       {model.phase === 'failed' && (
         <section role="alert" className="border border-clearance/60 rounded-[2px] px-4 py-4">
           <p className="font-display text-2xl font-bold text-strip">The negotiation stopped</p>
@@ -113,6 +147,8 @@ export default function NegotiateStage() {
     <>
       {bay && desktop && createPortal(rows, bay)}
       {panel && createPortal(side, panel)}
+      {tools && model.slots.length > 0 && createPortal(
+        <RulePicker rule={rule} onChange={setRule} outcomes={decided ? model.decision?.rules ?? [] : []} />, tools)}
       {banner && createPortal(<StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state} />, banner)}
     </>
   )

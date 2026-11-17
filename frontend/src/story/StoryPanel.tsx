@@ -12,6 +12,8 @@ interface Props {
   viewerId: string | null
   highlight: string | null
   onHover: (id: string | null) => void
+  /** A decision rule other than the one that booked, whose pick the outcome is showing. */
+  whatIf?: string | null
 }
 
 const first = (name: string) => name.trim().split(/\s+/)[0] || name
@@ -141,7 +143,7 @@ function Leaderboard({ model, times, onHover }: { model: TowerModel; times: Time
 }
 
 /** Step 3: the booking, person by person, least happy first. */
-function Outcome({ model, viewerId }: { model: TowerModel; viewerId: string | null }) {
+function Outcome({ model, viewerId, whatIf }: { model: TowerModel; viewerId: string | null; whatIf?: string | null }) {
   const d = model.decision!
   const fav = favourites(model)
   if (d.status !== 'converged' || !d.slot) {
@@ -164,8 +166,12 @@ function Outcome({ model, viewerId }: { model: TowerModel; viewerId: string | nu
   }
   return (
     <>
-      <Heading title="Step 3 · Booked" sub="How the chosen time lands for each person, starting with anyone who gave something up." />
-      <p className="mt-4 font-display font-bold text-[2.2rem] leading-none text-amber">{fullTime(pick.label)}</p>
+      {whatIf ? (
+        <Heading title={`What if · ${whatIf}`} sub="The time this rule would book, and how it lands for each person. The real booking is unchanged." />
+      ) : (
+        <Heading title="Step 3 · Booked" sub="How the chosen time lands for each person, starting with anyone who gave something up." />
+      )}
+      <p className={`mt-4 font-display font-bold text-[2.2rem] leading-none ${whatIf ? 'text-signal' : 'text-amber'}`}>{fullTime(pick.label)}</p>
       <ul className="mt-5 flex flex-col gap-3">
         {rows.map(({ a, score }) => {
           const l = line(a)
@@ -196,7 +202,7 @@ function Outcome({ model, viewerId }: { model: TowerModel; viewerId: string | nu
  * The left panel follows the negotiation: who is in, what got ruled out, the race between the
  * best times, then the booking. Every score is still one tap away.
  */
-export default function StoryPanel({ model, viewerId, highlight, onHover }: Props) {
+export default function StoryPanel({ model, viewerId, highlight, onHover, whatIf }: Props) {
   const [evidence, setEvidence] = useState(false)
   const times = useMemo(() => rankTimes(model), [model])
   const view = model.decision ? 'outcome'
@@ -212,7 +218,7 @@ export default function StoryPanel({ model, viewerId, highlight, onHover }: Prop
           {view === 'who' && <WhoIsIn model={model} viewerId={viewerId} />}
           {view === 'ruling' && <RulingOut model={model} />}
           {view === 'race' && <Leaderboard model={model} times={times} onHover={onHover} />}
-          {view === 'outcome' && <Outcome model={model} viewerId={viewerId} />}
+          {view === 'outcome' && <Outcome model={model} viewerId={viewerId} whatIf={whatIf} />}
       </motion.div>
 
       {Object.keys(model.scores).length > 0 && (

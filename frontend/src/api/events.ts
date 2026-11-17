@@ -29,6 +29,21 @@ export interface Binding {
   tied: string[]
 }
 
+export type RuleId = 'nash' | 'leximin' | 'utilitarian' | 'borda' | 'approval'
+
+/** What one decision rule would book on the same final preferences (additive, on the decision). */
+export interface RuleOutcome {
+  rule: RuleId
+  slot_id: string | null
+  label?: string
+  scores?: Record<string, number>
+  min_score?: number
+  avg_score?: number
+  nash_welfare?: number
+  pareto_dominated_by?: string | null
+  available?: number
+}
+
 export interface MemberPayload {
   user_id: string
   name: string
@@ -93,6 +108,7 @@ export type LogEvent = Base &
         binding?: Binding | null
         normalization?: string
         faithful?: boolean
+        rules?: RuleOutcome[]
       }
     | { type: 'negotiation_failed'; error: string }
     | { type: 'rsvp'; user_id: string; name: string; response: 'accepted' | 'declined' }
