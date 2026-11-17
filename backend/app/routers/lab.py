@@ -3,11 +3,13 @@
 import asyncio
 import json
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import Depends, APIRouter, HTTPException, Query
+
 from pydantic import BaseModel, Field
 from fastapi.responses import StreamingResponse
 
 from app.lab import ATTACKS, MECHANISMS, SIZES, lab_instance, lab_meeting, lab_row
+from app.ratelimit import limit
 
 router = APIRouter(prefix="/lab", tags=["lab"])
 MAX_RUN = 510  # the instances per group size that docs/eval/RESULTS.md reports on
@@ -29,7 +31,7 @@ def options():
     return {"mechanisms": MECHANISMS, "attacks": ATTACKS, "sizes": SIZES, "max_run": MAX_RUN}
 
 
-@router.get("/run")
+@router.get("/run", dependencies=[Depends(limit("lab_run", 8))])
 async def run(
     mechs: str = "nash,old,utilitarian,borda,when2meet",
     n: int = 5,
@@ -49,7 +51,7 @@ async def run(
     return StreamingResponse(lines(), media_type="application/x-ndjson", headers={"Cache-Control": "no-store"})
 
 
-@router.get("/instance")
+@router.get("/instance", dependencies=[Depends(limit("lab_instance", 90))])
 async def instance(idx: int, n: int = 5, mechs: str = "nash,old,utilitarian,borda,when2meet", attack: str = "none"):
     names = _parse(mechs, n, attack)
     data = await asyncio.to_thread(lab_instance, idx, n, names, attack)
@@ -58,7 +60,7 @@ async def instance(idx: int, n: int = 5, mechs: str = "nash,old,utilitarian,bord
     return data
 
 
-@router.get("/meeting")
+@router.get("/meeting", dependencies=[Depends(limit("lab_meeting", 90))])
 async def meeting(idx: int = 0, n: int = 5, attack: str = "none"):
     """One meeting under every rule, for the playground."""
     _parse("nash", n, attack)
@@ -80,7 +82,7 @@ class DecideBody(BaseModel):
     edits: dict[str, Edit] = Field(default_factory=dict)
 
 
-@router.post("/decide")
+@router.post("/decide", dependencies=[Depends(limit("lab_decide", 120))])
 async def decide(body: DecideBody):
     """The sandbox: redraw some people's preferences, then run every rule again."""
     _parse("nash", body.n, body.attack)

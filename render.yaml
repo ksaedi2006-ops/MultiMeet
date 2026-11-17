@@ -1,0 +1,21 @@
+# Render blueprint for the MultiMeet API (New > Blueprint in the Render dashboard, pick this repo).
+# The frontend is deployed separately on Vercel from frontend/.
+services:
+  - type: web
+    name: multimeet-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    # Migrations run on startup (app/main.py). Proxy headers so rate limits see the visitor's address.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips "*"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: MULTIMEET_AGENTS
+        value: simulated  # no API key needed, no per-visitor cost
+      - key: CORS_ORIGINS
+        sync: false  # set to the Vercel URL, e.g. https://multimeet.vercel.app
+      # No DATABASE_URL: SQLite on the instance's disk, reset on each deploy. Fine for a demo
+      # (samples and the Lab are throwaway). For persistence, set DATABASE_URL to a Postgres URL.

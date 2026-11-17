@@ -47,10 +47,6 @@ export default function RulePicker({ rule, onChange, outcomes }: Props) {
             initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2, ease: EASE }}
             className="fixed left-2 right-2 top-12 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:w-[27rem] z-50 bg-console border border-board-line shadow-[0_24px_60px_-20px_rgba(0,0,0,0.9)] font-sans tracking-normal">
-            <p className="px-4 pt-3.5 pb-2.5 text-[13px] leading-snug text-mist border-b border-board-line">
-              Five rules from economics, run on the same people’s final preferences.
-              {outcomes.length ? ' The booking used Nash; pick another to see what it would have done.' : ' Their picks appear once the agents finish.'}
-            </p>
             <ul className="max-h-[70vh] overflow-y-auto">
               {RULES.map((r) => {
                 const o = byRule.get(r.id)

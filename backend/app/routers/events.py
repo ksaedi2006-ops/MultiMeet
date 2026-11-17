@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+
 from fastapi.responses import Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -12,6 +13,7 @@ from app.database import get_db
 from app.members import announce_member, find_member, member_status
 from app.negotiation import event_slots, launch_negotiation
 from app.sample import populate_in_background
+from app.ratelimit import limit
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -58,7 +60,7 @@ async def create_event(payload: schemas.EventCreate, requested_by: str, db: Sess
     return event_out(db, meeting)
 
 
-@router.post("/sample", response_model=schemas.EventOut)
+@router.post("/sample", response_model=schemas.EventOut, dependencies=[Depends(limit("sample", 6))])
 async def create_sample_event(user_id: str, count: int = 14, autostart: bool = True, title: str | None = None,
                               timezone: str = "America/New_York", db: Session = Depends(get_db)):
     """One click: a new event, a crowd of generated students joining it, and (by default) the
@@ -90,7 +92,7 @@ async def create_sample_event(user_id: str, count: int = 14, autostart: bool = T
     return event_out(db, meeting)
 
 
-@router.post("/{event_id}/sample")
+@router.post("/{event_id}/sample", dependencies=[Depends(limit("add_sample", 10))])
 async def add_sample_people(event_id: str, user_id: str, count: int = 12, db: Session = Depends(get_db)):
     """Add generated students to an existing, unstarted event (organiser only). They check in."""
     meeting = get_meeting_or_404(db, event_id)

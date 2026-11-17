@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
+
 from sqlalchemy.orm import Session
 
 from app import models, schemas
@@ -9,6 +10,7 @@ from app.agents.types import AgentError
 from app.database import get_db
 from app.members import announce_member
 from app.scheduling.ics import BusyInterval, CalendarParseError, parse_ics
+from app.ratelimit import limit
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -39,7 +41,7 @@ def preference_out(p: models.UserPreference) -> dict:
     return {"id": p.id, "raw_text": p.raw_text, "rules": p.rules or [], "ack": p.ack}
 
 
-@router.post("/anon", response_model=schemas.UserOut)
+@router.post("/anon", response_model=schemas.UserOut, dependencies=[Depends(limit("anon", 20))])
 def create_guest(db: Session = Depends(get_db)):
     user = models.User(name="Guest")
     db.add(user)
