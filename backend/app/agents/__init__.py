@@ -3,10 +3,13 @@ from functools import lru_cache
 from typing import Protocol
 
 from app.agents.types import (
+    AgentMove,
     AskPlan,
+    AskRenderView,
     AskView,
     DecisionView,
     Explanation,
+    MoveView,
     PersonView,
     ReplySheet,
     ScoreSheet,
@@ -30,6 +33,10 @@ class Agents(Protocol):
     async def plan_asks(self, title: str, people: dict[str, str], shortlist: list[ShortlistView]) -> AskPlan: ...
     async def reply(self, person: PersonView, asks: list[AskView]) -> ReplySheet: ...
     async def explain(self, decision: DecisionView) -> Explanation: ...
+    # The mediated single-text protocol (app/scheduling/protocol.py). The solver has already
+    # decided who to ask and about what; these only put it into words and pick one move.
+    async def render_ask(self, view: AskRenderView) -> str: ...
+    async def move(self, view: MoveView) -> AgentMove: ...
 
 
 @lru_cache(maxsize=1)

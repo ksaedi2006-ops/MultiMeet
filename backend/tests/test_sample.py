@@ -99,3 +99,26 @@ def test_simulated_parser_treats_smart_apostrophes_like_plain_ones():
     smart = asyncio.run(agents.parse_preference("I can’t do anything before 11am")).rules[0]
     assert plain.strength == smart.strength == "hard"
     assert smart.kind == "not_before" and smart.time == "11:00"
+
+
+def test_negotiation_events_carry_solver_fields_without_dropping_old_ones(client):
+    uid = client.post("/users/anon").json()["id"]
+    event = client.post("/events/sample", params={"user_id": uid, "count": 12}).json()
+    log, final = wait_decision(client, event["event_id"])
+    assert final["type"] == "decision"
+    # Fields the frontend reads are all still there.
+    for key in ("status", "slot", "scores", "min_score", "avg_score", "compromises", "alternatives", "explanation"):
+        assert key in final
+    # Additive: how the solver decided.
+    assert final["selector"] == "nash" and final["normalization"] == "topk"
+    assert final["faithful"] is True and final["bottleneck"]["user_id"] in final["scores"]
+    assert final["binding"]["pick"] == final["slot"]["id"]
+    for e in log:
+        if e["type"] == "shortlist":
+            assert all({"slot_id", "min_score", "avg_score", "scores", "unhappy", "nash"} <= set(r) for r in e["ranked"])
+        if e["type"] == "agent_reply":
+            assert e["response"] in ("accept", "flex", "hold") and "valid" in e and "move" in e
+        if e["type"] == "agent_scored":
+            assert e["source"] == "rules" and all(0 <= v <= 100 for v in e["scores"].values())
+    asks = [e for e in log if e["type"] == "mediator_ask"]
+    assert len(asks) <= 3 and all("rule_id" in a and "zeuthen_gain" in a for a in asks)
