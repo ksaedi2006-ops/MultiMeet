@@ -18,11 +18,11 @@ interface Props {
 
 const first = (name: string) => name.trim().split(/\s+/)[0] || name
 
-function Heading({ title, sub }: { title: string; sub: string }) {
+function Heading({ title, sub }: { title: string; sub?: string }) {
   return (
     <div>
       <h2 className="font-display font-bold text-[1.7rem] leading-none text-strip">{title}</h2>
-      <p className="mt-2 text-[15px] leading-snug text-strip/80 max-w-[34rem]">{sub}</p>
+      {sub && <p className="mt-2 text-[15px] leading-snug text-strip/80 max-w-[34rem]">{sub}</p>}
     </div>
   )
 }
@@ -169,7 +169,7 @@ function Outcome({ model, viewerId, whatIf }: { model: TowerModel; viewerId: str
       {whatIf ? (
         <Heading title={`What if · ${whatIf}`} sub="The time this rule would book, and how it lands for each person. The real booking is unchanged." />
       ) : (
-        <Heading title="Step 3 · Booked" sub="How the chosen time lands for each person, starting with anyone who gave something up." />
+        <Heading title="Step 3 · Booked" />
       )}
       <p className={`mt-4 font-display font-bold text-[2.2rem] leading-none ${whatIf ? 'text-signal' : 'text-amber'}`}>{fullTime(pick.label)}</p>
       <ul className="mt-5 flex flex-col gap-3">
