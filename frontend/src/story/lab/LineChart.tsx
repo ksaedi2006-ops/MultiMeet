@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 export interface Series {
   id: string
@@ -8,8 +8,8 @@ export interface Series {
 }
 
 interface Props {
-  title: string
-  subtitle: string
+  title: ReactNode
+  subtitle: ReactNode
   series: Series[]
   focus: string | null // this series is drawn heaviest, with its 95% band
   domain: [number, number]
@@ -63,7 +63,7 @@ export default function LineChart({ title, subtitle, series, focus, domain, form
         <p className="mt-0.5 text-[12.5px] text-mist leading-snug">{subtitle}</p>
       </figcaption>
       <div ref={box} className="relative mt-2">
-        <svg width={w} height={height} role="img" aria-label={`${title}. ${subtitle}`}
+        <svg width={w} height={height} role="img" aria-label={typeof title === 'string' ? title : 'Chart'}
           onPointerMove={(e) => {
             const r = (e.currentTarget as SVGSVGElement).getBoundingClientRect()
             const x = ((e.clientX - r.left - PAD.l) / iw) * maxX

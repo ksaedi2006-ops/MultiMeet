@@ -1,34 +1,11 @@
 import { API_BASE } from '../api/client'
 import type { LogEvent } from '../api/events'
 
-/** Rules the Lab can race (backend/app/lab.py MECHANISMS) and what they're called on screen. */
-export type LabRule = 'utilitarian' | 'old' | 'egalitarian' | 'nash' | 'borda' | 'random' | 'when2meet'
+import type { RuleId } from '../lab/theories'
+
+export type LabRule = RuleId
 export type Attack = 'none' | 'inflater' | 'victim' | 'fakehard' | 'pair'
-
-export interface LabRuleInfo { id: LabRule; name: string; short: string; color: string; note: string }
-
-/**
- * Colour follows the rule, never its rank, and the order is the validated adjacency order
- * (dataviz validator, dark surface #1a2531: all checks pass).
- */
-export const LAB_RULES: LabRuleInfo[] = [
-  { id: 'utilitarian', name: 'Utilitarian', short: 'UTIL', color: '#3987e5', note: 'Most total happiness' },
-  { id: 'old', name: 'Old MultiMeet', short: 'OLD', color: '#d95926', note: 'Max-min over raw 0–100 scores (baseline B3)' },
-  { id: 'egalitarian', name: 'Egalitarian', short: 'EGAL', color: '#199e70', note: 'Our pipeline, leximin instead of Nash' },
-  { id: 'nash', name: 'Nash (ours)', short: 'NASH', color: '#c98500', note: 'Nash product, top-k normalization, mediator' },
-  { id: 'borda', name: 'Borda', short: 'BORDA', color: '#d55181', note: 'Rankings only' },
-  { id: 'random', name: 'Random', short: 'RAND', color: '#0ca30c', note: 'Any time everyone can make (floor)' },
-  { id: 'when2meet', name: 'When2Meet', short: 'W2M', color: '#9085e9', note: 'Most people free (approval voting)' },
-]
-export const LAB_RULE = Object.fromEntries(LAB_RULES.map((r) => [r.id, r])) as Record<LabRule, LabRuleInfo>
-
-export const ATTACKS: { id: Attack; name: string; note: string }[] = [
-  { id: 'none', name: 'Everyone honest', note: '' },
-  { id: 'inflater', name: 'Exaggerator', note: 'One person rates their favourite 100 and everything else 0.' },
-  { id: 'victim', name: 'Victim', note: 'One person claims every time but their favourite is nearly unbearable.' },
-  { id: 'fakehard', name: 'Fake “I can’t”', note: 'One person declares their soft dislikes as hard conflicts.' },
-  { id: 'pair', name: 'Colluding pair', note: 'Two people agree on a favourite and both exaggerate for it.' },
-]
+export const ATTACK_IDS: Attack[] = ['none', 'inflater', 'victim', 'fakehard', 'pair']
 
 export interface LabResult {
   pick: string | null
@@ -40,6 +17,9 @@ export interface LabResult {
   attack_pick?: string | null
   gain?: number // what lying won the liar(s), on their true utility
   harm?: number // what it cost everyone else
+  extra?: { condorcet?: boolean; dictator?: string }
+  payments?: Record<string, number>
+  rounds?: { user_id: string; rule: string; target: string; draft: string | null; move: 'accept' | 'flex' | 'hold'; pick_after: string | null }[]
 }
 
 export interface LabRow {
@@ -56,6 +36,18 @@ export interface LabInstance extends LabRow {
   timezone: string
   slots: { id: string; start: string; end: string; label: string }[]
   people: { user_id: string; name: string; liar: boolean; scores: Record<string, number> }[]
+}
+
+export interface LabMeeting extends LabInstance {
+  people: (LabInstance['people'][number] & { said: string[] })[]
+  liars: string[]
+}
+
+export async function getLabMeeting(idx: number, n: number, attack: Attack): Promise<LabMeeting> {
+  const q = new URLSearchParams({ idx: String(idx), n: String(n), attack })
+  const res = await fetch(`${API_BASE}/lab/meeting?${q}`)
+  if (!res.ok) throw new Error(res.status === 404 ? 'That meeting was dropped by the generator.' : 'Couldn’t load that meeting.')
+  return res.json()
 }
 
 export interface LabParams { rules: LabRule[]; n: 3 | 5 | 8; attack: Attack; count: number }

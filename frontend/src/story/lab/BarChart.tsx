@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react'
 import type { Stat } from '../../lib/lab'
 
 interface Bar { id: string; label: string; color: string; stat: Stat }
 
 interface Props {
-  title: string
-  subtitle: string
+  title: ReactNode
+  subtitle: ReactNode
   bars: Bar[]
   domain: [number, number] // may straddle zero
   format: (v: number) => string
