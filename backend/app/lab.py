@@ -21,6 +21,14 @@ MECHANISMS: dict[str, str] = {
     "borda": "B5",
     "when2meet": "B1",
     "random": "B0",
+    # More rules from the literature (eval/mechanisms.py run_extra); not preregistered.
+    "plurality": "P1",
+    "condorcet": "CW",
+    "ks": "KS",
+    "median": "MED",
+    "random_dictator": "RD",
+    "budget": "QV",
+    "vcg": "VCG",
 }
 ATTACKS = ("none", "inflater", "victim", "fakehard", "pair")
 SIZES = (3, 5, 8)
@@ -33,7 +41,8 @@ def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
     results: dict[str, dict] = {}
     for name in mechs:
         mech = MECHANISMS[name]
-        pick = run(mech, inst, honest, slots).pick
+        res = run(mech, inst, honest, slots)
+        pick = res.pick
         o = outcome(inst, pick, nw_or)
         r = {
             "pick": pick,
@@ -43,16 +52,29 @@ def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
             "pareto": o["pareto"],
             "violation": o["violation"],
         }
+        if res.extra:
+            r["extra"] = res.extra
+        if res.payments:
+            r["payments"] = {u: round(v, 4) for u, v in res.payments.items()}
+        if res.outcome and res.outcome.rounds:
+            # The mediator's concession rounds (only Nash runs them): who was asked, for what, and the answer.
+            r["rounds"] = [{
+                "user_id": rd.request.user_id, "rule": rd.request.rule_label, "target": rd.request.target,
+                "draft": rd.request.draft, "move": rd.applied.kind, "pick_after": rd.draft.pick,
+            } for rd in res.outcome.rounds]
         if attack != "none":
             lied, lslots, liars = condition(inst, attack)
-            lpick = run(mech, inst, lied, lslots).pick
+            lres = run(mech, inst, lied, lslots)
+            lpick = lres.pick
             before = utilities_at(inst, pick)
             after = utilities_at(inst, lpick)
             uids = [inst.uids[k] for k in liars]
             honest_ids = [u for u in inst.uids if u not in uids]
             r["attack_pick"] = lpick
             # What lying won the liars, and what it cost everyone else, on their true utilities.
-            r["gain"] = round(sum(after[u] - before[u] for u in uids) / len(uids), 4)
+            # Under the Clarke tax, points paid count against the liar too (that is what makes it truthful).
+            paid = {u: (lres.payments or {}).get(u, 0.0) - (res.payments or {}).get(u, 0.0) for u in uids}
+            r["gain"] = round(sum(after[u] - before[u] - paid[u] for u in uids) / len(uids), 4)
             r["harm"] = round(sum(after[u] - before[u] for u in honest_ids) / max(1, len(honest_ids)), 4)
         results[name] = r
     return {
@@ -69,6 +91,19 @@ def _row(inst: Instance, mechs: list[str], attack: str) -> dict:
 def lab_row(idx: int, n: int, mechs: list[str], attack: str) -> dict | None:
     inst = make_instance(idx, n)
     return _row(inst, mechs, attack) if inst else None
+
+
+def lab_meeting(idx: int, n: int, attack: str) -> dict | None:
+    """One meeting for the playground: every rule, the people in their own words, the truth."""
+    data = lab_instance(idx, n, list(MECHANISMS), attack)
+    if data is None:
+        return None
+    inst = make_instance(idx, n)
+    said = {p.uid: [s for _, s in p.phrases] for p in inst.people}
+    for person in data["people"]:
+        person["said"] = said.get(person["user_id"], [])
+    data["liars"] = [p["user_id"] for p in data["people"] if p["liar"]]
+    return data
 
 
 def lab_instance(idx: int, n: int, mechs: list[str], attack: str) -> dict | None:

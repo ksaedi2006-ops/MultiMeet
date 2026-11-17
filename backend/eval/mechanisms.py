@@ -15,9 +15,16 @@ from app.scheduling.protocol import AgentState, Move, Outcome, Solver, apply_mov
 from app.scheduling.selector import (
     approval_select,
     borda_select,
+    budget_select,
+    copeland_select,
+    ks_select,
+    median_select,
     nash_select,
+    plurality_select,
+    random_dictator_select,
     random_select,
     utilitarian_select,
+    vcg_select,
 )
 from app.scheduling.utility import Criterion, UtilityModel
 from eval.instances import Instance
@@ -156,6 +163,8 @@ class Result:
     pick: str | None
     rounds: int = 0
     outcome: Outcome | None = None
+    payments: dict[str, float] | None = None  # VCG: points each agent pays (Clarke tax)
+    extra: dict = field(default_factory=dict)  # e.g. condorcet exists, who the dictator was
 
 
 def _b3_scores(rep: Report, model: UtilityModel, slots: list[str]) -> dict[str, int]:
@@ -264,6 +273,9 @@ def run(mech: str, inst: Instance, reports: list[Report], slots: list[str], *, o
         return Result(utilitarian_select({u: normalize(row, "range") for u, row in raw.items()}, slots).slot_id)
     if mech == "B5":
         return Result(borda_select(raw, slots).slot_id)
+    # More rules from the literature, for the Lab. Not part of the preregistered comparison.
+    if mech in LAB_EXTRA:
+        return run_extra(mech, inst, raw, slots)
     if mech == "Ours-d":
         return run_ours(reports, slots, d_mode="elicited")
     if mech == "Ours-oneshot":
@@ -272,6 +284,46 @@ def run(mech: str, inst: Instance, reports: list[Report], slots: list[str], *, o
         return run_ours(reports, slots, scheme="none")
     if mech == "Ours-maxmin":
         return run_ours(reports, slots, selector="leximin")
+    raise ValueError(mech)
+
+
+LAB_EXTRA = ("P1", "CW", "KS", "MED", "RD", "QV", "VCG")
+
+
+def _minutes(inst: Instance, slots: list[str]) -> dict[str, int]:
+    from zoneinfo import ZoneInfo
+
+    from eval.instances import MEETING_TZ
+
+    zone = ZoneInfo(MEETING_TZ)
+    out = {}
+    for s in slots:
+        t = inst.slots[s].start.astimezone(zone)
+        out[s] = t.hour * 60 + t.minute
+    return out
+
+
+def run_extra(mech: str, inst: Instance, raw: dict[str, dict[str, float]], slots: list[str]) -> Result:
+    """Plurality, Condorcet/Copeland, Kalai-Smorodinsky, generalized median, random dictator,
+    budgeted (L2) votes and the Clarke tax, all on the same reports as everything else."""
+    common = {u: normalize(row, "range") for u, row in raw.items()}  # the common scale B4 uses
+    if mech == "P1":
+        return Result(plurality_select(raw, slots).slot_id)
+    if mech == "CW":
+        sel, condorcet = copeland_select(raw, slots)
+        return Result(sel.slot_id, extra={"condorcet": condorcet})
+    if mech == "KS":
+        return Result(ks_select(common, {u: 0.0 for u in common}, slots).slot_id)
+    if mech == "MED":
+        return Result(median_select(raw, slots, _minutes(inst, slots)).slot_id)
+    if mech == "RD":
+        sel, who = random_dictator_select(raw, slots, f"rd:{inst.n}:{inst.idx}")
+        return Result(sel.slot_id, extra={"dictator": who})
+    if mech == "QV":
+        return Result(budget_select(raw, slots).slot_id)
+    if mech == "VCG":
+        sel, pay = vcg_select(common, slots)
+        return Result(sel.slot_id, payments=pay)
     raise ValueError(mech)
 
 

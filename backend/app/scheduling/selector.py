@@ -207,3 +207,116 @@ def nash_welfare(u: Profile, d: dict[str, float], slot: str | None, eps: float =
 
 def distance_to_oracle(u: Profile, d: dict[str, float], slot: str | None, oracle: str | None, eps: float = EPS) -> float:
     return nash_welfare(u, d, oracle, eps) - nash_welfare(u, d, slot, eps)
+
+
+# ---------- more rules from the literature, for the Lab (docs/research/negotiation-layer.md) ----------
+
+def _top(row: dict[str, float], slots: list[str], order: dict[str, int]) -> str:
+    """An agent's favourite slot on its report; ties go to the earlier slot."""
+    return max(slots, key=lambda s: (round(row[s], 9), -order[s]))
+
+
+def plurality_select(raw: Profile, slots: list[str]) -> Selection:
+    """Plurality: each agent votes for its single favourite; most votes wins, ties earliest.
+    Ordinal and top-only (Handbook of Computational Social Choice, Brandt et al. 2016)."""
+    if not slots:
+        return Selection(None, "plurality", "no_slots")
+    order = _order(slots)
+    obj = {s: 0.0 for s in slots}
+    for row in raw.values():
+        obj[_top(row, slots, order)] += 1
+    ranking = sorted(slots, key=lambda s: (obj[s], -order[s]), reverse=True)
+    return Selection(ranking[0], "plurality", "ok", ranking, obj)
+
+
+def copeland_select(raw: Profile, slots: list[str]) -> tuple[Selection, bool]:
+    """Condorcet winner if one exists (beats every other slot in a pairwise majority vote),
+    else the Copeland winner (most pairwise wins minus losses), ties earliest.
+    Returns (selection, whether a Condorcet winner exists). Handbook of CompSoc 2016; the
+    report cites Kemeny / Young & Levenglick for Condorcet-consistent rules."""
+    if not slots:
+        return Selection(None, "copeland", "no_slots"), False
+    order = _order(slots)
+    agents = list(raw.values())
+
+    def beats(a: str, b: str) -> int:
+        pro = sum(1 for r in agents if r[a] > r[b] + _TOL)
+        con = sum(1 for r in agents if r[b] > r[a] + _TOL)
+        return (pro > con) - (pro < con)
+
+    obj = {s: float(sum(beats(s, t) for t in slots if t != s)) for s in slots}
+    ranking = sorted(slots, key=lambda s: (obj[s], -order[s]), reverse=True)
+    condorcet = len(slots) == 1 or obj[ranking[0]] == len(slots) - 1
+    return Selection(ranking[0], "copeland", "ok", ranking, obj), condorcet
+
+
+def ks_select(u: Profile, d: dict[str, float], slots: list[str]) -> Selection:
+    """Kalai-Smorodinsky on a discrete set: maximize the smallest share of each agent's
+    ideal gain, min_i (u_i - d_i) / (a_i - d_i), leximin ties (Kalai & Smorodinsky 1975).
+    Not Pareto-optimal on every n >= 3 problem (Roth 1979)."""
+    if not slots:
+        return Selection(None, "ks", "no_slots")
+    g = gains(u, d, slots)
+    ideal = {a: max(row[s] for s in slots) for a, row in g.items()}
+    share = {a: {s: (row[s] / ideal[a] if ideal[a] > _TOL else 1.0) for s in slots} for a, row in g.items()}
+    order = _order(slots)
+    ranking = sorted(slots, key=lambda s: (leximin_key(share, s), -order[s]), reverse=True)
+    obj = {s: min(row[s] for row in share.values()) for s in slots}
+    return Selection(ranking[0], "ks", "ok", ranking, obj, None, bottleneck(share, ranking[0]))
+
+
+def median_select(raw: Profile, slots: list[str], minutes: dict[str, int]) -> Selection:
+    """Generalized median on time of day (Moulin 1980): each agent's peak is the start time
+    of its favourite slot; take the lower median of the peaks (phantoms at the window edges)
+    and pick the feasible slot nearest to it, earliest on ties. Strategy-proof when
+    time-of-day preferences are single-peaked; days are not part of the vote."""
+    if not slots:
+        return Selection(None, "median", "no_slots")
+    order = _order(slots)
+    peaks = sorted(minutes[_top(row, slots, order)] for row in raw.values())
+    med = peaks[(len(peaks) - 1) // 2]
+    obj = {s: -float(abs(minutes[s] - med)) for s in slots}
+    ranking = sorted(slots, key=lambda s: (obj[s], -order[s]), reverse=True)
+    return Selection(ranking[0], "median", "ok", ranking, obj)
+
+
+def random_dictator_select(raw: Profile, slots: list[str], seed: str) -> tuple[Selection, str | None]:
+    """Random dictatorship: draw one agent uniformly (seeded, independent of the reports) and
+    take its favourite. Strategy-proof (Gibbard 1977): a report only matters when you are the
+    dictator, and then lying can only lose you your favourite. Returns (selection, drawn agent)."""
+    if not slots or not raw:
+        return Selection(None, "random_dictator", "no_slots"), None
+    who = random.Random(seed).choice(sorted(raw))
+    pick = _top(raw[who], slots, _order(slots))
+    return Selection(pick, "random_dictator", "ok", [pick]), who
+
+
+def budget_select(raw: Profile, slots: list[str]) -> Selection:
+    """Budgeted votes: the utilitarian sum over L2-normalized reports, so no one can put
+    everything at 100. For one meeting this is what a quadratic-voting credit budget reduces
+    to (Lalley & Weyl 2018; the report, "Normalization: what it buys you")."""
+    if not slots:
+        return Selection(None, "budget", "no_slots")
+    sel = utilitarian_select({a: normalize({s: row[s] for s in slots}, "l2") for a, row in raw.items()}, slots)
+    return Selection(sel.slot_id, "budget", sel.status, sel.ranking, sel.objective)
+
+
+def vcg_select(u: Profile, slots: list[str]) -> tuple[Selection, dict[str, float]]:
+    """Clarke tax (VCG pivot payments) in points: pick the utilitarian optimum on the reports;
+    each agent pays the harm its presence does to the others,
+    t_i = sum_{j != i} u_j(s_-i*) - sum_{j != i} u_j(s*). Truthful reporting is a dominant
+    strategy when people value points like utility (Ephrati & Rosenschein 1991; Ephrati,
+    Zlotkin & Rosenschein 1994). It maximizes the total, not fairness, and the tax is burned."""
+    if not slots:
+        return Selection(None, "vcg", "no_slots"), {}
+    sel = utilitarian_select(u, slots)
+    pick = sel.slot_id
+    pay: dict[str, float] = {}
+    for i in u:
+        others = {a: row for a, row in u.items() if a != i}
+        if not others:
+            pay[i] = 0.0
+            continue
+        alt = utilitarian_select(others, slots).slot_id
+        pay[i] = sum(r[alt] for r in others.values()) - sum(r[pick] for r in others.values())
+    return Selection(pick, "vcg", "ok", sel.ranking, sel.objective), pay

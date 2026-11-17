@@ -6,7 +6,7 @@ import json
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
 
-from app.lab import ATTACKS, MECHANISMS, SIZES, lab_instance, lab_row
+from app.lab import ATTACKS, MECHANISMS, SIZES, lab_instance, lab_meeting, lab_row
 
 router = APIRouter(prefix="/lab", tags=["lab"])
 MAX_RUN = 510  # the instances per group size that docs/eval/RESULTS.md reports on
@@ -52,6 +52,16 @@ async def run(
 async def instance(idx: int, n: int = 5, mechs: str = "nash,old,utilitarian,borda,when2meet", attack: str = "none"):
     names = _parse(mechs, n, attack)
     data = await asyncio.to_thread(lab_instance, idx, n, names, attack)
+    if data is None:
+        raise HTTPException(404, "That instance was dropped by the generator.")
+    return data
+
+
+@router.get("/meeting")
+async def meeting(idx: int = 0, n: int = 5, attack: str = "none"):
+    """One meeting under every rule, for the playground."""
+    _parse("nash", n, attack)
+    data = await asyncio.to_thread(lab_meeting, idx, n, attack)
     if data is None:
         raise HTTPException(404, "That instance was dropped by the generator.")
     return data

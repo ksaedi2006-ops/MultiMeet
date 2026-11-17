@@ -32,3 +32,13 @@ def test_lab_instance_has_everything_to_draw(client):
 
 def test_lab_rejects_unknown_rules(client):
     assert client.get("/lab/run", params={"mechs": "nope"}).status_code == 400
+
+
+def test_lab_meeting_runs_every_rule_with_the_people_in_their_own_words(client):
+    data = client.get("/lab/meeting", params={"idx": 2, "n": 5, "attack": "inflater"}).json()
+    assert len(data["results"]) == 14 and data["liars"]
+    assert all(p["said"] for p in data["people"])
+    assert "dictator" in data["results"]["random_dictator"]["extra"]
+    assert "condorcet" in data["results"]["condorcet"]["extra"]
+    assert data["results"]["vcg"]["payments"]
+    assert all("gain" in r for r in data["results"].values())
