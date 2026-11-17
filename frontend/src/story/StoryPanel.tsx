@@ -167,7 +167,7 @@ function Outcome({ model, viewerId, whatIf }: { model: TowerModel; viewerId: str
   return (
     <>
       {whatIf ? (
-        <Heading title={`What if · ${whatIf}`} sub="The time this rule would book, and how it lands for each person. The real booking is unchanged." />
+        <Heading title={`What if · ${whatIf}`} />
       ) : (
         <Heading title="Step 3 · Booked" />
       )}
