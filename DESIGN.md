@@ -345,6 +345,10 @@ Each step is a camera position, not a page.
 - **Your preferences**: Your card on the left (with its handwritten notes), a plain chat with your agent on the right ("Got it: …, and that's a must"), suggestion chips, and I'm ready. Musts cross times out on the ring; preferences don't.
 - **Negotiating / Booked**: rows on the left, the negotiation panel on the right, the scope centred.
 
+## Lab Vocabulary Rule
+
+The Lab shows the field's own terms on every option: rule names, properties, metrics, attacks and *n*. Each term is wrapped in `<Term>`, and its definition, formula and source open on hover, tap or focus. Explanations are never inlined next to a term. Inside a control (a radio or a rule card) the term is `passive`: hover still explains it, and the click goes to the control.
+
 ## Do's and Don'ts
 
 ### Do:

@@ -98,6 +98,25 @@ What held up, and what didn't:
   - Pricing declared hard claims (at most 25% of the week) cut the fake-constraint attack by two-thirds. It wasn't adopted, because a third of honest people's real constraints exceed that budget on their own. Letting calendar evidence pay the cost is the next step.
 - **Not tested.** LLM baselines and LLM attackers (persuasion, prompt injection) need an API key. The code is in `backend/eval/llm.py`.
 
+### The Lab (`/lab`)
+
+A playground for 14 decision rules from bargaining theory, welfare economics, social choice and mechanism design, all run on the same simulated meetings with hidden true preferences.
+
+- **One meeting.** Shows the people in their own words and every rule's pick. Each rule comes with property badges (Pareto optimal, strategy-proof, ordinal or cardinal, Condorcet-consistent) and its min utility, mean utility and ratio to oracle.
+- **Manipulation.** Add a manipulator (Inflater, Victim, Fake hard constraint, Colluding pair) to see each rule's manipulation gain.
+- **Sandbox.** EDIT a person to redraw their preferences, and every rule re-decides.
+- **Many meetings.** Races up to five rules live on the seeded evaluation meetings.
+- **Under the hood.** Has the full table, every formula and the sources.
+
+Every term on screen is the field's own. Hovering, tapping or focusing a term opens its definition, formula and source (`frontend/src/lab/glossary.ts`).
+
+The rules beyond the preregistered six are plurality, Copeland/Condorcet, Kalai–Smorodinsky, the generalized median, random dictatorship, budgeted (L2) votes and the Clarke tax. They live in `backend/app/scheduling/selector.py` and were added after the preregistration, so they aren't part of its thresholds. Their badges are checked in `backend/tests/test_rules.py`:
+- random dictatorship never rewards a lone liar;
+- the Clarke tax makes the truth a dominant strategy against true utilities;
+- the median is strategy-proof on single-peaked time of day;
+- discrete Kalai–Smorodinsky with leximin ties is Pareto optimal;
+- Copeland finds Condorcet winners and reports cycles.
+
 ### What we don't claim
 
 By Gibbard–Satterthwaite, no deterministic, non-dictatorial rule over three or more options is strategy-proof. MultiMeet isn't either, so we measure how much a liar gains instead of claiming they can't. In the exact best-response test, 27% of deviators had some profitable lie.
