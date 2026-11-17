@@ -114,14 +114,19 @@ async def launch_negotiation(db: Session, meeting: models.MeetingRequest, agents
 
     if meeting.status != "open":
         return False
-    db.add(models.NegotiationSession(meeting_request_id=meeting.id, agent_backend=agents.name))
+    backend = "anthropic" if meeting.recording else agents.name
+    db.add(models.NegotiationSession(meeting_request_id=meeting.id, agent_backend=backend))
     meeting.status = "negotiating"
     try:
         db.commit()
     except IntegrityError:
         db.rollback()
         return False
-    start_negotiation(meeting.id, agents)
+    if meeting.recording:
+        from app.replay import start_replay
+        start_replay(meeting.id)
+    else:
+        start_negotiation(meeting.id, agents)
     return True
 
 

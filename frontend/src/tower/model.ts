@@ -185,7 +185,8 @@ export function reduce(model: TowerModel, e: LogEvent): TowerModel {
     case 'negotiation_started': {
       const tz = e.timezone
       m.phase = 'filtering'
-      m.backend = e.agent_backend
+      // A replayed recording of a real Claude run reads as its own kind of backend.
+      m.backend = e.recorded ? 'recorded' : e.agent_backend
       m.timezone = tz
       const taken = new Set<string>()
       const takenAvatars = new Set(model.agents.map((a) => a.avatar))

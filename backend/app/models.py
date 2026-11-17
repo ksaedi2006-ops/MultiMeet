@@ -101,6 +101,8 @@ class MeetingRequest(Base):
     weekdays = Column(JSON, default=lambda: [0, 1, 2, 3, 4])
     # open | negotiating | scheduled | escalated | failed
     status = Column(String, default="open")
+    # Set when the negotiation replays a recorded Claude run (app/replay.py) instead of running live.
+    recording = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
 
 

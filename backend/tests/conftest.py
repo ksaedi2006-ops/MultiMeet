@@ -6,3 +6,4 @@ _db = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
 os.environ["DATABASE_URL"] = f"sqlite:///{_db.name}"
 os.environ["MULTIMEET_AGENTS"] = "simulated"
 os.environ["MULTIMEET_RATE_LIMIT"] = "off"  # tests hammer endpoints on purpose
+os.environ["MULTIMEET_LIVE_BANK"] = tempfile.mkdtemp()  # empty: samples generate people unless a test opts in

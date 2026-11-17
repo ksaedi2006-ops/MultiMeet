@@ -83,6 +83,7 @@ export default function NegotiateStage() {
   useGrowth(playback.model.slots.filter((s) => s.closed).length, useCallback((n: number) => play('cross', n), []))
   useGrowth(playback.model.asks.length, useCallback(() => play('blip'), []))
   const decided = Boolean(model.decision && landed)
+  const sample = model.backend === 'simulated' || model.backend === 'recorded'
   const closeMethod = useCallback(() => setMethod(false), [])
   const overlay = useMemo(
     () => (decided && model.decision ? <ChosenTime decision={model.decision} timezone={model.timezone} /> : null),
@@ -147,7 +148,7 @@ export default function NegotiateStage() {
       {/* On a phone the story comes before the booking and the chat, not after them. */}
       {!desktop && <div className="-mx-5 -mt-5">{rows}</div>}
       {/* Nobody attends a meeting that simulated agents booked, so the calendar buttons, RSVP and fall-backs are for live agents only. */}
-      {decided && !(model.backend === 'simulated' && model.decision?.status === 'converged') && (
+      {decided && !(sample && model.decision?.status === 'converged') && (
         <DecisionBrief eventId={eventId} title={event?.title ?? 'Meeting'} model={model} viewerId={viewerId} />
       )}
       {decided && (rule === USED_RULE ? <WhyCard model={model} /> : <RuleCompare model={model} rule={rule} />)}
@@ -169,7 +170,7 @@ export default function NegotiateStage() {
       {tools && model.slots.length > 0 && createPortal(
         <RulePicker rule={rule} onChange={setRule} outcomes={decided ? model.decision?.rules ?? [] : []} />, tools)}
       {banner && createPortal(<StatusBar title={event?.title ?? ' '} model={model} playback={playback} connection={state}
-        onNewGroup={model.backend === 'simulated' ? newGroup : undefined} starting={starting} />, banner)}
+        onNewGroup={sample ? newGroup : undefined} starting={starting} />, banner)}
     </>
   )
 }

@@ -62,16 +62,27 @@ async def create_event(payload: schemas.EventCreate, requested_by: str, db: Sess
 
 @router.post("/sample", response_model=schemas.EventOut, dependencies=[Depends(limit("sample", 6))])
 async def create_sample_event(user_id: str, count: int = 14, autostart: bool = True, title: str | None = None,
-                              timezone: str = "America/New_York", db: Session = Depends(get_db)):
-    """One click: a new event, a crowd of generated students joining it, and (by default) the
-    negotiation starting by itself once they have all checked in."""
+                              timezone: str = "America/New_York", live: bool = True, db: Session = Depends(get_db)):
+    """One click: a new event, a crowd of students joining it, and (by default) the negotiation
+    starting by itself once they have all checked in. With `live`, and when the recorded bank
+    has runs, the crowd and the negotiation come from a recorded real-Claude run (app/replay.py);
+    otherwise students are generated and the configured agents negotiate."""
     from datetime import date, timedelta
 
     from zoneinfo import ZoneInfo
 
-    if not db.get(models.User, user_id):
+    from app import replay
+
+    requester = db.get(models.User, user_id)
+    if not requester:
         raise HTTPException(status_code=404, detail="User not found")
     count = max(3, min(40, count))
+    name = replay.pick(count + 1) if live and not title else None
+    if name:
+        meeting, people = replay.create_meeting(db, requester, name)
+        await announce_member(db, meeting.id, user_id, "member_joined")
+        replay.populate_in_background(meeting.id, people, stagger=0.35, autostart=autostart)
+        return event_out(db, meeting)
     try:
         today = datetime.now(ZoneInfo(timezone)).date()
     except Exception:

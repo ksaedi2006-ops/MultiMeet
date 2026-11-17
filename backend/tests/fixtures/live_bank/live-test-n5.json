@@ -1,0 +1,2594 @@
+{
+ "version": 1,
+ "seed": 1000,
+ "recorded_at": "2026-11-17T20:03:08.095653+00:00",
+ "models": {
+  "agent": "claude-haiku-5-5",
+  "mediator": "claude-sonnet-5-5"
+ },
+ "cost_usd": 0.0,
+ "owner_id": "bba05a54-c402-44dc-a4f5-60a8f629284d",
+ "meeting": {
+  "id": "389371bf-86e2-4982-9ad9-25c84ffd0282",
+  "title": "Sample negotiation",
+  "duration_minutes": 60,
+  "start_date": "2026-11-18",
+  "end_date": "2026-11-29",
+  "timezone": "America/New_York",
+  "earliest_hour": 9,
+  "latest_hour": 21,
+  "weekdays": [
+   0,
+   1,
+   2,
+   3,
+   4
+  ],
+  "status": "scheduled"
+ },
+ "users": [
+  {
+   "id": "bba05a54-c402-44dc-a4f5-60a8f629284d",
+   "name": "Alex",
+   "calendar": [],
+   "role": "admin",
+   "prefs": []
+  },
+  {
+   "id": "436a7b6b-d620-440b-ad41-715f74477db0",
+   "name": "Petra Castillo",
+   "calendar": [
+    {
+     "start": "2026-11-17T19:00:00+00:00",
+     "end": "2026-11-17T21:50:00+00:00",
+     "title": "STAT Lab",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-17T14:30:00+00:00",
+     "end": "2026-11-17T15:45:00+00:00",
+     "title": "PHYS 151 Mechanics Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-17T17:00:00+00:00",
+     "end": "2026-11-17T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-18T19:00:00+00:00",
+     "end": "2026-11-18T19:50:00+00:00",
+     "title": "STAT 240 Probability Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-18T20:00:00+00:00",
+     "end": "2026-11-18T20:50:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T00:00:00+00:00",
+     "end": "2026-11-19T02:00:00+00:00",
+     "title": "Orchestra rehearsal",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-18T17:00:00+00:00",
+     "end": "2026-11-18T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T14:30:00+00:00",
+     "end": "2026-11-19T15:45:00+00:00",
+     "title": "PHYS 151 Mechanics Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T18:00:00+00:00",
+     "end": "2026-11-19T20:50:00+00:00",
+     "title": "CHEM Lab",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T17:00:00+00:00",
+     "end": "2026-11-19T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-20T19:00:00+00:00",
+     "end": "2026-11-20T19:50:00+00:00",
+     "title": "STAT 240 Probability Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-20T20:00:00+00:00",
+     "end": "2026-11-20T20:50:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-20T17:00:00+00:00",
+     "end": "2026-11-20T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-23T19:00:00+00:00",
+     "end": "2026-11-23T19:50:00+00:00",
+     "title": "STAT 240 Probability Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-23T20:00:00+00:00",
+     "end": "2026-11-23T20:50:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-23T17:00:00+00:00",
+     "end": "2026-11-23T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-24T19:00:00+00:00",
+     "end": "2026-11-24T21:50:00+00:00",
+     "title": "STAT Lab",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-24T14:30:00+00:00",
+     "end": "2026-11-24T15:45:00+00:00",
+     "title": "PHYS 151 Mechanics Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-24T17:00:00+00:00",
+     "end": "2026-11-24T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-25T19:00:00+00:00",
+     "end": "2026-11-25T19:50:00+00:00",
+     "title": "STAT 240 Probability Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-25T20:00:00+00:00",
+     "end": "2026-11-25T20:50:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T00:00:00+00:00",
+     "end": "2026-11-26T02:00:00+00:00",
+     "title": "Orchestra rehearsal",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-25T17:00:00+00:00",
+     "end": "2026-11-25T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T14:30:00+00:00",
+     "end": "2026-11-26T15:45:00+00:00",
+     "title": "PHYS 151 Mechanics Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T18:00:00+00:00",
+     "end": "2026-11-26T20:50:00+00:00",
+     "title": "CHEM Lab",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T17:00:00+00:00",
+     "end": "2026-11-26T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-27T19:00:00+00:00",
+     "end": "2026-11-27T19:50:00+00:00",
+     "title": "STAT 240 Probability Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-27T20:00:00+00:00",
+     "end": "2026-11-27T20:50:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-27T17:00:00+00:00",
+     "end": "2026-11-27T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-30T19:00:00+00:00",
+     "end": "2026-11-30T19:50:00+00:00",
+     "title": "STAT 240 Probability Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-30T20:00:00+00:00",
+     "end": "2026-11-30T20:50:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-30T17:00:00+00:00",
+     "end": "2026-11-30T17:45:00+00:00",
+     "title": "Lunch",
+     "kind": "soft",
+     "all_day": false
+    }
+   ],
+   "role": "member",
+   "prefs": [
+    {
+     "raw_text": "I'm useless before 11",
+     "rules": [
+      {
+       "kind": "not_before",
+       "strength": "soft",
+       "time": "11:00",
+       "summary": "Nothing before 11:00"
+      }
+     ],
+     "ack": "Got it: nothing before 11:00.",
+     "parse_ok": true
+    },
+    {
+     "raw_text": "Fridays are rough for me",
+     "rules": [
+      {
+       "kind": "day_weights",
+       "strength": "soft",
+       "day_weights": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        0.3,
+        1.0,
+        1.0
+       ],
+       "summary": "Fri not great"
+      }
+     ],
+     "ack": "Got it: fri not great.",
+     "parse_ok": true
+    }
+   ]
+  },
+  {
+   "id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+   "name": "Zoe Nguyen",
+   "calendar": [
+    {
+     "start": "2026-11-17T17:30:00+00:00",
+     "end": "2026-11-17T18:45:00+00:00",
+     "title": "MUS 105 Music Theory Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-17T14:30:00+00:00",
+     "end": "2026-11-17T15:45:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T17:30:00+00:00",
+     "end": "2026-11-19T18:45:00+00:00",
+     "title": "MUS 105 Music Theory Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T20:00:00+00:00",
+     "end": "2026-11-19T22:50:00+00:00",
+     "title": "ECON Lab",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T14:30:00+00:00",
+     "end": "2026-11-19T15:45:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-23T19:00:00+00:00",
+     "end": "2026-11-23T21:50:00+00:00",
+     "title": "CHEM Lab",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-24T17:30:00+00:00",
+     "end": "2026-11-24T18:45:00+00:00",
+     "title": "MUS 105 Music Theory Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-24T14:30:00+00:00",
+     "end": "2026-11-24T15:45:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T17:30:00+00:00",
+     "end": "2026-11-26T18:45:00+00:00",
+     "title": "MUS 105 Music Theory Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T20:00:00+00:00",
+     "end": "2026-11-26T22:50:00+00:00",
+     "title": "ECON Lab",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T14:30:00+00:00",
+     "end": "2026-11-26T15:45:00+00:00",
+     "title": "CHEM 131 General Chemistry Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-30T19:00:00+00:00",
+     "end": "2026-11-30T21:50:00+00:00",
+     "title": "CHEM Lab",
+     "kind": "soft",
+     "all_day": false
+    }
+   ],
+   "role": "member",
+   "prefs": [
+    {
+     "raw_text": "I try to keep Fridays free",
+     "rules": [
+      {
+       "kind": "avoid_weekdays",
+       "strength": "soft",
+       "weekdays": [
+        4
+       ],
+       "summary": "Avoid Fri"
+      }
+     ],
+     "ack": "Got it: avoid fri.",
+     "parse_ok": true
+    }
+   ]
+  },
+  {
+   "id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+   "name": "Theo Ortiz",
+   "calendar": [
+    {
+     "start": "2026-11-17T13:00:00+00:00",
+     "end": "2026-11-17T14:15:00+00:00",
+     "title": "PHYS 151 Mechanics Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-17T19:00:00+00:00",
+     "end": "2026-11-17T20:15:00+00:00",
+     "title": "HIST 150 World History Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-18T17:00:00+00:00",
+     "end": "2026-11-18T17:50:00+00:00",
+     "title": "CS 301 Algorithms Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T13:00:00+00:00",
+     "end": "2026-11-19T14:15:00+00:00",
+     "title": "PHYS 151 Mechanics Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-19T19:00:00+00:00",
+     "end": "2026-11-19T20:15:00+00:00",
+     "title": "HIST 150 World History Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-20T17:00:00+00:00",
+     "end": "2026-11-20T17:50:00+00:00",
+     "title": "CS 301 Algorithms Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-23T17:00:00+00:00",
+     "end": "2026-11-23T17:50:00+00:00",
+     "title": "CS 301 Algorithms Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-24T13:00:00+00:00",
+     "end": "2026-11-24T14:15:00+00:00",
+     "title": "PHYS 151 Mechanics Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-24T19:00:00+00:00",
+     "end": "2026-11-24T20:15:00+00:00",
+     "title": "HIST 150 World History Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-25T17:00:00+00:00",
+     "end": "2026-11-25T17:50:00+00:00",
+     "title": "CS 301 Algorithms Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T13:00:00+00:00",
+     "end": "2026-11-26T14:15:00+00:00",
+     "title": "PHYS 151 Mechanics Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-26T19:00:00+00:00",
+     "end": "2026-11-26T20:15:00+00:00",
+     "title": "HIST 150 World History Lecture",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-27T17:00:00+00:00",
+     "end": "2026-11-27T17:50:00+00:00",
+     "title": "CS 301 Algorithms Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-30T17:00:00+00:00",
+     "end": "2026-11-30T17:50:00+00:00",
+     "title": "CS 301 Algorithms Lecture",
+     "kind": "soft",
+     "all_day": false
+    }
+   ],
+   "role": "member",
+   "prefs": [
+    {
+     "raw_text": "I'm useless before 12",
+     "rules": [
+      {
+       "kind": "not_before",
+       "strength": "soft",
+       "time": "12:00",
+       "summary": "Nothing before 12:00"
+      }
+     ],
+     "ack": "Got it: nothing before 12:00.",
+     "parse_ok": true
+    },
+    {
+     "raw_text": "Ideally around 11am",
+     "rules": [
+      {
+       "kind": "time_of_day",
+       "strength": "soft",
+       "time": "11:00",
+       "width_minutes": 120,
+       "summary": "Ideally around 11:00"
+      }
+     ],
+     "ack": "Got it: ideally around 11:00.",
+     "parse_ok": true
+    }
+   ]
+  },
+  {
+   "id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+   "name": "Quinn Kowalski",
+   "calendar": [
+    {
+     "start": "2026-11-18T13:00:00+00:00",
+     "end": "2026-11-18T13:50:00+00:00",
+     "title": "ART 130 Studio Drawing Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-18T17:00:00+00:00",
+     "end": "2026-11-18T17:50:00+00:00",
+     "title": "CS 201 Data Structures Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-18T21:00:00+00:00",
+     "end": "2026-11-19T01:00:00+00:00",
+     "title": "Dining hall shift",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-20T13:00:00+00:00",
+     "end": "2026-11-20T13:50:00+00:00",
+     "title": "ART 130 Studio Drawing Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-20T17:00:00+00:00",
+     "end": "2026-11-20T17:50:00+00:00",
+     "title": "CS 201 Data Structures Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-20T21:00:00+00:00",
+     "end": "2026-11-21T01:00:00+00:00",
+     "title": "Dining hall shift",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-23T13:00:00+00:00",
+     "end": "2026-11-23T13:50:00+00:00",
+     "title": "ART 130 Studio Drawing Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-23T17:00:00+00:00",
+     "end": "2026-11-23T17:50:00+00:00",
+     "title": "CS 201 Data Structures Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-23T21:00:00+00:00",
+     "end": "2026-11-24T01:00:00+00:00",
+     "title": "Dining hall shift",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-25T13:00:00+00:00",
+     "end": "2026-11-25T13:50:00+00:00",
+     "title": "ART 130 Studio Drawing Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-25T17:00:00+00:00",
+     "end": "2026-11-25T17:50:00+00:00",
+     "title": "CS 201 Data Structures Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-25T21:00:00+00:00",
+     "end": "2026-11-26T01:00:00+00:00",
+     "title": "Dining hall shift",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-27T13:00:00+00:00",
+     "end": "2026-11-27T13:50:00+00:00",
+     "title": "ART 130 Studio Drawing Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-27T17:00:00+00:00",
+     "end": "2026-11-27T17:50:00+00:00",
+     "title": "CS 201 Data Structures Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-27T21:00:00+00:00",
+     "end": "2026-11-28T01:00:00+00:00",
+     "title": "Dining hall shift",
+     "kind": "hard",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-30T13:00:00+00:00",
+     "end": "2026-11-30T13:50:00+00:00",
+     "title": "ART 130 Studio Drawing Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-30T17:00:00+00:00",
+     "end": "2026-11-30T17:50:00+00:00",
+     "title": "CS 201 Data Structures Lecture",
+     "kind": "soft",
+     "all_day": false
+    },
+    {
+     "start": "2026-11-30T21:00:00+00:00",
+     "end": "2026-12-01T01:00:00+00:00",
+     "title": "Dining hall shift",
+     "kind": "hard",
+     "all_day": false
+    }
+   ],
+   "role": "member",
+   "prefs": [
+    {
+     "raw_text": "Ideally around 2pm",
+     "rules": [
+      {
+       "kind": "time_of_day",
+       "strength": "soft",
+       "time": "14:00",
+       "width_minutes": 120,
+       "summary": "Ideally around 14:00"
+      }
+     ],
+     "ack": "Got it: ideally around 14:00.",
+     "parse_ok": true
+    },
+    {
+     "raw_text": "I'd rather be done by 6pm",
+     "rules": [
+      {
+       "kind": "not_after",
+       "strength": "soft",
+       "time": "18:00",
+       "summary": "Done by 18:00"
+      }
+     ],
+     "ack": "Got it: done by 18:00.",
+     "parse_ok": true
+    }
+   ]
+  }
+ ],
+ "events": [
+  {
+   "seq": 1,
+   "type": "negotiation_started",
+   "payload": {
+    "participants": [
+     {
+      "user_id": "bba05a54-c402-44dc-a4f5-60a8f629284d",
+      "name": "Alex",
+      "carrier": "SIM"
+     },
+     {
+      "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+      "name": "Petra Castillo",
+      "carrier": "SIM"
+     },
+     {
+      "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+      "name": "Zoe Nguyen",
+      "carrier": "SIM"
+     },
+     {
+      "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+      "name": "Theo Ortiz",
+      "carrier": "SIM"
+     },
+     {
+      "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+      "name": "Quinn Kowalski",
+      "carrier": "SIM"
+     }
+    ],
+    "slots": [
+     {
+      "id": "20261118T1400Z",
+      "start": "2026-11-18T14:00:00+00:00",
+      "end": "2026-11-18T15:00:00+00:00",
+      "label": "Wed Nov 18, 9:00 AM"
+     },
+     {
+      "id": "20261118T1530Z",
+      "start": "2026-11-18T15:30:00+00:00",
+      "end": "2026-11-18T16:30:00+00:00",
+      "label": "Wed Nov 18, 10:30 AM"
+     },
+     {
+      "id": "20261118T1700Z",
+      "start": "2026-11-18T17:00:00+00:00",
+      "end": "2026-11-18T18:00:00+00:00",
+      "label": "Wed Nov 18, 12:00 PM"
+     },
+     {
+      "id": "20261118T1830Z",
+      "start": "2026-11-18T18:30:00+00:00",
+      "end": "2026-11-18T19:30:00+00:00",
+      "label": "Wed Nov 18, 1:30 PM"
+     },
+     {
+      "id": "20261118T2000Z",
+      "start": "2026-11-18T20:00:00+00:00",
+      "end": "2026-11-18T21:00:00+00:00",
+      "label": "Wed Nov 18, 3:00 PM"
+     },
+     {
+      "id": "20261118T2130Z",
+      "start": "2026-11-18T21:30:00+00:00",
+      "end": "2026-11-18T22:30:00+00:00",
+      "label": "Wed Nov 18, 4:30 PM"
+     },
+     {
+      "id": "20261118T2300Z",
+      "start": "2026-11-18T23:00:00+00:00",
+      "end": "2026-11-19T00:00:00+00:00",
+      "label": "Wed Nov 18, 6:00 PM"
+     },
+     {
+      "id": "20261119T0030Z",
+      "start": "2026-11-19T00:30:00+00:00",
+      "end": "2026-11-19T01:30:00+00:00",
+      "label": "Wed Nov 18, 7:30 PM"
+     },
+     {
+      "id": "20261119T1400Z",
+      "start": "2026-11-19T14:00:00+00:00",
+      "end": "2026-11-19T15:00:00+00:00",
+      "label": "Thu Nov 19, 9:00 AM"
+     },
+     {
+      "id": "20261119T1530Z",
+      "start": "2026-11-19T15:30:00+00:00",
+      "end": "2026-11-19T16:30:00+00:00",
+      "label": "Thu Nov 19, 10:30 AM"
+     },
+     {
+      "id": "20261119T1700Z",
+      "start": "2026-11-19T17:00:00+00:00",
+      "end": "2026-11-19T18:00:00+00:00",
+      "label": "Thu Nov 19, 12:00 PM"
+     },
+     {
+      "id": "20261119T1830Z",
+      "start": "2026-11-19T18:30:00+00:00",
+      "end": "2026-11-19T19:30:00+00:00",
+      "label": "Thu Nov 19, 1:30 PM"
+     },
+     {
+      "id": "20261119T2000Z",
+      "start": "2026-11-19T20:00:00+00:00",
+      "end": "2026-11-19T21:00:00+00:00",
+      "label": "Thu Nov 19, 3:00 PM"
+     },
+     {
+      "id": "20261119T2130Z",
+      "start": "2026-11-19T21:30:00+00:00",
+      "end": "2026-11-19T22:30:00+00:00",
+      "label": "Thu Nov 19, 4:30 PM"
+     },
+     {
+      "id": "20261119T2300Z",
+      "start": "2026-11-19T23:00:00+00:00",
+      "end": "2026-11-20T00:00:00+00:00",
+      "label": "Thu Nov 19, 6:00 PM"
+     },
+     {
+      "id": "20261120T0030Z",
+      "start": "2026-11-20T00:30:00+00:00",
+      "end": "2026-11-20T01:30:00+00:00",
+      "label": "Thu Nov 19, 7:30 PM"
+     },
+     {
+      "id": "20261120T1400Z",
+      "start": "2026-11-20T14:00:00+00:00",
+      "end": "2026-11-20T15:00:00+00:00",
+      "label": "Fri Nov 20, 9:00 AM"
+     },
+     {
+      "id": "20261120T1530Z",
+      "start": "2026-11-20T15:30:00+00:00",
+      "end": "2026-11-20T16:30:00+00:00",
+      "label": "Fri Nov 20, 10:30 AM"
+     },
+     {
+      "id": "20261120T1700Z",
+      "start": "2026-11-20T17:00:00+00:00",
+      "end": "2026-11-20T18:00:00+00:00",
+      "label": "Fri Nov 20, 12:00 PM"
+     },
+     {
+      "id": "20261120T1830Z",
+      "start": "2026-11-20T18:30:00+00:00",
+      "end": "2026-11-20T19:30:00+00:00",
+      "label": "Fri Nov 20, 1:30 PM"
+     },
+     {
+      "id": "20261120T2000Z",
+      "start": "2026-11-20T20:00:00+00:00",
+      "end": "2026-11-20T21:00:00+00:00",
+      "label": "Fri Nov 20, 3:00 PM"
+     },
+     {
+      "id": "20261120T2130Z",
+      "start": "2026-11-20T21:30:00+00:00",
+      "end": "2026-11-20T22:30:00+00:00",
+      "label": "Fri Nov 20, 4:30 PM"
+     },
+     {
+      "id": "20261120T2300Z",
+      "start": "2026-11-20T23:00:00+00:00",
+      "end": "2026-11-21T00:00:00+00:00",
+      "label": "Fri Nov 20, 6:00 PM"
+     },
+     {
+      "id": "20261121T0030Z",
+      "start": "2026-11-21T00:30:00+00:00",
+      "end": "2026-11-21T01:30:00+00:00",
+      "label": "Fri Nov 20, 7:30 PM"
+     },
+     {
+      "id": "20261123T1400Z",
+      "start": "2026-11-23T14:00:00+00:00",
+      "end": "2026-11-23T15:00:00+00:00",
+      "label": "Mon Nov 23, 9:00 AM"
+     },
+     {
+      "id": "20261123T1530Z",
+      "start": "2026-11-23T15:30:00+00:00",
+      "end": "2026-11-23T16:30:00+00:00",
+      "label": "Mon Nov 23, 10:30 AM"
+     },
+     {
+      "id": "20261123T1700Z",
+      "start": "2026-11-23T17:00:00+00:00",
+      "end": "2026-11-23T18:00:00+00:00",
+      "label": "Mon Nov 23, 12:00 PM"
+     },
+     {
+      "id": "20261123T1830Z",
+      "start": "2026-11-23T18:30:00+00:00",
+      "end": "2026-11-23T19:30:00+00:00",
+      "label": "Mon Nov 23, 1:30 PM"
+     },
+     {
+      "id": "20261123T2000Z",
+      "start": "2026-11-23T20:00:00+00:00",
+      "end": "2026-11-23T21:00:00+00:00",
+      "label": "Mon Nov 23, 3:00 PM"
+     },
+     {
+      "id": "20261123T2130Z",
+      "start": "2026-11-23T21:30:00+00:00",
+      "end": "2026-11-23T22:30:00+00:00",
+      "label": "Mon Nov 23, 4:30 PM"
+     },
+     {
+      "id": "20261123T2300Z",
+      "start": "2026-11-23T23:00:00+00:00",
+      "end": "2026-11-24T00:00:00+00:00",
+      "label": "Mon Nov 23, 6:00 PM"
+     },
+     {
+      "id": "20261124T0030Z",
+      "start": "2026-11-24T00:30:00+00:00",
+      "end": "2026-11-24T01:30:00+00:00",
+      "label": "Mon Nov 23, 7:30 PM"
+     },
+     {
+      "id": "20261124T1400Z",
+      "start": "2026-11-24T14:00:00+00:00",
+      "end": "2026-11-24T15:00:00+00:00",
+      "label": "Tue Nov 24, 9:00 AM"
+     },
+     {
+      "id": "20261124T1530Z",
+      "start": "2026-11-24T15:30:00+00:00",
+      "end": "2026-11-24T16:30:00+00:00",
+      "label": "Tue Nov 24, 10:30 AM"
+     },
+     {
+      "id": "20261124T1700Z",
+      "start": "2026-11-24T17:00:00+00:00",
+      "end": "2026-11-24T18:00:00+00:00",
+      "label": "Tue Nov 24, 12:00 PM"
+     },
+     {
+      "id": "20261124T1830Z",
+      "start": "2026-11-24T18:30:00+00:00",
+      "end": "2026-11-24T19:30:00+00:00",
+      "label": "Tue Nov 24, 1:30 PM"
+     },
+     {
+      "id": "20261124T2000Z",
+      "start": "2026-11-24T20:00:00+00:00",
+      "end": "2026-11-24T21:00:00+00:00",
+      "label": "Tue Nov 24, 3:00 PM"
+     },
+     {
+      "id": "20261124T2130Z",
+      "start": "2026-11-24T21:30:00+00:00",
+      "end": "2026-11-24T22:30:00+00:00",
+      "label": "Tue Nov 24, 4:30 PM"
+     },
+     {
+      "id": "20261124T2300Z",
+      "start": "2026-11-24T23:00:00+00:00",
+      "end": "2026-11-25T00:00:00+00:00",
+      "label": "Tue Nov 24, 6:00 PM"
+     },
+     {
+      "id": "20261125T0030Z",
+      "start": "2026-11-25T00:30:00+00:00",
+      "end": "2026-11-25T01:30:00+00:00",
+      "label": "Tue Nov 24, 7:30 PM"
+     },
+     {
+      "id": "20261125T1400Z",
+      "start": "2026-11-25T14:00:00+00:00",
+      "end": "2026-11-25T15:00:00+00:00",
+      "label": "Wed Nov 25, 9:00 AM"
+     },
+     {
+      "id": "20261125T1530Z",
+      "start": "2026-11-25T15:30:00+00:00",
+      "end": "2026-11-25T16:30:00+00:00",
+      "label": "Wed Nov 25, 10:30 AM"
+     },
+     {
+      "id": "20261125T1700Z",
+      "start": "2026-11-25T17:00:00+00:00",
+      "end": "2026-11-25T18:00:00+00:00",
+      "label": "Wed Nov 25, 12:00 PM"
+     },
+     {
+      "id": "20261125T1830Z",
+      "start": "2026-11-25T18:30:00+00:00",
+      "end": "2026-11-25T19:30:00+00:00",
+      "label": "Wed Nov 25, 1:30 PM"
+     },
+     {
+      "id": "20261125T2000Z",
+      "start": "2026-11-25T20:00:00+00:00",
+      "end": "2026-11-25T21:00:00+00:00",
+      "label": "Wed Nov 25, 3:00 PM"
+     },
+     {
+      "id": "20261125T2130Z",
+      "start": "2026-11-25T21:30:00+00:00",
+      "end": "2026-11-25T22:30:00+00:00",
+      "label": "Wed Nov 25, 4:30 PM"
+     },
+     {
+      "id": "20261125T2300Z",
+      "start": "2026-11-25T23:00:00+00:00",
+      "end": "2026-11-26T00:00:00+00:00",
+      "label": "Wed Nov 25, 6:00 PM"
+     },
+     {
+      "id": "20261126T0030Z",
+      "start": "2026-11-26T00:30:00+00:00",
+      "end": "2026-11-26T01:30:00+00:00",
+      "label": "Wed Nov 25, 7:30 PM"
+     },
+     {
+      "id": "20261126T1400Z",
+      "start": "2026-11-26T14:00:00+00:00",
+      "end": "2026-11-26T15:00:00+00:00",
+      "label": "Thu Nov 26, 9:00 AM"
+     },
+     {
+      "id": "20261126T1530Z",
+      "start": "2026-11-26T15:30:00+00:00",
+      "end": "2026-11-26T16:30:00+00:00",
+      "label": "Thu Nov 26, 10:30 AM"
+     },
+     {
+      "id": "20261126T1700Z",
+      "start": "2026-11-26T17:00:00+00:00",
+      "end": "2026-11-26T18:00:00+00:00",
+      "label": "Thu Nov 26, 12:00 PM"
+     },
+     {
+      "id": "20261126T1830Z",
+      "start": "2026-11-26T18:30:00+00:00",
+      "end": "2026-11-26T19:30:00+00:00",
+      "label": "Thu Nov 26, 1:30 PM"
+     },
+     {
+      "id": "20261126T2000Z",
+      "start": "2026-11-26T20:00:00+00:00",
+      "end": "2026-11-26T21:00:00+00:00",
+      "label": "Thu Nov 26, 3:00 PM"
+     },
+     {
+      "id": "20261126T2130Z",
+      "start": "2026-11-26T21:30:00+00:00",
+      "end": "2026-11-26T22:30:00+00:00",
+      "label": "Thu Nov 26, 4:30 PM"
+     },
+     {
+      "id": "20261126T2300Z",
+      "start": "2026-11-26T23:00:00+00:00",
+      "end": "2026-11-27T00:00:00+00:00",
+      "label": "Thu Nov 26, 6:00 PM"
+     },
+     {
+      "id": "20261127T0030Z",
+      "start": "2026-11-27T00:30:00+00:00",
+      "end": "2026-11-27T01:30:00+00:00",
+      "label": "Thu Nov 26, 7:30 PM"
+     },
+     {
+      "id": "20261127T1400Z",
+      "start": "2026-11-27T14:00:00+00:00",
+      "end": "2026-11-27T15:00:00+00:00",
+      "label": "Fri Nov 27, 9:00 AM"
+     },
+     {
+      "id": "20261127T1530Z",
+      "start": "2026-11-27T15:30:00+00:00",
+      "end": "2026-11-27T16:30:00+00:00",
+      "label": "Fri Nov 27, 10:30 AM"
+     },
+     {
+      "id": "20261127T1700Z",
+      "start": "2026-11-27T17:00:00+00:00",
+      "end": "2026-11-27T18:00:00+00:00",
+      "label": "Fri Nov 27, 12:00 PM"
+     },
+     {
+      "id": "20261127T1830Z",
+      "start": "2026-11-27T18:30:00+00:00",
+      "end": "2026-11-27T19:30:00+00:00",
+      "label": "Fri Nov 27, 1:30 PM"
+     },
+     {
+      "id": "20261127T2000Z",
+      "start": "2026-11-27T20:00:00+00:00",
+      "end": "2026-11-27T21:00:00+00:00",
+      "label": "Fri Nov 27, 3:00 PM"
+     },
+     {
+      "id": "20261127T2130Z",
+      "start": "2026-11-27T21:30:00+00:00",
+      "end": "2026-11-27T22:30:00+00:00",
+      "label": "Fri Nov 27, 4:30 PM"
+     },
+     {
+      "id": "20261127T2300Z",
+      "start": "2026-11-27T23:00:00+00:00",
+      "end": "2026-11-28T00:00:00+00:00",
+      "label": "Fri Nov 27, 6:00 PM"
+     },
+     {
+      "id": "20261128T0030Z",
+      "start": "2026-11-28T00:30:00+00:00",
+      "end": "2026-11-28T01:30:00+00:00",
+      "label": "Fri Nov 27, 7:30 PM"
+     }
+    ],
+    "timezone": "America/New_York",
+    "agent_backend": "simulated",
+    "selector": "nash",
+    "normalization": "topk"
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.0
+  },
+  {
+   "seq": 2,
+   "type": "slots_closed",
+   "payload": {
+    "closed": [
+     {
+      "slot_id": "20261118T1830Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "STAT 240 Probability Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261118T2000Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261118T2130Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261118T2300Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261119T0030Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "Orchestra rehearsal"
+       },
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261119T1400Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "PHYS 151 Mechanics Lecture"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       },
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "PHYS 151 Mechanics Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261119T1530Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "PHYS 151 Mechanics Lecture"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261119T1700Z",
+      "blockers": [
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "MUS 105 Music Theory Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261119T1830Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM Lab"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "MUS 105 Music Theory Lecture"
+       },
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "HIST 150 World History Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261119T2000Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM Lab"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "ECON Lab"
+       },
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "HIST 150 World History Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261119T2130Z",
+      "blockers": [
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "ECON Lab"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261120T1830Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "STAT 240 Probability Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261120T2000Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261120T2130Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261120T2300Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261121T0030Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261123T1830Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "STAT 240 Probability Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261123T2000Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261123T2130Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261123T2300Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261124T0030Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261124T1400Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "PHYS 151 Mechanics Lecture"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       },
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "PHYS 151 Mechanics Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261124T1530Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "PHYS 151 Mechanics Lecture"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261124T1700Z",
+      "blockers": [
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "MUS 105 Music Theory Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261124T1830Z",
+      "blockers": [
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "MUS 105 Music Theory Lecture"
+       },
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "HIST 150 World History Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261124T2000Z",
+      "blockers": [
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "HIST 150 World History Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261125T1830Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "STAT 240 Probability Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261125T2000Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261125T2130Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261125T2300Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261126T0030Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "Orchestra rehearsal"
+       },
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261126T1400Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "PHYS 151 Mechanics Lecture"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       },
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "PHYS 151 Mechanics Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261126T1530Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "PHYS 151 Mechanics Lecture"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261126T1700Z",
+      "blockers": [
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "MUS 105 Music Theory Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261126T1830Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM Lab"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "MUS 105 Music Theory Lecture"
+       },
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "HIST 150 World History Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261126T2000Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM Lab"
+       },
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "ECON Lab"
+       },
+       {
+        "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+        "name": "Theo Ortiz",
+        "reason": "HIST 150 World History Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261126T2130Z",
+      "blockers": [
+       {
+        "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+        "name": "Zoe Nguyen",
+        "reason": "ECON Lab"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261127T1830Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "STAT 240 Probability Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261127T2000Z",
+      "blockers": [
+       {
+        "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+        "name": "Petra Castillo",
+        "reason": "CHEM 131 General Chemistry Lecture"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261127T2130Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261127T2300Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     },
+     {
+      "slot_id": "20261128T0030Z",
+      "blockers": [
+       {
+        "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+        "name": "Quinn Kowalski",
+        "reason": "Dining hall shift"
+       }
+      ]
+     }
+    ],
+    "open": [
+     "20261118T1400Z",
+     "20261118T1530Z",
+     "20261118T1700Z",
+     "20261119T2300Z",
+     "20261120T0030Z",
+     "20261120T1400Z",
+     "20261120T1530Z",
+     "20261120T1700Z",
+     "20261123T1400Z",
+     "20261123T1530Z",
+     "20261123T1700Z",
+     "20261124T2130Z",
+     "20261124T2300Z",
+     "20261125T0030Z",
+     "20261125T1400Z",
+     "20261125T1530Z",
+     "20261125T1700Z",
+     "20261126T2300Z",
+     "20261127T0030Z",
+     "20261127T1400Z",
+     "20261127T1530Z",
+     "20261127T1700Z"
+    ]
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.004953
+  },
+  {
+   "seq": 3,
+   "type": "round_started",
+   "payload": {
+    "round": 1,
+    "kind": "score"
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.007103
+  },
+  {
+   "seq": 4,
+   "type": "agent_thinking",
+   "payload": {
+    "user_id": "bba05a54-c402-44dc-a4f5-60a8f629284d",
+    "round": 1
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.008581
+  },
+  {
+   "seq": 5,
+   "type": "agent_thinking",
+   "payload": {
+    "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+    "round": 1
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.009955
+  },
+  {
+   "seq": 6,
+   "type": "agent_thinking",
+   "payload": {
+    "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+    "round": 1
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.011275
+  },
+  {
+   "seq": 7,
+   "type": "agent_thinking",
+   "payload": {
+    "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+    "round": 1
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.01255
+  },
+  {
+   "seq": 8,
+   "type": "agent_thinking",
+   "payload": {
+    "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+    "round": 1
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.013762
+  },
+  {
+   "seq": 9,
+   "type": "agent_scored",
+   "payload": {
+    "user_id": "bba05a54-c402-44dc-a4f5-60a8f629284d",
+    "round": 1,
+    "scores": {
+     "20261118T1400Z": 50,
+     "20261118T1530Z": 50,
+     "20261118T1700Z": 50,
+     "20261119T2300Z": 50,
+     "20261120T0030Z": 50,
+     "20261120T1400Z": 50,
+     "20261120T1530Z": 50,
+     "20261120T1700Z": 50,
+     "20261123T1400Z": 50,
+     "20261123T1530Z": 50,
+     "20261123T1700Z": 50,
+     "20261124T2130Z": 50,
+     "20261124T2300Z": 50,
+     "20261125T0030Z": 50,
+     "20261125T1400Z": 50,
+     "20261125T1530Z": 50,
+     "20261125T1700Z": 50,
+     "20261126T2300Z": 50,
+     "20261127T0030Z": 50,
+     "20261127T1400Z": 50,
+     "20261127T1530Z": 50,
+     "20261127T1700Z": 50
+    },
+    "summary": "Wide open this week; most times work for me.",
+    "fallback": false,
+    "source": "rules",
+    "normalization": "topk",
+    "utilities": {
+     "20261118T1400Z": 0.5,
+     "20261118T1530Z": 0.5,
+     "20261118T1700Z": 0.5,
+     "20261119T2300Z": 0.5,
+     "20261120T0030Z": 0.5,
+     "20261120T1400Z": 0.5,
+     "20261120T1530Z": 0.5,
+     "20261120T1700Z": 0.5,
+     "20261123T1400Z": 0.5,
+     "20261123T1530Z": 0.5,
+     "20261123T1700Z": 0.5,
+     "20261124T2130Z": 0.5,
+     "20261124T2300Z": 0.5,
+     "20261125T0030Z": 0.5,
+     "20261125T1400Z": 0.5,
+     "20261125T1530Z": 0.5,
+     "20261125T1700Z": 0.5,
+     "20261126T2300Z": 0.5,
+     "20261127T0030Z": 0.5,
+     "20261127T1400Z": 0.5,
+     "20261127T1530Z": 0.5,
+     "20261127T1700Z": 0.5
+    }
+   },
+   "owner_id": "bba05a54-c402-44dc-a4f5-60a8f629284d",
+   "private": {
+    "reasons": {
+     "20261118T1400Z": "Clear for me",
+     "20261118T1530Z": "Clear for me",
+     "20261118T1700Z": "Clear for me",
+     "20261119T2300Z": "Clear for me",
+     "20261120T0030Z": "Clear for me",
+     "20261120T1400Z": "Clear for me",
+     "20261120T1530Z": "Clear for me",
+     "20261120T1700Z": "Clear for me",
+     "20261123T1400Z": "Clear for me",
+     "20261123T1530Z": "Clear for me",
+     "20261123T1700Z": "Clear for me",
+     "20261124T2130Z": "Clear for me",
+     "20261124T2300Z": "Clear for me",
+     "20261125T0030Z": "Clear for me",
+     "20261125T1400Z": "Clear for me",
+     "20261125T1530Z": "Clear for me",
+     "20261125T1700Z": "Clear for me",
+     "20261126T2300Z": "Clear for me",
+     "20261127T0030Z": "Clear for me",
+     "20261127T1400Z": "Clear for me",
+     "20261127T1530Z": "Clear for me",
+     "20261127T1700Z": "Clear for me"
+    }
+   },
+   "offset": 0.01596
+  },
+  {
+   "seq": 10,
+   "type": "agent_scored",
+   "payload": {
+    "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+    "round": 1,
+    "scores": {
+     "20261118T1400Z": 43,
+     "20261118T1530Z": 67,
+     "20261118T1700Z": 26,
+     "20261119T2300Z": 100,
+     "20261120T0030Z": 100,
+     "20261120T1400Z": 12,
+     "20261120T1530Z": 55,
+     "20261120T1700Z": 2,
+     "20261123T1400Z": 43,
+     "20261123T1530Z": 67,
+     "20261123T1700Z": 26,
+     "20261124T2130Z": 26,
+     "20261124T2300Z": 100,
+     "20261125T0030Z": 100,
+     "20261125T1400Z": 43,
+     "20261125T1530Z": 67,
+     "20261125T1700Z": 26,
+     "20261126T2300Z": 100,
+     "20261127T0030Z": 100,
+     "20261127T1400Z": 12,
+     "20261127T1530Z": 55,
+     "20261127T1700Z": 2
+    },
+    "summary": "Weighing nothing before 11:00 and Lunch.",
+    "fallback": false,
+    "source": "rules",
+    "normalization": "topk",
+    "utilities": {
+     "20261118T1400Z": 0.4286,
+     "20261118T1530Z": 0.6667,
+     "20261118T1700Z": 0.2619,
+     "20261119T2300Z": 1.0,
+     "20261120T0030Z": 1.0,
+     "20261120T1400Z": 0.119,
+     "20261120T1530Z": 0.5476,
+     "20261120T1700Z": 0.0238,
+     "20261123T1400Z": 0.4286,
+     "20261123T1530Z": 0.6667,
+     "20261123T1700Z": 0.2619,
+     "20261124T2130Z": 0.2619,
+     "20261124T2300Z": 1.0,
+     "20261125T0030Z": 1.0,
+     "20261125T1400Z": 0.4286,
+     "20261125T1530Z": 0.6667,
+     "20261125T1700Z": 0.2619,
+     "20261126T2300Z": 1.0,
+     "20261127T0030Z": 1.0,
+     "20261127T1400Z": 0.119,
+     "20261127T1530Z": 0.5476,
+     "20261127T1700Z": 0.0238
+    }
+   },
+   "owner_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+   "private": {
+    "reasons": {
+     "20261118T1400Z": "Bends: Nothing before 11:00",
+     "20261118T1530Z": "Bends: Nothing before 11:00",
+     "20261118T1700Z": "Clashes with Lunch",
+     "20261119T2300Z": "Clear for me",
+     "20261120T0030Z": "Clear for me",
+     "20261120T1400Z": "Bends: Nothing before 11:00",
+     "20261120T1530Z": "Bends: Fri not great",
+     "20261120T1700Z": "Clashes with Lunch",
+     "20261123T1400Z": "Bends: Nothing before 11:00",
+     "20261123T1530Z": "Bends: Nothing before 11:00",
+     "20261123T1700Z": "Clashes with Lunch",
+     "20261124T2130Z": "Clashes with STAT Lab",
+     "20261124T2300Z": "Clear for me",
+     "20261125T0030Z": "Clear for me",
+     "20261125T1400Z": "Bends: Nothing before 11:00",
+     "20261125T1530Z": "Bends: Nothing before 11:00",
+     "20261125T1700Z": "Clashes with Lunch",
+     "20261126T2300Z": "Clear for me",
+     "20261127T0030Z": "Clear for me",
+     "20261127T1400Z": "Bends: Nothing before 11:00",
+     "20261127T1530Z": "Bends: Fri not great",
+     "20261127T1700Z": "Clashes with Lunch"
+    }
+   },
+   "offset": 0.017307
+  },
+  {
+   "seq": 11,
+   "type": "agent_scored",
+   "payload": {
+    "user_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+    "round": 1,
+    "scores": {
+     "20261118T1400Z": 64,
+     "20261118T1530Z": 64,
+     "20261118T1700Z": 64,
+     "20261119T2300Z": 64,
+     "20261120T0030Z": 64,
+     "20261120T1400Z": 12,
+     "20261120T1530Z": 12,
+     "20261120T1700Z": 12,
+     "20261123T1400Z": 64,
+     "20261123T1530Z": 64,
+     "20261123T1700Z": 64,
+     "20261124T2130Z": 64,
+     "20261124T2300Z": 64,
+     "20261125T0030Z": 64,
+     "20261125T1400Z": 64,
+     "20261125T1530Z": 64,
+     "20261125T1700Z": 64,
+     "20261126T2300Z": 64,
+     "20261127T0030Z": 64,
+     "20261127T1400Z": 12,
+     "20261127T1530Z": 12,
+     "20261127T1700Z": 12
+    },
+    "summary": "Weighing avoid fri.",
+    "fallback": false,
+    "source": "rules",
+    "normalization": "topk",
+    "utilities": {
+     "20261118T1400Z": 0.6429,
+     "20261118T1530Z": 0.6429,
+     "20261118T1700Z": 0.6429,
+     "20261119T2300Z": 0.6429,
+     "20261120T0030Z": 0.6429,
+     "20261120T1400Z": 0.119,
+     "20261120T1530Z": 0.119,
+     "20261120T1700Z": 0.119,
+     "20261123T1400Z": 0.6429,
+     "20261123T1530Z": 0.6429,
+     "20261123T1700Z": 0.6429,
+     "20261124T2130Z": 0.6429,
+     "20261124T2300Z": 0.6429,
+     "20261125T0030Z": 0.6429,
+     "20261125T1400Z": 0.6429,
+     "20261125T1530Z": 0.6429,
+     "20261125T1700Z": 0.6429,
+     "20261126T2300Z": 0.6429,
+     "20261127T0030Z": 0.6429,
+     "20261127T1400Z": 0.119,
+     "20261127T1530Z": 0.119,
+     "20261127T1700Z": 0.119
+    }
+   },
+   "owner_id": "67f0933f-5ab0-47df-beb4-39f5f19daf92",
+   "private": {
+    "reasons": {
+     "20261118T1400Z": "Clear for me",
+     "20261118T1530Z": "Clear for me",
+     "20261118T1700Z": "Clear for me",
+     "20261119T2300Z": "Clear for me",
+     "20261120T0030Z": "Clear for me",
+     "20261120T1400Z": "Bends: Avoid Fri",
+     "20261120T1530Z": "Bends: Avoid Fri",
+     "20261120T1700Z": "Bends: Avoid Fri",
+     "20261123T1400Z": "Clear for me",
+     "20261123T1530Z": "Clear for me",
+     "20261123T1700Z": "Clear for me",
+     "20261124T2130Z": "Clear for me",
+     "20261124T2300Z": "Clear for me",
+     "20261125T0030Z": "Clear for me",
+     "20261125T1400Z": "Clear for me",
+     "20261125T1530Z": "Clear for me",
+     "20261125T1700Z": "Clear for me",
+     "20261126T2300Z": "Clear for me",
+     "20261127T0030Z": "Clear for me",
+     "20261127T1400Z": "Bends: Avoid Fri",
+     "20261127T1530Z": "Bends: Avoid Fri",
+     "20261127T1700Z": "Bends: Avoid Fri"
+    }
+   },
+   "offset": 0.018668
+  },
+  {
+   "seq": 12,
+   "type": "agent_scored",
+   "payload": {
+    "user_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+    "round": 1,
+    "scores": {
+     "20261118T1400Z": 10,
+     "20261118T1530Z": 100,
+     "20261118T1700Z": 33,
+     "20261119T2300Z": 67,
+     "20261120T0030Z": 52,
+     "20261120T1400Z": 10,
+     "20261120T1530Z": 100,
+     "20261120T1700Z": 33,
+     "20261123T1400Z": 10,
+     "20261123T1530Z": 100,
+     "20261123T1700Z": 33,
+     "20261124T2130Z": 76,
+     "20261124T2300Z": 67,
+     "20261125T0030Z": 52,
+     "20261125T1400Z": 10,
+     "20261125T1530Z": 100,
+     "20261125T1700Z": 33,
+     "20261126T2300Z": 67,
+     "20261127T0030Z": 52,
+     "20261127T1400Z": 10,
+     "20261127T1530Z": 100,
+     "20261127T1700Z": 33
+    },
+    "summary": "Weighing ideally around 11:00 and nothing before 12:00.",
+    "fallback": false,
+    "source": "rules",
+    "normalization": "topk",
+    "utilities": {
+     "20261118T1400Z": 0.0952,
+     "20261118T1530Z": 1.0,
+     "20261118T1700Z": 0.3333,
+     "20261119T2300Z": 0.6667,
+     "20261120T0030Z": 0.5238,
+     "20261120T1400Z": 0.0952,
+     "20261120T1530Z": 1.0,
+     "20261120T1700Z": 0.3333,
+     "20261123T1400Z": 0.0952,
+     "20261123T1530Z": 1.0,
+     "20261123T1700Z": 0.3333,
+     "20261124T2130Z": 0.7619,
+     "20261124T2300Z": 0.6667,
+     "20261125T0030Z": 0.5238,
+     "20261125T1400Z": 0.0952,
+     "20261125T1530Z": 1.0,
+     "20261125T1700Z": 0.3333,
+     "20261126T2300Z": 0.6667,
+     "20261127T0030Z": 0.5238,
+     "20261127T1400Z": 0.0952,
+     "20261127T1530Z": 1.0,
+     "20261127T1700Z": 0.3333
+    }
+   },
+   "owner_id": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+   "private": {
+    "reasons": {
+     "20261118T1400Z": "Bends: Nothing before 12:00",
+     "20261118T1530Z": "Bends: Nothing before 12:00",
+     "20261118T1700Z": "Clashes with CS 301 Algorithms Lecture",
+     "20261119T2300Z": "Bends: Ideally around 11:00",
+     "20261120T0030Z": "Bends: Ideally around 11:00",
+     "20261120T1400Z": "Bends: Nothing before 12:00",
+     "20261120T1530Z": "Bends: Nothing before 12:00",
+     "20261120T1700Z": "Clashes with CS 301 Algorithms Lecture",
+     "20261123T1400Z": "Bends: Nothing before 12:00",
+     "20261123T1530Z": "Bends: Nothing before 12:00",
+     "20261123T1700Z": "Clashes with CS 301 Algorithms Lecture",
+     "20261124T2130Z": "Bends: Ideally around 11:00",
+     "20261124T2300Z": "Bends: Ideally around 11:00",
+     "20261125T0030Z": "Bends: Ideally around 11:00",
+     "20261125T1400Z": "Bends: Nothing before 12:00",
+     "20261125T1530Z": "Bends: Nothing before 12:00",
+     "20261125T1700Z": "Clashes with CS 301 Algorithms Lecture",
+     "20261126T2300Z": "Bends: Ideally around 11:00",
+     "20261127T0030Z": "Bends: Ideally around 11:00",
+     "20261127T1400Z": "Bends: Nothing before 12:00",
+     "20261127T1530Z": "Bends: Nothing before 12:00",
+     "20261127T1700Z": "Clashes with CS 301 Algorithms Lecture"
+    }
+   },
+   "offset": 0.021434
+  },
+  {
+   "seq": 13,
+   "type": "agent_scored",
+   "payload": {
+    "user_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+    "round": 1,
+    "scores": {
+     "20261118T1400Z": 62,
+     "20261118T1530Z": 66,
+     "20261118T1700Z": 24,
+     "20261119T2300Z": 43,
+     "20261120T0030Z": 5,
+     "20261120T1400Z": 62,
+     "20261120T1530Z": 66,
+     "20261120T1700Z": 24,
+     "20261123T1400Z": 62,
+     "20261123T1530Z": 66,
+     "20261123T1700Z": 24,
+     "20261124T2130Z": 100,
+     "20261124T2300Z": 43,
+     "20261125T0030Z": 5,
+     "20261125T1400Z": 62,
+     "20261125T1530Z": 66,
+     "20261125T1700Z": 24,
+     "20261126T2300Z": 43,
+     "20261127T0030Z": 5,
+     "20261127T1400Z": 62,
+     "20261127T1530Z": 66,
+     "20261127T1700Z": 24
+    },
+    "summary": "Weighing ideally around 14:00 and cs 201 data structures lecture.",
+    "fallback": false,
+    "source": "rules",
+    "normalization": "topk",
+    "utilities": {
+     "20261118T1400Z": 0.619,
+     "20261118T1530Z": 0.6571,
+     "20261118T1700Z": 0.2381,
+     "20261119T2300Z": 0.4286,
+     "20261120T0030Z": 0.0476,
+     "20261120T1400Z": 0.619,
+     "20261120T1530Z": 0.6571,
+     "20261120T1700Z": 0.2381,
+     "20261123T1400Z": 0.619,
+     "20261123T1530Z": 0.6571,
+     "20261123T1700Z": 0.2381,
+     "20261124T2130Z": 1.0,
+     "20261124T2300Z": 0.4286,
+     "20261125T0030Z": 0.0476,
+     "20261125T1400Z": 0.619,
+     "20261125T1530Z": 0.6571,
+     "20261125T1700Z": 0.2381,
+     "20261126T2300Z": 0.4286,
+     "20261127T0030Z": 0.0476,
+     "20261127T1400Z": 0.619,
+     "20261127T1530Z": 0.6571,
+     "20261127T1700Z": 0.2381
+    }
+   },
+   "owner_id": "9d4b8ebd-8c65-4643-8c91-484a1b930f52",
+   "private": {
+    "reasons": {
+     "20261118T1400Z": "Bends: Ideally around 14:00",
+     "20261118T1530Z": "Bends: Ideally around 14:00",
+     "20261118T1700Z": "Clashes with CS 201 Data Structures Lecture",
+     "20261119T2300Z": "Bends: Ideally around 14:00",
+     "20261120T0030Z": "Bends: Done by 18:00",
+     "20261120T1400Z": "Bends: Ideally around 14:00",
+     "20261120T1530Z": "Bends: Ideally around 14:00",
+     "20261120T1700Z": "Clashes with CS 201 Data Structures Lecture",
+     "20261123T1400Z": "Bends: Ideally around 14:00",
+     "20261123T1530Z": "Bends: Ideally around 14:00",
+     "20261123T1700Z": "Clashes with CS 201 Data Structures Lecture",
+     "20261124T2130Z": "Bends: Ideally around 14:00",
+     "20261124T2300Z": "Bends: Ideally around 14:00",
+     "20261125T0030Z": "Bends: Done by 18:00",
+     "20261125T1400Z": "Bends: Ideally around 14:00",
+     "20261125T1530Z": "Bends: Ideally around 14:00",
+     "20261125T1700Z": "Clashes with CS 201 Data Structures Lecture",
+     "20261126T2300Z": "Bends: Ideally around 14:00",
+     "20261127T0030Z": "Bends: Done by 18:00",
+     "20261127T1400Z": "Bends: Ideally around 14:00",
+     "20261127T1530Z": "Bends: Ideally around 14:00",
+     "20261127T1700Z": "Clashes with CS 201 Data Structures Lecture"
+    }
+   },
+   "offset": 0.02377
+  },
+  {
+   "seq": 14,
+   "type": "shortlist",
+   "payload": {
+    "round": 1,
+    "ranked": [
+     {
+      "slot_id": "20261118T1530Z",
+      "min_score": 50,
+      "avg_score": 69.4,
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "unhappy": [],
+      "rank": 1,
+      "nash": -1.5956,
+      "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d"
+     },
+     {
+      "slot_id": "20261123T1530Z",
+      "min_score": 50,
+      "avg_score": 69.4,
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "unhappy": [],
+      "rank": 2,
+      "nash": -1.5956,
+      "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d"
+     },
+     {
+      "slot_id": "20261125T1530Z",
+      "min_score": 50,
+      "avg_score": 69.4,
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "unhappy": [],
+      "rank": 3,
+      "nash": -1.5956,
+      "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d"
+     }
+    ],
+    "selector": "nash",
+    "draft_slot_id": "20261118T1530Z",
+    "status": "ok",
+    "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d"
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.025527
+  },
+  {
+   "seq": 15,
+   "type": "round_started",
+   "payload": {
+    "round": 2,
+    "kind": "asks",
+    "slot_ids": [
+     "20261124T2130Z"
+    ]
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.029916
+  },
+  {
+   "seq": 16,
+   "type": "mediator_ask",
+   "payload": {
+    "round": 2,
+    "ask_id": "r2-0",
+    "slot_id": "20261124T2130Z",
+    "to_user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+    "to_name": "Petra Castillo",
+    "text": "Petra, could STAT Lab move for Tue Nov 24, 4:30 PM? That time would work best for the group.",
+    "rule_id": "event:STAT Lab",
+    "rule_label": "STAT Lab",
+    "current_weight": 0.7,
+    "floor": 0.0,
+    "zeuthen_gain": 0.5201,
+    "draft_slot_id": "20261118T1530Z",
+    "reason_code": "raises_nash_product"
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.031365
+  },
+  {
+   "seq": 17,
+   "type": "agent_thinking",
+   "payload": {
+    "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+    "round": 2
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.032669
+  },
+  {
+   "seq": 18,
+   "type": "agent_reply",
+   "payload": {
+    "round": 2,
+    "ask_id": "r2-0",
+    "user_id": "436a7b6b-d620-440b-ad41-715f74477db0",
+    "slot_id": "20261124T2130Z",
+    "response": "hold",
+    "old_score": 26,
+    "new_score": 26,
+    "text": "STAT Lab matters that day; I can't move it.",
+    "move": {
+     "type": "hold",
+     "rule_id": null,
+     "new_weight": null,
+     "old_weight": null
+    },
+    "valid": true,
+    "rejected_reason": null
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.034162
+  },
+  {
+   "seq": 19,
+   "type": "shortlist",
+   "payload": {
+    "round": 2,
+    "ranked": [
+     {
+      "slot_id": "20261118T1530Z",
+      "min_score": 50,
+      "avg_score": 69.4,
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "unhappy": [],
+      "rank": 1,
+      "nash": -1.5956,
+      "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d"
+     },
+     {
+      "slot_id": "20261123T1530Z",
+      "min_score": 50,
+      "avg_score": 69.4,
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "unhappy": [],
+      "rank": 2,
+      "nash": -1.5956,
+      "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d"
+     },
+     {
+      "slot_id": "20261125T1530Z",
+      "min_score": 50,
+      "avg_score": 69.4,
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "unhappy": [],
+      "rank": 3,
+      "nash": -1.5956,
+      "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d"
+     }
+    ],
+    "selector": "nash",
+    "draft_slot_id": "20261118T1530Z",
+    "status": "ok",
+    "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d"
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.035819
+  },
+  {
+   "seq": 20,
+   "type": "decision",
+   "payload": {
+    "status": "converged",
+    "slot": {
+     "id": "20261118T1530Z",
+     "start": "2026-11-18T15:30:00+00:00",
+     "end": "2026-11-18T16:30:00+00:00",
+     "label": "Wed Nov 18, 10:30 AM"
+    },
+    "scores": {
+     "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+     "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+     "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+     "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+     "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+    },
+    "min_score": 50,
+    "avg_score": 69.4,
+    "compromises": [],
+    "alternatives": [
+     {
+      "slot_id": "20261123T1530Z",
+      "label": "Mon Nov 23, 10:30 AM",
+      "min_score": 50,
+      "avg_score": 69.4
+     },
+     {
+      "slot_id": "20261125T1530Z",
+      "label": "Wed Nov 25, 10:30 AM",
+      "min_score": 50,
+      "avg_score": 69.4
+     },
+     {
+      "slot_id": "20261119T2300Z",
+      "label": "Thu Nov 19, 6:00 PM",
+      "min_score": 43,
+      "avg_score": 64.8
+     }
+    ],
+    "explanation": "The runner-up, Thu Nov 19, 6:00 PM, would have cost Theo Ortiz the most (ideally around 11:00). Alex is the person this time suits least; any time that suits them better would cost someone else. Mon Nov 23, 10:30 AM suits everyone exactly as well, so the earlier date won.",
+    "question": null,
+    "selector": "nash",
+    "normalization": "topk",
+    "solver_status": "ok",
+    "individually_rational": true,
+    "near_miss": null,
+    "nash_score": -1.5956,
+    "bottleneck": {
+     "user_id": "bba05a54-c402-44dc-a4f5-60a8f629284d",
+     "name": "Alex",
+     "gain": 0.5
+    },
+    "binding": {
+     "pick": "20261118T1530Z",
+     "runner_up": "20261119T2300Z",
+     "decisive": "9ad5190f-c26f-4a67-abc6-472804e9e79a",
+     "decisive_label": "Ideally around 11:00",
+     "bottleneck": "bba05a54-c402-44dc-a4f5-60a8f629284d",
+     "tied": [
+      "20261123T1530Z",
+      "20261125T1530Z"
+     ]
+    },
+    "faithful": true,
+    "concessions": [],
+    "rules": [
+     {
+      "rule": "nash",
+      "slot_id": "20261118T1530Z",
+      "label": "Wed Nov 18, 10:30 AM",
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "min_score": 50,
+      "avg_score": 69.4,
+      "nash_welfare": -1.5956,
+      "pareto_dominated_by": null,
+      "available": 3
+     },
+     {
+      "rule": "leximin",
+      "slot_id": "20261118T1530Z",
+      "label": "Wed Nov 18, 10:30 AM",
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "min_score": 50,
+      "avg_score": 69.4,
+      "nash_welfare": -1.5956,
+      "pareto_dominated_by": null,
+      "available": 3
+     },
+     {
+      "rule": "utilitarian",
+      "slot_id": "20261118T1530Z",
+      "label": "Wed Nov 18, 10:30 AM",
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "min_score": 50,
+      "avg_score": 69.4,
+      "nash_welfare": -1.5956,
+      "pareto_dominated_by": null,
+      "available": 3
+     },
+     {
+      "rule": "borda",
+      "slot_id": "20261118T1530Z",
+      "label": "Wed Nov 18, 10:30 AM",
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+      },
+      "min_score": 50,
+      "avg_score": 69.4,
+      "nash_welfare": -1.5956,
+      "pareto_dominated_by": null,
+      "available": 3
+     },
+     {
+      "rule": "approval",
+      "slot_id": "20261119T2300Z",
+      "label": "Thu Nov 19, 6:00 PM",
+      "scores": {
+       "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+       "436a7b6b-d620-440b-ad41-715f74477db0": 100,
+       "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+       "9ad5190f-c26f-4a67-abc6-472804e9e79a": 67,
+       "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 43
+      },
+      "min_score": 43,
+      "avg_score": 64.8,
+      "nash_welfare": -1.9861,
+      "pareto_dominated_by": null,
+      "available": 4
+     }
+    ]
+   },
+   "owner_id": null,
+   "private": null,
+   "offset": 0.043009
+  }
+ ],
+ "decision": {
+  "status": "converged",
+  "slot_id": "20261118T1530Z",
+  "start": "2026-11-18T15:30:00",
+  "end": "2026-11-18T16:30:00",
+  "label": "Wed Nov 18, 10:30 AM",
+  "explanation": "The runner-up, Thu Nov 19, 6:00 PM, would have cost Theo Ortiz the most (ideally around 11:00). Alex is the person this time suits least; any time that suits them better would cost someone else. Mon Nov 23, 10:30 AM suits everyone exactly as well, so the earlier date won.",
+  "question": null,
+  "scores": {
+   "bba05a54-c402-44dc-a4f5-60a8f629284d": 50,
+   "436a7b6b-d620-440b-ad41-715f74477db0": 67,
+   "67f0933f-5ab0-47df-beb4-39f5f19daf92": 64,
+   "9ad5190f-c26f-4a67-abc6-472804e9e79a": 100,
+   "9d4b8ebd-8c65-4643-8c91-484a1b930f52": 66
+  },
+  "compromises": [],
+  "alternatives": [
+   {
+    "slot_id": "20261123T1530Z",
+    "label": "Mon Nov 23, 10:30 AM",
+    "min_score": 50,
+    "avg_score": 69.4
+   },
+   {
+    "slot_id": "20261125T1530Z",
+    "label": "Wed Nov 25, 10:30 AM",
+    "min_score": 50,
+    "avg_score": 69.4
+   },
+   {
+    "slot_id": "20261119T2300Z",
+    "label": "Thu Nov 19, 6:00 PM",
+    "min_score": 43,
+    "avg_score": 64.8
+   }
+  ]
+ }
+}

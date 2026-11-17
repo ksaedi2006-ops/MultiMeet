@@ -62,6 +62,7 @@ export type LogEvent = Base &
         slots: SlotInfo[]
         timezone: string
         agent_backend: string
+        recorded?: boolean
       }
     | {
         type: 'slots_closed'

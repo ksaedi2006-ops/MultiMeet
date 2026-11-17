@@ -62,6 +62,10 @@ export default function StatusBar({ title, model, playback, connection, onNewGro
         {model.backend === 'simulated' && (
           <span className="px-2 py-0.5 border border-mist/40 text-mist rounded-[2px] font-sans text-[12px] tracking-normal">Simulated agents, not live AI</span>
         )}
+        {model.backend === 'recorded' && (
+          <span title="A real negotiation between Claude agents, recorded once and replayed here, so watching it costs nothing."
+            className="px-2 py-0.5 border border-amber/50 text-amber rounded-[2px] font-sans text-[12px] tracking-normal">Claude agents · recorded run</span>
+        )}
       </div>
       <div className="flex items-center gap-2 ml-auto">
         {playback.started && (
